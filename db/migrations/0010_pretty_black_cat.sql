@@ -1,0 +1,1 @@
+ALTER TABLE "blocked_dates" ADD CONSTRAINT "blocked_dates_turf_id_start_date_unique" UNIQUE("turf_id","start_date");

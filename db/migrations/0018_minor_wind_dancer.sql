@@ -1,0 +1,1 @@
+ALTER TABLE "turf_peak_hours" ADD COLUMN "type" text NOT NULL;

@@ -1,0 +1,1 @@
+ALTER TABLE "blocked_dates" ALTER COLUMN "blocked_times" SET DATA TYPE time[];

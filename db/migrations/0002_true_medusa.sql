@@ -1,0 +1,1 @@
+ALTER TABLE "turfs" ADD COLUMN "image_url" text;

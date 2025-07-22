@@ -1,0 +1,139 @@
+{
+  "version": "7",
+  "dialect": "postgresql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "7",
+      "when": 1741507131861,
+      "tag": "0000_worthless_magma",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1741507221176,
+      "tag": "0001_smooth_hulk",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1741507243706,
+      "tag": "0002_true_medusa",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1741527243368,
+      "tag": "0003_known_garia",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1741532109234,
+      "tag": "0004_brave_cargill",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1741532254326,
+      "tag": "0005_jazzy_manta",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1741668425638,
+      "tag": "0006_natural_richard_fisk",
+      "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1741693193411,
+      "tag": "0007_concerned_kitty_pryde",
+      "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1741698648729,
+      "tag": "0008_polite_starhawk",
+      "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1741784105691,
+      "tag": "0009_amusing_manta",
+      "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1741852561733,
+      "tag": "0010_pretty_black_cat",
+      "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1742022781448,
+      "tag": "0011_smooth_firedrake",
+      "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1742035645880,
+      "tag": "0012_uneven_professor_monster",
+      "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "7",
+      "when": 1743274113897,
+      "tag": "0013_last_smasher",
+      "breakpoints": true
+    },
+    {
+      "idx": 14,
+      "version": "7",
+      "when": 1743677856668,
+      "tag": "0014_sparkling_jasper_sitwell",
+      "breakpoints": true
+    },
+    {
+      "idx": 15,
+      "version": "7",
+      "when": 1743677980934,
+      "tag": "0015_bored_vin_gonzales",
+      "breakpoints": true
+    },
+    {
+      "idx": 16,
+      "version": "7",
+      "when": 1743678020702,
+      "tag": "0016_neat_zombie",
+      "breakpoints": true
+    },
+    {
+      "idx": 17,
+      "version": "7",
+      "when": 1744009463556,
+      "tag": "0017_lowly_blue_blade",
+      "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "7",
+      "when": 1744011029975,
+      "tag": "0018_minor_wind_dancer",
+      "breakpoints": true
+    }
+  ]
+}

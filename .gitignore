@@ -1,0 +1,54 @@
+# Dependencies
+node_modules
+/.pnp
+.pnp.js
+
+# Next.js build output
+/.next
+/out
+
+# Production build directory
+/build
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# Runtime data
+/.vercel
+/.env.local
+.env
+.env.development
+.env.production
+.env.test
+.env*.local
+
+# Static files cache
+/.turbo
+/public/sw.js
+/public/workbox-*.js
+/public/sw.js.map
+/public/workbox-*.js.map
+
+# Next.js Cache
+/.next/cache
+
+# IntelliJ IDEA settings
+.idea
+
+# Local environment files
+.vscode
+
+# MacOS system files
+.DS_Store
+
+# Linux system files
+*.swp
+
+# Test and coverage
+coverage
+*.log
+.vercel

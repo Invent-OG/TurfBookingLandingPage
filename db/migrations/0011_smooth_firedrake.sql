@@ -1,0 +1,1 @@
+ALTER TABLE "bookings" ADD CONSTRAINT "unique_turf_booking" UNIQUE("turf_id","date","start_time");

@@ -1,0 +1,1 @@
+ALTER TABLE "turfs" DROP COLUMN "image_url";
