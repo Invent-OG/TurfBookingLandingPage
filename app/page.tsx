@@ -14,6 +14,7 @@ import GetInTouch from "@/components/sections/GetInTouch";
 import { GlobalBackground } from "@/components/ui/global-background";
 
 export default function Home() {
+  console.log("test");
   return (
     <main className="relative min-h-screen w-full text-white selection:bg-turf-neon/30 selection:text-turf-neon overflow-x-hidden">
       <GlobalBackground />
