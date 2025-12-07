@@ -1,39 +1,50 @@
-"use client";
-
-import { useRef } from "react";
-import { motion } from "framer-motion";
+import { useRef, useEffect } from "react";
 import { MarqueeDemo } from "../TestimonialsMarquee/main";
+import { gsap } from "gsap";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
 
 export default function Testimonials() {
   const containerRef = useRef<HTMLDivElement>(null);
+  const textRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const ctx = gsap.context(() => {
+      gsap.from(textRef.current, {
+        y: 30,
+        opacity: 0,
+        duration: 1,
+        ease: "power3.out",
+        scrollTrigger: {
+          trigger: containerRef.current,
+          start: "top 75%",
+        },
+      });
+    }, containerRef);
+    return () => ctx.revert();
+  }, []);
 
   return (
     <section
-      className="relative py-16 bg-gradient-to-b from-white to-gray-100 overflow-hidden"
+      className="relative py-24 overflow-hidden"
       id="testimonials"
       ref={containerRef}
     >
-      {/* Blurred Border Effect */}
-      <div className="absolute inset-0  border-white/30  rounded-xl " />
+      {/* Background Effect Removed */}
 
-      <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
-          viewport={{ once: true }}
-          className="text-center mb-16"
-        >
-          <h2 className="text-4xl font-bold text-gray-900 mb-4">
-            What Our Customers Say
+      <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 z-10">
+        <div ref={textRef} className="text-center mb-16 space-y-4">
+          <h2 className="text-4xl md:text-5xl font-black text-white font-heading uppercase italic tracking-tighter">
+            What Our <span className="text-turf-neon">Players</span> Say
           </h2>
-          <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-            Don't just take our word for it - hear from our satisfied customers.
+          <p className="text-xl text-gray-400 max-w-2xl mx-auto">
+            Don't just take our word for it - hear from our community of
+            athletes.
           </p>
-        </motion.div>
+          <div className="w-24 h-1 bg-gradient-to-r from-transparent via-turf-neon to-transparent mx-auto rounded-full"></div>
+        </div>
 
         {/* Testimonials Marquee with Glassmorphism Card */}
-        <div className="relative p-6 bg-white/20  rounded-2xl  border-white/30 ">
+        <div className="relative p-1 rounded-2xl  to-transparent">
           <MarqueeDemo />
         </div>
       </div>

@@ -1,7 +1,7 @@
 "use client";
 
 import { AdminSidebar } from "@/components/admin/admin-sidebar";
-import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
+import { AdminHeader } from "@/components/admin/admin-header"; // NEW
 import { useRouter, usePathname } from "next/navigation";
 import React, { useEffect, useState } from "react";
 
@@ -33,7 +33,11 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
   }
 
   if (isAuth === null) {
-    return <p className="text-center mt-10">Loading...</p>; // Prevents flickering
+    return (
+      <div className="h-screen w-full flex items-center justify-center bg-turf-dark text-turf-neon">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-turf-neon"></div>
+      </div>
+    );
   }
 
   if (!isAuth) {
@@ -41,13 +45,17 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
   }
 
   return (
-    <SidebarProvider>
+    <div className="min-h-screen w-full bg-turf-dark flex font-sans selection:bg-turf-neon/30 selection:text-turf-neon">
       <AdminSidebar />
-      <main className="h-screen w-full gap-5">
-        <SidebarTrigger />
-        <div className="w-full lg:p-10">{children}</div>
-      </main>
-    </SidebarProvider>
+      <div className="flex-1 flex flex-col lg:pl-64 min-h-screen relative z-0">
+        <AdminHeader />
+        <main className="flex-1 p-4 lg:p-10 overflow-auto">
+          <div className="max-w-7xl mx-auto space-y-6 lg:space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+            {children}
+          </div>
+        </main>
+      </div>
+    </div>
   );
 };
 

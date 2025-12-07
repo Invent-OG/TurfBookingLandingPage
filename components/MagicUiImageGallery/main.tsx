@@ -1,4 +1,5 @@
 import { BlurFade } from "../ui/blur-fade";
+import { GlassCard } from "../ui/glass-card";
 
 const images = Array.from(
   { length: 9 },
@@ -7,28 +8,45 @@ const images = Array.from(
 
 export function BlurFadeDemo() {
   return (
-    <div className="py-16 bg-white text-gray-900">
-      {/* Header Section */}
+    <div className="py-24 text-white relative overflow-hidden">
+      {/* Background Glow Removed */}
 
-      <div className="text-center relative z-10">
-        <h2 className="text-4xl md:text-5xl font-extrabold text-gray-900">
-          Explore Our Turf
+      {/* Header Section */}
+      <div className="text-center relative z-10 mb-16 space-y-4 px-4">
+        <h2 className="text-4xl md:text-5xl font-black font-heading uppercase italic tracking-tighter text-white">
+          Explore Our <span className="text-turf-neon">Arena</span>
         </h2>
-        <p className="text-lg text-gray-600 max-w-2xl mx-auto mt-2">
-          High-quality turf spaces designed for your best game.
+        <p className="text-lg text-gray-400 max-w-2xl mx-auto leading-relaxed">
+          High-quality turf spaces designed for your best game. Witness the
+          ultimate sporting experience.
         </p>
+        <div className="w-24 h-1 bg-gradient-to-r from-transparent via-turf-neon to-transparent mx-auto rounded-full"></div>
       </div>
 
       {/* Gallery Grid */}
-      <section id="photos">
-        <div className="columns-2 gap-5 px-10 md:px-[10%] mt-10 sm:columns-3">
+      <section id="photos" className="relative z-10 max-w-7xl mx-auto px-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
           {images.map((imageUrl, idx) => (
             <BlurFade key={imageUrl} delay={0.25 + idx * 0.05} inView>
-              <img
-                className="mb-4 size-full rounded-lg object-contain"
-                src={imageUrl}
-                alt={`Gallery image ${idx + 1}`}
-              />
+              <div className="group relative h-64 md:h-72 w-full overflow-hidden rounded-2xl border border-white/10 bg-white/5 hover:border-turf-neon/50 hover:shadow-[0_0_20px_rgba(204,255,0,0.15)] transition-all duration-500">
+                <img
+                  className="size-full object-cover transition-transform duration-700 group-hover:scale-110 group-hover:rotate-1"
+                  src={imageUrl}
+                  alt={`Gallery image ${idx + 1}`}
+                />
+
+                {/* Overlay */}
+                <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-end p-6">
+                  <div className="transform translate-y-4 group-hover:translate-y-0 transition-transform duration-500">
+                    <p className="text-turf-neon text-xs font-bold uppercase tracking-widest mb-1">
+                      Turf Zone
+                    </p>
+                    <h3 className="text-white font-heading font-bold text-xl uppercase tracking-wide">
+                      View Gallery
+                    </h3>
+                  </div>
+                </div>
+              </div>
             </BlurFade>
           ))}
         </div>

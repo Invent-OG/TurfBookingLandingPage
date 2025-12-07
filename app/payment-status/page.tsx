@@ -112,16 +112,22 @@ function BookingStatusContent({ bookingId }: { bookingId: string | null }) {
   }
 
   return (
-    <div className="h-screen">
+    <div className="h-screen bg-turf-dark flex items-center justify-center p-4">
       {bookingData ? (
         bookingData.status === "booked" ? (
-          <Success bookingData={bookingData} />
+          <div className="w-full max-w-md">
+            <Success bookingData={bookingData} />
+          </div>
         ) : (
-          <Failure bookingData={bookingData} />
+          <div className="w-full max-w-md">
+            <Failure bookingData={bookingData} />
+          </div>
         )
       ) : (
-        <div className="h-screen flex items-center justify-center">
-          <p className="text-red-500 font-semibold">Booking not found.</p>
+        <div className="h-screen flex items-center justify-center text-white">
+          <p className="text-red-500 font-semibold bg-white/5 px-6 py-3 rounded-xl border border-white/10">
+            Booking not found.
+          </p>
         </div>
       )}
     </div>
@@ -130,7 +136,16 @@ function BookingStatusContent({ bookingId }: { bookingId: string | null }) {
 
 export default function BookingStatus() {
   return (
-    <Suspense fallback={<div>Loading booking status...</div>}>
+    <Suspense
+      fallback={
+        <div className="h-screen bg-turf-dark flex items-center justify-center">
+          <div className="flex flex-col items-center gap-4">
+            <div className="w-12 h-12 border-4 border-turf-neon/30 border-t-turf-neon rounded-full animate-spin" />
+            <p className="text-gray-400 animate-pulse">Verifying Payment...</p>
+          </div>
+        </div>
+      }
+    >
       <BookingIdWrapper />
     </Suspense>
   );

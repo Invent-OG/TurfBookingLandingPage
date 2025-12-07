@@ -3,11 +3,17 @@
 import { useRouter } from "next/navigation";
 import { Button } from "../ui/button";
 import { supabase } from "@/lib/supabase";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { toast } from "sonner";
 import { Turf } from "@/types/turf";
 import { cn } from "@/lib/utils";
 import { useTurfStore } from "@/lib/store/turf";
+
+import { GlassCard } from "@/components/ui/glass-card";
+import { gsap } from "gsap";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
+
+gsap.registerPlugin(ScrollTrigger);
 
 export default function TurfImageGallery() {
   const { setSelectedTurf, setTurfs, turfs } = useTurfStore();
@@ -15,6 +21,8 @@ export default function TurfImageGallery() {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<any>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const galleryRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const fetchTurfs = async () => {
@@ -31,74 +39,146 @@ export default function TurfImageGallery() {
     fetchTurfs();
   }, [setTurfs]);
 
+  useEffect(() => {
+    if (!isLoading && turfs.length > 0) {
+      const ctx = gsap.context(() => {
+        gsap.fromTo(
+          ".turf-title-anim",
+          { y: 50, opacity: 0 },
+          {
+            y: 0,
+            opacity: 1,
+            duration: 1,
+            ease: "power3.out",
+            scrollTrigger: {
+              trigger: containerRef.current,
+              start: "top 80%",
+            },
+          }
+        );
+
+        gsap.fromTo(
+          galleryRef.current?.children || [],
+          { y: 100, opacity: 0 },
+          {
+            y: 0,
+            opacity: 1,
+            duration: 0.8,
+            stagger: 0.1,
+            ease: "power3.out",
+            scrollTrigger: {
+              trigger: galleryRef.current,
+              start: "top 85%",
+            },
+          }
+        );
+      }, containerRef);
+      return () => ctx.revert();
+    }
+  }, [isLoading, turfs]);
+
   return (
-    <div className="relative flex flex-col items-center justify-center px-6 py-16 min-h-screen overflow-hidden bg-green-100">
-      {/* Background Elements */}
-      <div className="absolute inset-0 bg-gradient-to-r from-green-500 to-green-700 opacity-20 blur-3xl"></div>
-      <div className="absolute inset-0 flex justify-center items-center">
-        <div className="w-96 h-96 bg-white rounded-full opacity-10 blur-3xl"></div>
-      </div>
+    <div
+      ref={containerRef}
+      className="relative flex flex-col items-center justify-center px-6 py-24 min-h-screen overflow-hidden"
+    >
+      {/* Background Elements Removed */}
 
       {/* Heading */}
-      <div className="text-center max-w-7xl  mx-auto relative z-10">
-        <h2 className="text-4xl md:text-5xl font-extrabold text-green-900">
-          Choose Your Perfect Turf & Play Your Game!
+      <div className="turf-title-anim text-center max-w-4xl mx-auto relative z-10 mb-16 space-y-6">
+        <h2 className="text-4xl md:text-6xl font-black text-white font-heading uppercase italic tracking-tighter">
+          Choose Your{" "}
+          <span className="text-stroke-neon text-transparent">Turf</span> &{" "}
+          <span className="text-turf-neon">Play!</span>
         </h2>
-        <p className="text-lg text-green-700 max-w-2xl mx-auto mt-2">
+        <p className="text-lg md:text-xl text-gray-400 max-w-2xl mx-auto">
           Football, Cricket, or Multi-Sport—Book the best turf for your game,
           anytime!
         </p>
+        <div className="w-24 h-1 bg-gradient-to-r from-transparent via-turf-neon to-transparent mx-auto rounded-full"></div>
       </div>
 
       {/* Turf Gallery */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 mt-12 relative z-10">
+      <div
+        ref={galleryRef}
+        className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 w-full max-w-7xl relative z-10"
+      >
         {isLoading && (
-          <div className="col-span-3 text-center">
-            <p className="text-lg text-green-700">Loading turfs...</p>
+          <div className="col-span-3 text-center py-20">
+            <div className="inline-block w-12 h-12 border-4 border-turf-neon border-t-transparent rounded-full animate-spin"></div>
+            <p className="text-lg text-turf-neon mt-4 font-bold animate-pulse">
+              Loading Arena...
+            </p>
           </div>
         )}
+
+        {!isLoading && turfs.length === 0 && (
+          <div className="col-span-1 sm:col-span-2 lg:col-span-3 text-center py-20">
+            <div className="bg-white/5 rounded-2xl p-8 max-w-md mx-auto border border-white/10 backdrop-blur-sm">
+              <p className="text-xl text-gray-300 font-bold mb-2 font-heading uppercase tracking-wide">
+                No Arenas Found
+              </p>
+              <p className="text-gray-500 text-sm">
+                It seems quiet here. Check back later for available turfs!
+              </p>
+            </div>
+          </div>
+        )}
+
         {turfs.map((turf) => (
-          <div
+          <GlassCard
             key={turf.id}
+            noPadding
             className={cn(
-              "rounded-lg shadow-lg overflow-hidden relative  bg-white transition-transform transform hover:scale-105",
-              turf.is_disabled ? " cursor-not-allowed border" : "cursor-pointer"
+              "overflow-hidden group hover:-translate-y-2 transition-all duration-500 hover:shadow-neon-blue",
+              turf.is_disabled ? "opacity-70 grayscale" : "cursor-pointer"
             )}
           >
-            {/* Background Image */}
-            <img
-              src={turf.image_url}
-              alt={turf.name}
-              className="w-full h-48 object-cover"
-            />
-            {/* Content */}
+            {/* Image Container */}
+            <div className="relative h-64 overflow-hidden">
+              <img
+                src={turf.image_url}
+                alt={turf.name}
+                className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-turf-dark via-transparent to-transparent opacity-80" />
 
-            <div className="p-6">
-              <h3 className="text-xl font-bold text-green-900 mb-2">
+              <div className="absolute top-4 right-4 bg-black/60 backdrop-blur-md px-3 py-1 rounded-full border border-white/10">
+                <span className="text-xs font-bold text-turf-neon uppercase tracking-wider">
+                  {turf.is_disabled ? "Coming Soon" : "Available"}
+                </span>
+              </div>
+            </div>
+
+            {/* Content */}
+            <div className="p-6 relative">
+              <h3 className="text-2xl font-bold text-white mb-2 font-heading uppercase tracking-wide group-hover:text-turf-blue transition-colors">
                 {turf.name}
               </h3>
-              <p className="text-green-700 mb-4">Located at {turf.location}</p>
+              <p className="text-gray-400 mb-6 flex items-center gap-2 text-sm">
+                <span className="w-1.5 h-1.5 rounded-full bg-turf-neon"></span>
+                Located at {turf.location}
+              </p>
+
               {turf.is_disabled ? (
-                <p className="w-full  text-center text-green-500 font-semibold py-2 rounded-lg transition">
+                <div className="w-full text-center py-3 rounded-xl border border-red-500/20 bg-red-500/10 text-red-500 font-bold uppercase tracking-wider text-sm">
                   {turf.disabled_reason}
-                </p>
+                </div>
               ) : (
                 <Button
                   disabled={turf.is_disabled}
                   onClick={() => {
                     setSelectedTurf(turf);
-
                     toast.success("Turf selected: " + turf.name);
-                    // Redirect to booking page
                     router.push("/booking");
                   }}
-                  className="w-full bg-green-600 hover:bg-green-500 text-white font-semibold py-2 rounded-lg transition"
+                  className="w-full bg-turf-neon hover:bg-turf-neon/80 text-turf-dark font-black py-6 rounded-xl transition-all shadow-lg shadow-neon-green/20 group-hover:shadow-neon-green/50 uppercase tracking-widest text-sm"
                 >
                   Book Now
                 </Button>
               )}
             </div>
-          </div>
+          </GlassCard>
         ))}
       </div>
     </div>

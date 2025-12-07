@@ -210,24 +210,28 @@ export function TimePicker({
   };
 
   return (
-    <div className="flex flex-col items-center">
+    <div className="w-full flex flex-col items-center">
       <Select
         onValueChange={handleTimeChange}
         value={selectedTime || undefined}
         disabled={disabled}
       >
-        <SelectTrigger>
+        <SelectTrigger className="bg-transparent border-none text-white h-auto w-full p-2 focus:ring-0 focus:ring-offset-0">
           <SelectValue placeholder="Select Time" />
         </SelectTrigger>
-        <SelectContent>
+        <SelectContent className="bg-black border border-white/10 text-white max-h-60 z-[9999] overflow-y-auto">
           {timeSlots.map((time) => (
-            <SelectItem key={time} value={time}>
+            <SelectItem
+              key={time}
+              value={time}
+              className="text-white hover:bg-turf-neon hover:text-turf-dark focus:bg-turf-neon focus:text-turf-dark cursor-pointer pl-8"
+            >
               {format(parse(time, "HH:mm:ss", new Date()), "hh:mm a")}
             </SelectItem>
           ))}
         </SelectContent>
       </Select>
-      {error && <p className="text-red-500 text-sm mt-2">{error}</p>}
+      {error && <p className="text-red-500 text-xs mt-1">{error}</p>}
     </div>
   );
 }

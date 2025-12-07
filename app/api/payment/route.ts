@@ -25,15 +25,13 @@ export async function POST(req: Request) {
       );
     }
 
-    console.log("test")
+    console.log("test");
 
     // Determine API endpoint based on environment mode
-    // const BASE_URL =
-    //   ENV_MODE === "LIVE"
-    //     ? "https://api.cashfree.com/pg/orders"
-    //     : "https://sandbox.cashfree.com/pg/orders";
-
-    const BASE_URL ="https://sandbox.cashfree.com/pg/orders"
+    const BASE_URL =
+      ENV_MODE === "LIVE"
+        ? "https://api.cashfree.com/pg/orders"
+        : "https://sandbox.cashfree.com/pg/orders";
 
     // Set return and notification URLs from environment variables
     const RETURN_URL = process.env.CASHFREE_RETURN_URL;

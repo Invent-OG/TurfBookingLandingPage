@@ -2,18 +2,21 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Button } from "@/components/ui/button";
+import { GlassCard } from "@/components/ui/glass-card";
+import { NeonButton } from "@/components/ui/neon-button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Dialog,
   DialogTrigger,
   DialogContent,
   DialogTitle,
+  DialogHeader,
+  DialogFooter,
 } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { supabase } from "@/lib/supabase";
+import { LogOut, Lock, User, KeyRound, Mail } from "lucide-react";
 
 const AdminSettings = () => {
   const [currentPassword, setCurrentPassword] = useState("");
@@ -27,15 +30,15 @@ const AdminSettings = () => {
     const fetchAdminDetails = async () => {
       const adminId = localStorage.getItem("adminId");
 
-      // Fetch admin details from the "users" table
       const { data, error: fetchError } = await supabase
-        .from("users") // Change this if your table name is different
+        .from("users")
         .select("email")
         .eq("id", adminId)
         .single();
 
       if (fetchError) {
-        toast.error("Failed to fetch admin details.");
+        // Silent fail or toast if needed, but keeping it minimal for now
+        console.error("Failed to fetch admin details");
         return;
       }
 
@@ -43,7 +46,7 @@ const AdminSettings = () => {
     };
 
     fetchAdminDetails();
-  }, [router, supabase]);
+  }, [router]);
 
   const handlePasswordReset = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -91,74 +94,149 @@ const AdminSettings = () => {
     router.replace("/admin/login");
   };
 
-  return (
-    <div className="max-w-2xl mx-auto mt-10 p-6">
-      <h1 className="text-3xl font-bold mb-6 text-center">Settings</h1>
-      <Card>
-        <CardHeader>
-          <CardTitle>Admin Details</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div>
-            <Label>Email</Label>
-            <Input type="email" value={admin?.email || "Loading..."} disabled />
-          </div>
-          <div>
-            <Label>Password</Label>
-            <Input type="password" value="********" disabled />
-          </div>
-        </CardContent>
-      </Card>
+  const inputClasses =
+    "bg-white/5 border-white/10 text-white placeholder-gray-500 focus:border-turf-neon/50 focus:ring-1 focus:ring-turf-neon/20 rounded-xl pl-10";
+  const labelClasses = "text-gray-300 font-medium mb-1.5 block";
 
-      <div className="mt-6 space-y-4">
-        <Dialog>
-          <DialogTrigger asChild>
-            <Button className="w-full">Reset Password</Button>
-          </DialogTrigger>
-          <DialogContent>
-            <DialogTitle>Reset Password</DialogTitle>
-            <form onSubmit={handlePasswordReset} className="space-y-4">
-              <div>
-                <Label>Current Password</Label>
-                <Input
-                  type="password"
-                  value={currentPassword}
-                  onChange={(e) => setCurrentPassword(e.target.value)}
-                  required
-                />
-              </div>
-              <div>
-                <Label>New Password</Label>
-                <Input
-                  type="password"
-                  value={newPassword}
-                  onChange={(e) => setNewPassword(e.target.value)}
-                  required
-                />
-              </div>
-              <div>
-                <Label>Confirm New Password</Label>
-                <Input
-                  type="password"
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                  required
-                />
-              </div>
-              <Button type="submit" className="w-full" disabled={loading}>
-                {loading ? "Updating..." : "Update Password"}
-              </Button>
-            </form>
-          </DialogContent>
-        </Dialog>
+  return (
+    <div className="max-w-3xl mx-auto pb-10">
+      <div className="mb-8">
+        <h1 className="text-3xl font-bold text-white font-heading tracking-wide">
+          Settings
+        </h1>
+        <p className="text-gray-400 mt-1">
+          Manage your account preferences and security.
+        </p>
       </div>
 
-      <Button
-        onClick={handleLogout}
-        className="w-full mt-6 bg-red-500 hover:bg-red-600"
-      >
-        Logout
-      </Button>
+      <div className="space-y-8">
+        <GlassCard title="Profile Details" className="overflow-hidden">
+          <div className="space-y-6">
+            <div className="flex items-center gap-4 p-4 rounded-xl bg-white/5 border border-white/10">
+              <div className="w-16 h-16 rounded-full bg-turf-neon/10 flex items-center justify-center text-turf-neon border border-turf-neon/20">
+                <User className="w-8 h-8" />
+              </div>
+              <div>
+                <h3 className="text-lg font-bold text-white">Administrator</h3>
+                <p className="text-gray-400 text-sm">Super Admin Access</p>
+              </div>
+            </div>
+
+            <div className="space-y-1 relative">
+              <Label className={labelClasses}>Email Address</Label>
+              <div className="relative">
+                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
+                <Input
+                  type="email"
+                  value={admin?.email || "Loading..."}
+                  disabled
+                  className="bg-black/20 border-white/10 text-gray-400 pl-10 cursor-not-allowed"
+                />
+              </div>
+            </div>
+
+            <div className="space-y-1 relative">
+              <Label className={labelClasses}>Password</Label>
+              <div className="relative">
+                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
+                <Input
+                  type="password"
+                  value="********"
+                  disabled
+                  className="bg-black/20 border-white/10 text-gray-400 pl-10 cursor-not-allowed"
+                />
+              </div>
+            </div>
+          </div>
+        </GlassCard>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <GlassCard className="flex flex-col justify-center items-center text-center p-8">
+            <div className="w-12 h-12 rounded-full bg-turf-neon/10 flex items-center justify-center text-turf-neon mb-4">
+              <KeyRound className="w-6 h-6" />
+            </div>
+            <h3 className="text-lg font-bold text-white mb-2">
+              Change Password
+            </h3>
+            <p className="text-gray-400 text-sm mb-6">
+              Update your password to keep your account secure.
+            </p>
+
+            <Dialog>
+              <DialogTrigger asChild>
+                <NeonButton variant="secondary" className="w-full">
+                  Reset Password
+                </NeonButton>
+              </DialogTrigger>
+              <DialogContent className="bg-turf-dark border border-white/10 text-white sm:max-w-md">
+                <DialogHeader>
+                  <DialogTitle>Reset Password</DialogTitle>
+                </DialogHeader>
+                <form onSubmit={handlePasswordReset} className="space-y-4 py-4">
+                  <div className="space-y-2">
+                    <Label>Current Password</Label>
+                    <Input
+                      type="password"
+                      value={currentPassword}
+                      onChange={(e) => setCurrentPassword(e.target.value)}
+                      required
+                      className="bg-white/5 border-white/10 text-white"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>New Password</Label>
+                    <Input
+                      type="password"
+                      value={newPassword}
+                      onChange={(e) => setNewPassword(e.target.value)}
+                      required
+                      className="bg-white/5 border-white/10 text-white"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Confirm New Password</Label>
+                    <Input
+                      type="password"
+                      value={confirmPassword}
+                      onChange={(e) => setConfirmPassword(e.target.value)}
+                      required
+                      className="bg-white/5 border-white/10 text-white"
+                    />
+                  </div>
+                  <DialogFooter className="mt-4">
+                    <NeonButton
+                      type="submit"
+                      variant="primary"
+                      glow
+                      disabled={loading}
+                      className="w-full"
+                    >
+                      {loading ? "Updating..." : "Update Password"}
+                    </NeonButton>
+                  </DialogFooter>
+                </form>
+              </DialogContent>
+            </Dialog>
+          </GlassCard>
+
+          <GlassCard className="flex flex-col justify-center items-center text-center p-8 bg-red-500/5 hover:bg-red-500/10 transition-colors border-red-500/20">
+            <div className="w-12 h-12 rounded-full bg-red-500/10 flex items-center justify-center text-red-500 mb-4">
+              <LogOut className="w-6 h-6" />
+            </div>
+            <h3 className="text-lg font-bold text-white mb-2">Sign Out</h3>
+            <p className="text-gray-400 text-sm mb-6">
+              Securely log out of your admin account.
+            </p>
+            <NeonButton
+              onClick={handleLogout}
+              variant="danger"
+              className="w-full"
+            >
+              Logout
+            </NeonButton>
+          </GlassCard>
+        </div>
+      </div>
     </div>
   );
 };

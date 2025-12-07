@@ -6,6 +6,8 @@
   --foreground-rgb: 0, 0, 0;
   --background-start-rgb: 214, 219, 220;
   --background-end-rgb: 255, 255, 255;
+  --font-sans: 'Inter', sans-serif;
+  --font-heading: 'Outfit', sans-serif; /* Example for "Sport-styled" if loaded */
 }
 
 @media (prefers-color-scheme: dark) {
@@ -54,7 +56,7 @@
   }
 
   .dark {
-    --background: 0 0% 3.9%;
+    --background: 220 17% 7%; /* #0f1115 matches turf-dark */
     --foreground: 0 0% 98%;
     --card: 0 0% 3.9%;
     --card-foreground: 0 0% 98%;
@@ -111,4 +113,41 @@
 
 .ant-form-item-label > label {
   font-weight: 500 !important;
+}
+
+/* Admin Panel Custom Utilities */
+@layer utilities {
+  .glass-panel {
+    @apply bg-turf-glass-surface backdrop-blur-xl border border-turf-glass-border shadow-glass;
+  }
+  
+  .glass-sidebar {
+    @apply bg-turf-dark/90 backdrop-blur-xl border-r border-turf-glass-border;
+  }
+
+  .glass-header {
+    @apply bg-turf-dark/80 backdrop-blur-md border-b border-turf-glass-border sticky top-0 z-50;
+  }
+
+  .text-shadow {
+    text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+  }
+  
+  .text-glow {
+    text-shadow: 0 0 10px currentColor;
+  }
+  
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+  
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  .text-stroke-neon {
+    -webkit-text-stroke: 2px #ccff00;
+    color: transparent;
+  }
 }

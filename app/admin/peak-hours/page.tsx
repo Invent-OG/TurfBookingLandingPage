@@ -1,10 +1,10 @@
 "use client";
 
 import { useEffect, useState, useTransition } from "react";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import { Label } from "@/components/ui/label";
+import { GlassCard } from "@/components/ui/glass-card";
+import { NeonButton } from "@/components/ui/neon-button";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import {
   Select,
   SelectTrigger,
@@ -28,6 +28,13 @@ import { z } from "zod";
 import { useTurfStore } from "@/lib/store/turf";
 import { supabase } from "@/lib/supabase";
 import { formatToAMPM } from "@/lib/convertTime";
+import {
+  Clock,
+  Calendar as CalendarIcon,
+  Trash2,
+  Edit2,
+  Plus,
+} from "lucide-react";
 
 type PeakHour = {
   id: string;
@@ -39,11 +46,6 @@ type PeakHour = {
   end_time: string;
   price: number;
 };
-
-const mockTurfs = [
-  { id: "1", name: "GRASP Turf" },
-  { id: "2", name: "Downtown Arena" },
-];
 
 const weekDays = [
   "Monday",
@@ -64,7 +66,7 @@ const peakHourSchema = z.object({
 });
 
 export default function TurfPeakHoursUI() {
-  const { turfs, setTurfs } = useTurfStore();
+  const { turfs } = useTurfStore(); // Assuming setTurfs is not needed directly here if store handles it or we just read
 
   const [selectedTurfId, setSelectedTurfId] = useState<string>();
   const [peakHours, setPeakHours] = useState<PeakHour[]>([]);
@@ -226,208 +228,272 @@ export default function TurfPeakHoursUI() {
     setOpen(true);
   };
 
+  const inputClasses =
+    "bg-white/5 border-white/10 text-white placeholder-gray-500 focus:border-turf-neon/50 focus:ring-1 focus:ring-turf-neon/20 rounded-xl";
+  const labelClasses = "text-gray-300 font-medium mb-1.5 block";
+
   return (
-    <div className="max-w-4xl mx-auto mt-6 space-y-6">
-      <div className="flex justify-between items-center">
-        <div className="flex gap-5 items-center">
-          <Label>Peak Hours for Turf:</Label>
-          <Select value={selectedTurfId} onValueChange={setSelectedTurfId}>
-            <SelectTrigger className="w-[200px]">
-              <SelectValue placeholder="Select Turf" />
-            </SelectTrigger>
-            <SelectContent>
-              {turfs.map((turf) => (
-                <SelectItem key={turf.id} value={turf.id}>
-                  {turf.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-        <Dialog
-          open={open}
-          onOpenChange={(val) => {
-            setOpen(val);
-            if (!val) resetForm();
-          }}
-        >
-          <DialogTrigger asChild>
-            <Button disabled={!selectedTurfId}>+ Add Peak Hour</Button>
-          </DialogTrigger>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>
-                {editMode ? "Edit Peak Hour" : "Add Peak Hour"}
-              </DialogTitle>
-            </DialogHeader>
-            <div className="grid gap-4 py-2">
-              <div>
-                <Label className="mb-1">Peak Hour Type</Label>
-                <RadioGroup
-                  value={type}
-                  onValueChange={(v) => setType(v as "day" | "date")}
-                  className="flex gap-4 mt-2"
-                >
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="day" id="day" />
-                    <Label htmlFor="day">Recurring (Day)</Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="date" id="date" />
-                    <Label htmlFor="date">Specific Date</Label>
-                  </div>
-                </RadioGroup>
-              </div>
-              {type === "day" ? (
-                <div>
-                  <Label>Select Days of Week</Label>
-                  <div className="grid grid-cols-2 gap-2 mt-2">
-                    {weekDays.map((day) => (
-                      <label key={day} className="flex items-center gap-2">
-                        <input
-                          type="checkbox"
-                          value={day}
-                          checked={selectedDays.includes(day)}
-                          onChange={(e) => {
-                            if (e.target.checked) {
-                              setSelectedDays([...selectedDays, day]);
-                            } else {
-                              setSelectedDays(
-                                selectedDays.filter((d) => d !== day)
-                              );
-                            }
-                          }}
-                        />
-                        <span>{day}</span>
-                      </label>
-                    ))}
-                  </div>
-                </div>
-              ) : (
-                <div>
-                  <Label>Select Date</Label>
-                  <Calendar
-                    mode="single"
-                    selected={specificDate}
-                    onSelect={setSpecificDate}
-                    className="rounded-md border mt-1"
-                  />
-                  {specificDate && (
-                    <p className="text-sm text-muted-foreground mt-1">
-                      Selected: {format(specificDate, "PPP")}
-                    </p>
-                  )}
-                </div>
-              )}
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <div>
-                  <Label>Start Time</Label>
-                  <Input
-                    type="time"
-                    value={startTime}
-                    onChange={(e) => setStartTime(e.target.value)}
-                  />
-                </div>
-                <div>
-                  <Label>End Time</Label>
-                  <Input
-                    type="time"
-                    value={endTime}
-                    onChange={(e) => setEndTime(e.target.value)}
-                  />
-                </div>
-                <div>
-                  <Label>Price (₹)</Label>
-                  <Input
-                    type="number"
-                    value={price}
-                    onChange={(e) => setPrice(e.target.value)}
-                  />
-                </div>
-              </div>
-            </div>
-            <DialogFooter>
-              <Button disabled={loading} onClick={handleSave}>
-                {loading ? "Saving..." : editMode ? "Update" : "Save"}
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
+    <div className="max-w-5xl mx-auto pb-10 space-y-8">
+      <div>
+        <h1 className="text-3xl font-bold text-white font-heading tracking-wide">
+          Peak Hours Management
+        </h1>
+        <p className="text-gray-400 mt-1">
+          Set custom pricing for specific times and days to maximize revenue.
+        </p>
       </div>
 
-      <Card>
-        <CardContent className="p-4 space-y-4">
-          <h3 className="text-lg font-semibold">Peak Hours List</h3>
-          {selectedTurfId ? (
-            peakHours.length > 0 ? (
-              peakHours.map((entry) => (
-                <div
-                  key={entry.id}
-                  className="border p-3 rounded-md flex justify-between items-center"
-                >
-                  <div>
-                    <p className="font-medium">
-                      {entry.type === "day"
-                        ? entry.days_of_week?.join(", ")
-                        : entry.specific_date
-                          ? format(new Date(entry.specific_date), "PPP")
-                          : ""}
-                    </p>
-                    <p className="text-sm text-muted-foreground">
-                      {formatToAMPM(entry.start_time)} –
-                      {formatToAMPM(entry.end_time)} | ₹{entry.price}
-                    </p>
+      <GlassCard className="overflow-visible">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-8">
+          <div className="flex-1 w-full md:w-auto space-y-2">
+            <Label className={labelClasses}>Select Arena</Label>
+            <Select value={selectedTurfId} onValueChange={setSelectedTurfId}>
+              <SelectTrigger className={inputClasses}>
+                <SelectValue placeholder="Choose an arena..." />
+              </SelectTrigger>
+              <SelectContent className="bg-turf-dark border-white/10 text-white">
+                {turfs.map((turf) => (
+                  <SelectItem key={turf.id} value={turf.id}>
+                    {turf.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <Dialog
+            open={open}
+            onOpenChange={(val) => {
+              setOpen(val);
+              if (!val) resetForm();
+            }}
+          >
+            <DialogTrigger asChild>
+              <NeonButton
+                disabled={!selectedTurfId}
+                variant="primary"
+                glow
+                className="mt-6 md:mt-2"
+              >
+                <Plus className="w-4 h-4 mr-2" /> Add Peak Hour slot
+              </NeonButton>
+            </DialogTrigger>
+            <DialogContent className="bg-turf-dark border border-white/10 text-white max-w-lg">
+              <DialogHeader>
+                <DialogTitle>
+                  {editMode ? "Edit Peak Hour" : "Add Peak Hour Configuration"}
+                </DialogTitle>
+              </DialogHeader>
+              <div className="grid gap-6 py-4">
+                <div className="space-y-3">
+                  <Label className={labelClasses}>Configuration Type</Label>
+                  <RadioGroup
+                    value={type}
+                    onValueChange={(v) => setType(v as "day" | "date")}
+                    className="flex gap-4"
+                  >
+                    <div className="flex items-center space-x-2 border border-white/10 rounded-lg p-3 flex-1 justify-center cursor-pointer hover:bg-white/5 transition-colors">
+                      <RadioGroupItem value="day" id="day" />
+                      <Label htmlFor="day" className="cursor-pointer mb-0">
+                        Recurring (Day)
+                      </Label>
+                    </div>
+                    <div className="flex items-center space-x-2 border border-white/10 rounded-lg p-3 flex-1 justify-center cursor-pointer hover:bg-white/5 transition-colors">
+                      <RadioGroupItem value="date" id="date" />
+                      <Label htmlFor="date" className="cursor-pointer mb-0">
+                        Specific Date
+                      </Label>
+                    </div>
+                  </RadioGroup>
+                </div>
+
+                {type === "day" ? (
+                  <div className="space-y-3">
+                    <Label className={labelClasses}>Select Days</Label>
+                    <div className="grid grid-cols-3 gap-2">
+                      {weekDays.map((day) => (
+                        <label
+                          key={day}
+                          className={`flex items-center justify-center gap-2 p-2 rounded-lg border cursor-pointer transition-all ${selectedDays.includes(day) ? "bg-turf-neon/20 border-turf-neon text-white" : "border-white/10 hover:bg-white/5 text-gray-400"}`}
+                        >
+                          <input
+                            type="checkbox"
+                            className="hidden"
+                            value={day}
+                            checked={selectedDays.includes(day)}
+                            onChange={(e) => {
+                              if (e.target.checked)
+                                setSelectedDays([...selectedDays, day]);
+                              else
+                                setSelectedDays(
+                                  selectedDays.filter((d) => d !== day)
+                                );
+                            }}
+                          />
+                          <span className="text-xs font-medium">
+                            {day.slice(0, 3)}
+                          </span>
+                        </label>
+                      ))}
+                    </div>
                   </div>
-                  <div className="flex gap-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleEdit(entry)}
-                    >
-                      Edit
-                    </Button>
-                    <Button
-                      variant="destructive"
-                      size="sm"
-                      onClick={() => setConfirmDeleteId(entry.id)}
-                    >
-                      Delete
-                    </Button>
+                ) : (
+                  <div className="space-y-3">
+                    <Label className={labelClasses}>Select Date</Label>
+                    <Calendar
+                      mode="single"
+                      selected={specificDate}
+                      onSelect={setSpecificDate}
+                      className="rounded-xl border border-white/10 bg-white/5 text-white"
+                    />
+                  </div>
+                )}
+
+                <div className="grid grid-cols-3 gap-4">
+                  <div className="space-y-1">
+                    <Label className={labelClasses}>Start Time</Label>
+                    <Input
+                      type="time"
+                      value={startTime}
+                      onChange={(e) => setStartTime(e.target.value)}
+                      className={inputClasses}
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <Label className={labelClasses}>End Time</Label>
+                    <Input
+                      type="time"
+                      value={endTime}
+                      onChange={(e) => setEndTime(e.target.value)}
+                      className={inputClasses}
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <Label className={labelClasses}>Price (₹)</Label>
+                    <Input
+                      type="number"
+                      value={price}
+                      onChange={(e) => setPrice(e.target.value)}
+                      className={inputClasses}
+                    />
                   </div>
                 </div>
-              ))
+              </div>
+              <DialogFooter>
+                <NeonButton
+                  disabled={loading}
+                  onClick={handleSave}
+                  variant="primary"
+                  glow
+                  className="w-full"
+                >
+                  {loading
+                    ? "Saving..."
+                    : editMode
+                      ? "Update Configuration"
+                      : "Save Configuration"}
+                </NeonButton>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+        </div>
+
+        <div className="space-y-4">
+          <h3 className="text-lg font-bold text-white border-b border-white/10 pb-2">
+            Active Configurations
+          </h3>
+          {selectedTurfId ? (
+            peakHours.length > 0 ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {peakHours.map((entry) => (
+                  <div
+                    key={entry.id}
+                    className="relative group bg-white/5 border border-white/10 rounded-xl p-5 hover:border-turf-neon/50 transition-all hover:bg-white/[0.07]"
+                  >
+                    <div className="absolute top-4 right-4 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <button
+                        onClick={() => handleEdit(entry)}
+                        className="p-1.5 rounded-lg bg-turf-blue/20 text-turf-blue hover:bg-turf-blue/30"
+                      >
+                        <Edit2 className="w-4 h-4" />
+                      </button>
+                      <button
+                        onClick={() => setConfirmDeleteId(entry.id)}
+                        className="p-1.5 rounded-lg bg-red-500/20 text-red-500 hover:bg-red-500/30"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
+                    <div className="flex items-start gap-3 mb-3">
+                      <div className="p-2 rounded-lg bg-turf-neon/10 text-turf-neon">
+                        {entry.type === "day" ? (
+                          <CalendarIcon className="w-5 h-5" />
+                        ) : (
+                          <Clock className="w-5 h-5" />
+                        )}
+                      </div>
+                      <div>
+                        <p className="text-sm font-bold text-white uppercase tracking-wider">
+                          {entry.type === "day"
+                            ? "Weekly Recurring"
+                            : "One-time Override"}
+                        </p>
+                        <p className="text-xs text-gray-400 mt-0.5">
+                          {entry.type === "day"
+                            ? entry.days_of_week?.join(", ")
+                            : entry.specific_date
+                              ? format(new Date(entry.specific_date), "PPP")
+                              : ""}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex items-center justify-between pt-3 border-t border-white/5">
+                      <div className="text-sm text-gray-300">
+                        {formatToAMPM(entry.start_time)} –{" "}
+                        {formatToAMPM(entry.end_time)}
+                      </div>
+                      <div className="text-lg font-bold text-turf-neon">
+                        ₹{entry.price}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
             ) : (
-              <p className="text-sm text-muted-foreground">
-                No peak hours for this turf yet.
-              </p>
+              <div className="text-center py-10 text-gray-500 bg-white/5 rounded-xl border border-white/5 border-dashed">
+                No peak hour configurations found for this arena.
+              </div>
             )
           ) : (
-            <p className="text-sm text-muted-foreground">
-              Please select a turf to view its peak hours.
-            </p>
+            <div className="text-center py-10 text-gray-500 bg-white/5 rounded-xl border border-white/5 border-dashed">
+              Please select an arena above to manage peak hours.
+            </div>
           )}
-        </CardContent>
-      </Card>
+        </div>
+      </GlassCard>
 
       <Dialog
         open={!!confirmDeleteId}
         onOpenChange={(open) => !open && setConfirmDeleteId(null)}
       >
-        <DialogContent>
+        <DialogContent className="bg-turf-dark border border-white/10 text-white">
           <DialogHeader>
-            <DialogTitle>Are you sure?</DialogTitle>
+            <DialogTitle>Delete Configuration?</DialogTitle>
           </DialogHeader>
-          <p>
-            This action cannot be undone. This will permanently delete the peak
-            hour slot.
+          <p className="text-gray-400">
+            This action cannot be undone. This pricing rule will be permanently
+            removed.
           </p>
           <DialogFooter className="mt-4">
-            <Button variant="outline" onClick={() => setConfirmDeleteId(null)}>
+            <NeonButton
+              variant="ghost"
+              onClick={() => setConfirmDeleteId(null)}
+            >
               Cancel
-            </Button>
-            <Button variant="destructive" onClick={handleDelete}>
+            </NeonButton>
+            <NeonButton variant="danger" onClick={handleDelete}>
               Delete
-            </Button>
+            </NeonButton>
           </DialogFooter>
         </DialogContent>
       </Dialog>

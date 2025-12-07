@@ -1,9 +1,10 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Button } from "@/components/ui/button";
+import { GlassCard } from "@/components/ui/glass-card";
+import { NeonButton } from "@/components/ui/neon-button";
 import { Input } from "@/components/ui/input";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Label } from "@/components/ui/label";
 import {
   Select,
   SelectContent,
@@ -17,6 +18,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
+  DialogFooter,
 } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { supabase } from "@/lib/supabase";
@@ -27,7 +29,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { CalendarIcon, CircleX, X } from "lucide-react";
+import { CalendarIcon, Trash2, Ban } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 type Turf = {
@@ -64,7 +66,6 @@ export default function BlockDatePage() {
     const fetchTurfs = async () => {
       const { data, error } = await supabase.from("turfs").select("id, name");
       if (error) {
-        console.error("Failed to fetch turfs:", error.message);
         toast.error("Failed to load turfs.");
         return;
       }
@@ -89,13 +90,11 @@ export default function BlockDatePage() {
         .eq("turf_id", selectedTurf);
 
       if (blockedError) {
-        console.error("Failed to fetch blocked dates:", blockedError.message);
         toast.error("Failed to load blocked dates.");
         return;
       }
 
       if (bookedError) {
-        console.error("Failed to fetch booked dates:", bookedError.message);
         toast.error("Failed to load booked dates.");
         return;
       }
@@ -114,10 +113,10 @@ export default function BlockDatePage() {
       isBefore(date, new Date()) ||
       blockedDates.some(
         (d) =>
-          formattedDate === d.start_date || // Disable single blocked dates
+          formattedDate === d.start_date ||
           (d.end_date &&
             formattedDate >= d.start_date &&
-            formattedDate <= d.end_date) // Disable range of blocked dates
+            formattedDate <= d.end_date)
       ) ||
       bookedDates.includes(formattedDate)
     );
@@ -181,134 +180,193 @@ export default function BlockDatePage() {
     }
   };
 
+  const inputClasses =
+    "bg-white/5 border-white/10 text-white placeholder-gray-500 focus:border-turf-neon/50 focus:ring-1 focus:ring-turf-neon/20 rounded-xl";
+  const labelClasses = "text-gray-300 font-medium mb-1.5 block";
+
   return (
-    <div className="p-6  space-y-6">
-      <div className="flex items-center justify-between">
-        <div className="w-1/4">
-          <Select onValueChange={setSelectedTurf}>
-            <SelectTrigger>
-              <SelectValue placeholder="Select Turf" />
-            </SelectTrigger>
-            <SelectContent>
-              {turfs.map((turf) => (
-                <SelectItem key={turf.id} value={turf.id}>
-                  {turf.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+    <div className="max-w-5xl mx-auto pb-10 space-y-8">
+      <div>
+        <h1 className="text-3xl font-bold text-white font-heading tracking-wide">
+          Block Multiple Dates
+        </h1>
+        <p className="text-gray-400 mt-1">
+          Prevent bookings for a continuous range of dates.
+        </p>
+      </div>
+
+      <GlassCard className="overflow-visible">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-8">
+          <div className="flex-1 w-full md:w-auto space-y-2">
+            <Label className={labelClasses}>Select Arena</Label>
+            <Select value={selectedTurf} onValueChange={setSelectedTurf}>
+              <SelectTrigger className={inputClasses}>
+                <SelectValue placeholder="Choose an arena..." />
+              </SelectTrigger>
+              <SelectContent className="bg-turf-dark border-white/10 text-white">
+                {turfs.map((turf) => (
+                  <SelectItem key={turf.id} value={turf.id}>
+                    {turf.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+            <DialogTrigger asChild>
+              <NeonButton
+                disabled={!selectedTurf}
+                variant="primary"
+                glow
+                className="mt-6 md:mt-2"
+              >
+                <Ban className="w-4 h-4 mr-2" /> Block Range
+              </NeonButton>
+            </DialogTrigger>
+            <DialogContent className="bg-turf-dark border border-white/10 text-white">
+              <DialogHeader>
+                <DialogTitle>Block Date Range</DialogTitle>
+              </DialogHeader>
+              <div className="space-y-4 py-4">
+                <div className="space-y-1">
+                  <Label>Select Range</Label>
+                  <Popover>
+                    <PopoverTrigger
+                      asChild
+                      className="flex items-center space-x-2"
+                    >
+                      <NeonButton
+                        id="date"
+                        variant="secondary"
+                        className={cn(
+                          "w-full flex justify-between items-center font-normal px-4 py-2 border-white/10 bg-white/5 text-left",
+                          !dateRange && "text-gray-500"
+                        )}
+                      >
+                        <div className="flex items-center space-x-2">
+                          <CalendarIcon className="w-4 h-4 text-turf-neon" />
+                          {dateRange?.from ? (
+                            dateRange.to ? (
+                              <>
+                                {format(dateRange.from, "MMM dd, y")} -{" "}
+                                {format(dateRange.to, "MMM dd, y")}
+                              </>
+                            ) : (
+                              format(dateRange.from, "MMM dd, y")
+                            )
+                          ) : (
+                            <span className="text-gray-400">
+                              Pick a date range
+                            </span>
+                          )}
+                        </div>
+                      </NeonButton>
+                    </PopoverTrigger>
+                    <PopoverContent
+                      className="w-auto p-0 bg-turf-dark border border-white/10"
+                      align="start"
+                    >
+                      <Calendar
+                        initialFocus
+                        mode="range"
+                        defaultMonth={dateRange?.from}
+                        selected={dateRange}
+                        onSelect={(range) =>
+                          setDateRange({
+                            from: range?.from,
+                            to: range?.to || undefined,
+                          })
+                        }
+                        numberOfMonths={2}
+                        disabled={isDateDisabled}
+                        className="bg-turf-dark text-white rounded-xl"
+                      />
+                    </PopoverContent>
+                  </Popover>
+                </div>
+                <div className="space-y-1">
+                  <Label>Reason (Optional)</Label>
+                  <Input
+                    type="text"
+                    placeholder="e.g. Field Renovation"
+                    value={reason}
+                    onChange={(e) => setReason(e.target.value)}
+                    className={inputClasses}
+                  />
+                </div>
+              </div>
+              <DialogFooter>
+                <NeonButton
+                  className="w-full"
+                  variant="primary"
+                  glow
+                  onClick={createBlockedDate}
+                >
+                  Confirm Block Range
+                </NeonButton>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
         </div>
 
-        <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-          <DialogTrigger asChild>
-            <Button disabled={!selectedTurf}>Block a Date Range</Button>
-          </DialogTrigger>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Block a Date Range</DialogTitle>
-            </DialogHeader>
-            <div className="space-y-4">
-              <Popover>
-                <PopoverTrigger asChild className="flex items-center space-x-2">
-                  <Button
-                    id="date"
-                    variant={"outline"}
-                    className={cn(
-                      "w-full flex justify-between items-center font-normal",
-                      !dateRange && "text-muted-foreground"
-                    )}
-                  >
-                    <div className="flex items-center space-x-2">
-                      <CalendarIcon />
-                      {dateRange?.from ? (
-                        dateRange.to ? (
-                          <>
-                            {format(dateRange.from, "LLL dd, y")} -{" "}
-                            {format(dateRange.to, "LLL dd, y")}
-                          </>
-                        ) : (
-                          format(dateRange.from, "LLL dd, y")
-                        )
-                      ) : (
-                        <span>Pick a dateRange</span>
-                      )}
-                    </div>
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0" align="start">
-                  <Calendar
-                    initialFocus
-                    mode="range"
-                    defaultMonth={dateRange?.from}
-                    selected={dateRange}
-                    onSelect={(range) =>
-                      setDateRange({
-                        from: range?.from,
-                        to: range?.to || undefined,
-                      })
-                    }
-                    numberOfMonths={2}
-                    disabled={isDateDisabled}
-                  />
-                </PopoverContent>
-              </Popover>
-              <Input
-                type="text"
-                placeholder="Reason (Optional)"
-                value={reason}
-                onChange={(e) => setReason(e.target.value)}
-              />
-              <Button onClick={createBlockedDate}>Confirm Block</Button>
-            </div>
-          </DialogContent>
-        </Dialog>
-      </div>
-
-      <div>
-        <table className="w-full text-left rounded-lg">
-          <thead className="bg-gray-100 ">
-            <tr>
-              <th className="px-4 py-2">Start Date</th>
-              <th className="px-4 py-2">End Date</th>
-              <th className="px-4 py-2">Reason</th>
-              <th className="border-b p-2">Action</th>
-            </tr>
-          </thead>
-          {blockedDates.length > 0 ? (
-            <tbody>
-              {blockedDates
-                .filter((d) => d.end_date)
-                .map((blockedDate) => (
-                  <tr key={blockedDate.id} className="">
-                    <td className="border-b p-2">{blockedDate.start_date}</td>
-                    <td className="border-b p-2">{blockedDate.end_date}</td>
-                    <td className="border-b p-2">{blockedDate.reason}</td>
-                    <td className="border-b p-2">
-                      <Button
-                        size="sm"
-                        variant="destructive"
-                        onClick={() => deleteBlockedDateRange(blockedDate.id)}
-                      >
-                        Delete
-                      </Button>
-                    </td>
-                  </tr>
-                ))}
-            </tbody>
-          ) : (
-            <tbody>
+        <div className="rounded-xl border border-white/10 overflow-hidden">
+          <table className="w-full text-left">
+            <thead className="bg-white/5 text-gray-400 uppercase text-xs font-semibold tracking-wider">
               <tr>
-                <td
-                  colSpan={3}
-                  className="border-b p-2 text-center text-gray-500"
-                >
-                  No blocked dates range found
-                </td>
+                <th className="px-6 py-4">Start Date</th>
+                <th className="px-6 py-4">End Date</th>
+                <th className="px-6 py-4">Reason</th>
+                <th className="px-6 py-4 text-right">Action</th>
               </tr>
+            </thead>
+            <tbody className="divide-y divide-white/5">
+              {blockedDates.length > 0 ? (
+                blockedDates
+                  .filter((d) => d.end_date)
+                  .map((blockedDate) => (
+                    <tr
+                      key={blockedDate.id}
+                      className="hover:bg-white/5 transition-colors"
+                    >
+                      <td className="px-6 py-4 text-white font-medium">
+                        {format(
+                          new Date(blockedDate.start_date),
+                          "MMM d, yyyy"
+                        )}
+                      </td>
+                      <td className="px-6 py-4 text-white font-medium">
+                        {format(new Date(blockedDate.end_date), "MMM d, yyyy")}
+                      </td>
+                      <td className="px-6 py-4 text-gray-400">
+                        {blockedDate.reason}
+                      </td>
+                      <td className="px-6 py-4 text-right">
+                        <NeonButton
+                          size="sm"
+                          variant="danger"
+                          onClick={() => deleteBlockedDateRange(blockedDate.id)}
+                          className="h-8 px-3"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </NeonButton>
+                      </td>
+                    </tr>
+                  ))
+              ) : (
+                <tr>
+                  <td
+                    colSpan={4}
+                    className="px-6 py-12 text-center text-gray-500 bg-white/5"
+                  >
+                    No blocked date ranges found for this arena.
+                  </td>
+                </tr>
+              )}
             </tbody>
-          )}
-        </table>
-      </div>
+          </table>
+        </div>
+      </GlassCard>
     </div>
   );
 }

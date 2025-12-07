@@ -119,17 +119,23 @@ const DateSelector: React.FC<DateSelectorProps> = ({
   };
 
   return (
-    <div className="bg-white w-full">
-      <div className="flex justify-between items-center mb-4">
-        <div className="flex items-center gap-2">
-          <span className="text-lg font-semibold">{monthLabel}</span>
+    <div className="w-full">
+      <div className="flex justify-between items-center mb-6">
+        <div className="flex items-center gap-3">
+          <span className="text-xl font-bold text-white tracking-tight">
+            {monthLabel}
+          </span>
           <Popover>
             <PopoverTrigger asChild>
-              <Button variant="outline">
-                <CalendarDays />
+              <Button
+                variant="ghost"
+                size="icon"
+                className="text-turf-neon hover:bg-turf-neon/10 hover:text-turf-neon"
+              >
+                <CalendarDays className="w-5 h-5" />
               </Button>
             </PopoverTrigger>
-            <PopoverContent className="w-auto p-0">
+            <PopoverContent className="w-auto p-0 bg-turf-dark border border-white/10 text-white">
               <Calendar
                 mode="single"
                 // selected={selectedDate || undefined}
@@ -150,43 +156,55 @@ const DateSelector: React.FC<DateSelectorProps> = ({
                   setMonthLabel(format(newMonth, "MMMM yyyy"));
                 }}
                 disabled={(date) => isDateDisabled(date)}
+                className="bg-black/90 text-white border-none"
               />
             </PopoverContent>
           </Popover>
         </div>
         <div className="flex gap-2">
-          <Button variant="outline" onClick={() => handleScroll("left")}>
-            <ChevronLeft />
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={() => handleScroll("left")}
+            className="bg-white/5 border-white/10 text-white hover:bg-white/10 hover:border-turf-neon/50 hover:text-turf-neon transition-colors"
+          >
+            <ChevronLeft className="w-4 h-4" />
           </Button>
-          <Button variant="outline" onClick={() => handleScroll("right")}>
-            <ChevronRight />
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={() => handleScroll("right")}
+            className="bg-white/5 border-white/10 text-white hover:bg-white/10 hover:border-turf-neon/50 hover:text-turf-neon transition-colors"
+          >
+            <ChevronRight className="w-4 h-4" />
           </Button>
         </div>
       </div>
 
       <div className="relative overflow-hidden">
         <div
-          className="flex overflow-x-auto gap-2 no-scrollbar"
+          className="flex overflow-x-auto gap-3 no-scrollbar py-2"
           ref={containerRef}
           style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
         >
           {Array.from({ length: totalDays }, (_, i) => {
             const date = addDays(today, i);
             const isDisabled = isDateDisabled(date);
+            const isSelected = isSameDay(selectedDate || today, date);
 
             return (
               <div
                 key={i}
                 data-date={date.toISOString()}
-                className={`flex flex-col items-center justify-center select-none min-w-[70px] h-20 rounded-lg shadow 
+                className={`flex flex-col items-center justify-center select-none min-w-[72px] h-24 rounded-2xl transition-all duration-300
                   ${
-                    isSameDay(selectedDate || today, date)
-                      ? "bg-black text-white"
-                      : "border text-black"
+                    isSelected
+                      ? "bg-turf-neon text-black shadow-[0_0_15px_-3px_rgba(204,255,0,0.5)] scale-105 z-10 font-bold"
+                      : "bg-white/5 border border-white/10 text-gray-400 hover:border-white/30 hover:bg-white/10"
                   }
                   ${
                     isDisabled
-                      ? "bg-gray-300 text-gray-600 cursor-not-allowed"
+                      ? "opacity-30 cursor-not-allowed bg-black/40 border-transparent"
                       : "cursor-pointer"
                   }
                 `}
@@ -203,15 +221,20 @@ const DateSelector: React.FC<DateSelectorProps> = ({
               >
                 <span
                   className={cn(
-                    isSameDay(selectedDate || today, date)
-                      ? "bg-black text-white"
-                      : " text-gray-400",
-                    "text-sm"
+                    "text-xs mb-1 uppercase tracking-wider font-medium",
+                    isSelected ? "text-black/70" : "text-gray-500"
                   )}
                 >
                   {weekdays[date.getDay()]}
                 </span>
-                <span className="text-lg font-bold">{date.getDate()}</span>
+                <span
+                  className={cn(
+                    "text-2xl",
+                    isSelected ? "font-black" : "font-normal"
+                  )}
+                >
+                  {date.getDate()}
+                </span>
               </div>
             );
           })}

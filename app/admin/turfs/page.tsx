@@ -1,7 +1,6 @@
 "use client";
 import { supabase } from "@/lib/supabase";
 import { useState, useEffect } from "react";
-import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
@@ -11,219 +10,251 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { toast } from "sonner";
-import { AlertTriangle, Plus } from "lucide-react";
+import {
+  AlertTriangle,
+  Plus,
+  MapPin,
+  Loader2,
+  Edit,
+  Trash2,
+  Clock,
+  Users,
+} from "lucide-react";
 import { useRouter } from "next/navigation";
 import { Turf } from "@/types/turf";
 import { useTurfStore } from "@/lib/store/turf";
+import { GlassCard } from "@/components/ui/glass-card";
+import { NeonButton } from "@/components/ui/neon-button";
+import { cn } from "@/lib/utils";
 
 function ManageTurfs() {
   const { turfs, setTurfs } = useTurfStore();
-
-  const [error, setError] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedTurf, setSelectedTurf] = useState<Turf | null>(null);
-
   const router = useRouter();
+
+  useEffect(() => {
+    fetchTurfs();
+  }, []);
+
+  const fetchTurfs = async () => {
+    setIsLoading(true);
+    const { data, error } = await supabase.from("turfs").select("*");
+    if (error) {
+      toast.error("Error fetching turfs");
+    } else {
+      setTurfs((data as Turf[]) || []);
+    }
+    setIsLoading(false);
+  };
 
   const formatTime = (time: string) => {
     if (!time) return "N/A";
-
-    const [hours, minutes] = time.split(":"); // Extract HH and MM
+    const [hours, minutes] = time.split(":");
     const hour = parseInt(hours, 10);
     const ampm = hour >= 12 ? "PM" : "AM";
-    const formattedHour = hour % 12 || 12; // Convert 24-hour to 12-hour format
-
+    const formattedHour = hour % 12 || 12;
     return `${formattedHour}:${minutes} ${ampm}`;
   };
 
-  useEffect(() => {
-    const fetchTurfs = async () => {
-      setIsLoading(true);
-      const { data, error } = await supabase.from("turfs").select("*");
-      if (error) {
-        setError(error);
-        toast.error("Error fetching turfs: " + error.message);
-      } else {
-        setTurfs(data as Turf[]);
-      }
-      setIsLoading(false);
-    };
-    fetchTurfs();
-
-    console.log(turfs, "global state");
-  }, [setTurfs]);
-
   const handleConfirmDelete = async () => {
     if (!selectedTurf) return;
-
     try {
-      const { id, image_url } = selectedTurf;
-
-      if (image_url) {
+      if (selectedTurf.image_url) {
         try {
-          // 🔍 Extract the file path correctly
-          const urlParts = new URL(image_url);
+          const urlParts = new URL(selectedTurf.image_url);
           const fullPath = decodeURIComponent(urlParts.pathname);
-          const bucketName = "turf-images"; // Change if needed
-
-          // Ensure only the relative path is extracted
+          const bucketName = "turf-images";
           const filePath = fullPath.split(`/${bucketName}/`)[1];
-
-          console.log("🔍 Extracted file path:", filePath);
-
-          // 🔥 Try deleting the image
-          const { error: storageError } = await supabase.storage
-            .from(bucketName)
-            .remove([filePath]);
-
-          if (storageError) {
-            console.error("❌ Error deleting image:", storageError.message);
-          } else {
-            console.log("✅ Image deleted successfully from Supabase storage");
-          }
-        } catch (pathError) {
-          console.error("❌ Error extracting file path:", pathError);
+          if (filePath)
+            await supabase.storage.from(bucketName).remove([filePath]);
+        } catch (e) {
+          console.error(e);
         }
       }
 
-      // ✅ Delete turf from database
       const { error: dbError } = await supabase
         .from("turfs")
         .delete()
-        .eq("id", id);
+        .eq("id", selectedTurf.id);
       if (dbError) throw dbError;
 
       toast.success("Turf deleted successfully");
-
-      // Refresh turfs list
-      const { data } = await supabase.from("turfs").select("*");
-      setTurfs(data as Turf[]);
+      fetchTurfs();
     } catch (error: any) {
-      toast.error("❌ Error deleting turf: " + error.message);
+      toast.error("Error deleting turf");
     } finally {
       setSelectedTurf(null);
     }
   };
 
+  if (isLoading && turfs.length === 0) {
+    return (
+      <div className="flex h-96 items-center justify-center">
+        <Loader2 className="animate-spin text-turf-neon h-8 w-8" />
+      </div>
+    );
+  }
+
   return (
-    <div className="p-6">
+    <div className="space-y-8">
       <div className="flex justify-between items-center">
-        <h1 className="text-2xl font-bold">Manage Turfs</h1>
-        <Button
-          onClick={() => {
-            router.push("/admin/turfs/create");
-          }}
-          className="mt-4"
+        <div>
+          <h1 className="text-3xl font-bold text-white font-heading tracking-wide">
+            My Turfs
+          </h1>
+          <p className="text-gray-400 mt-1">
+            Manage your arenas, pricing, and availability.
+          </p>
+        </div>
+        <NeonButton
+          onClick={() => router.push("/admin/turfs/create")}
+          className="flex items-center gap-2"
         >
-          <Plus /> Add New Turf
-        </Button>
+          <Plus size={18} /> Add Arena
+        </NeonButton>
       </div>
 
-      {error && error.message}
-      {isLoading ? (
-        <p className="text-center mt-4">Loading...</p>
-      ) : turfs.length === 0 ? (
-        <p className="text-center mt-4">No turfs available</p>
+      {turfs.length === 0 ? (
+        <div className="flex flex-col items-center justify-center p-20 glass-panel rounded-2xl border-dashed border-2 border-white/10">
+          <h3 className="text-xl font-bold text-white mb-2">
+            No Turfs Added Yet
+          </h3>
+          <p className="text-gray-400 mb-6">
+            Get started by adding your first arena.
+          </p>
+          <NeonButton onClick={() => router.push("/admin/turfs/create")}>
+            Add New Turf
+          </NeonButton>
+        </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mt-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {turfs.map((turf) => (
-            <div
+            <GlassCard
               key={turf.id}
-              className="border p-4 flex flex-col gap-5 justify-between  rounded-lg shadow-md"
+              className="group hover:border-turf-neon/50 transition-colors"
+              noPadding
             >
-              {turf.is_disabled && (
-                <div className="bg-red-100 text-red-800 p-2 flex flex-col items-center gap-2 rounded-md">
-                  <strong>Disabled: {turf.disabled_reason}</strong>
+              {/* Image Section */}
+              <div className="relative h-48 w-full overflow-hidden bg-black/50">
+                {turf.image_url ? (
+                  <img
+                    src={turf.image_url}
+                    alt={turf.name}
+                    className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                  />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center text-gray-500">
+                    No Image
+                  </div>
+                )}
+
+                {/* Status Badge */}
+                <div className="absolute top-4 left-4">
+                  {turf.is_disabled ? (
+                    <span className="px-3 py-1 bg-red-500 text-white text-xs font-bold rounded-full shadow-lg">
+                      Disabled
+                    </span>
+                  ) : (
+                    <span className="px-3 py-1 bg-turf-neon text-turf-dark text-xs font-bold rounded-full shadow-neon-green">
+                      Active
+                    </span>
+                  )}
                 </div>
-              )}
 
-              {turf.image_url ? (
-                <img
-                  src={turf.image_url}
-                  alt="Preview"
-                  className="w-full h-32 mt-2 rounded-lg object-cover border border-gray-300 shadow"
-                />
-              ) : (
-                <span className="w-full h-32 mt-2 border-gray-300 bg-gray-100 flex justify-center items-center shadow rounded-lg">
-                  No Image Available
-                </span>
-              )}
-              <h2 className="text-xl font-bold">{turf.name}</h2>
-
-              <div className="space-y-2">
-                <p>
-                  <strong>Description:</strong> {turf.description}
-                </p>
-                <p>
-                  <strong>Location:</strong> {turf.location}
-                </p>
-                <p>
-                  <strong>Type:</strong> {turf.type}
-                </p>
-                <p>
-                  <strong>Price Per Hour:</strong> ₹{turf.price_per_hour}
-                </p>
-                <p>
-                  <strong>Opening Time:</strong> {formatTime(turf.opening_time)}
-                </p>
-                <p>
-                  <strong>Closing Time:</strong> {formatTime(turf.closing_time)}
-                </p>
-                <p>
-                  <strong>Max Players:</strong> {turf.max_players}
-                </p>
-                <p>
-                  <strong>Maximum Hours of Duration:</strong> {turf.max_hours}
-                </p>
-                <p>
-                  <strong>Minimum Hours of Duration:</strong> {turf.min_hours}
-                </p>
+                {/* Price Badge */}
+                <div className="absolute bottom-4 right-4 bg-turf-dark/80 backdrop-blur px-3 py-1 rounded-lg border border-white/10">
+                  <span className="text-turf-neon font-bold">
+                    ₹{turf.price_per_hour}
+                  </span>
+                  <span className="text-gray-400 text-xs">/hr</span>
+                </div>
               </div>
-              <div className="flex justify-between ">
-                <Button
-                  onClick={() => setSelectedTurf(turf)}
-                  variant="destructive"
-                >
-                  Delete
-                </Button>
 
-                <Button
-                  onClick={() => {
-                    router.push(`/admin/turfs/edit?id=${turf.id}`);
-                  }}
-                  className=""
-                >
-                  Edit
-                </Button>
+              {/* Content Section */}
+              <div className="p-6 space-y-4">
+                <div>
+                  <h2 className="text-xl font-bold text-white font-heading">
+                    {turf.name}
+                  </h2>
+                  <div className="flex items-center gap-1 text-turf-blue text-sm mt-1">
+                    <MapPin size={14} />
+                    <span>{turf.location}</span>
+                  </div>
+                </div>
+
+                {/* Quick Stats */}
+                <div className="grid grid-cols-2 gap-4 py-4 border-t border-b border-white/5">
+                  <div className="flex items-center gap-2">
+                    <div className="p-1.5 rounded-md bg-white/5 text-gray-400">
+                      <Clock size={16} />
+                    </div>
+                    <div className="flex flex-col">
+                      <span className="text-[10px] text-gray-500 uppercase tracking-wider">
+                        Hours
+                      </span>
+                      <span className="text-xs text-white font-medium">
+                        {formatTime(turf.opening_time)} -{" "}
+                        {formatTime(turf.closing_time)}
+                      </span>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className="p-1.5 rounded-md bg-white/5 text-gray-400">
+                      <Users size={16} />
+                    </div>
+                    <div className="flex flex-col">
+                      <span className="text-[10px] text-gray-500 uppercase tracking-wider">
+                        Capacity
+                      </span>
+                      <span className="text-xs text-white font-medium">
+                        {turf.max_players} Players
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Actions */}
+                <div className="flex gap-3 pt-2">
+                  <button
+                    onClick={() =>
+                      router.push(`/admin/turfs/edit?id=${turf.id}`)
+                    }
+                    className="flex-1 flex items-center justify-center gap-2 py-2 rounded-lg bg-white/5 hover:bg-white/10 text-white text-sm font-medium transition-colors border border-white/5"
+                  >
+                    <Edit size={16} /> Edit
+                  </button>
+                  <button
+                    onClick={() => setSelectedTurf(turf)}
+                    className="flex items-center justify-center p-2 rounded-lg bg-red-500/10 hover:bg-red-500/20 text-red-500 transition-colors border border-red-500/10"
+                  >
+                    <Trash2 size={18} />
+                  </button>
+                </div>
               </div>
-            </div>
+            </GlassCard>
           ))}
         </div>
       )}
 
+      {/* Delete Modal */}
       <Dialog open={!!selectedTurf} onOpenChange={() => setSelectedTurf(null)}>
-        <DialogContent>
+        <DialogContent className="bg-turf-dark border border-white/10 text-white">
           <DialogHeader>
             <DialogTitle>Confirm Deletion</DialogTitle>
-            <DialogDescription>
-              Are you sure you want to delete
-              <strong>{selectedTurf?.name}</strong>? This action cannot be
-              undone.
+            <DialogDescription className="text-gray-400">
+              Are you sure you want to delete{" "}
+              <span className="text-white font-bold">{selectedTurf?.name}</span>
+              ? This will also remove all associated bookings.
             </DialogDescription>
           </DialogHeader>
-          <div className="flex items-center gap-2 p-3 bg-red-100 border border-red-400 rounded-md">
-            <AlertTriangle className="w-5 h-5 text-red-600" />
-            <span className="text-sm text-red-600">
-              Deleting this turf will also remove all associated bookings.
-            </span>
-          </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setSelectedTurf(null)}>
+            <NeonButton variant="ghost" onClick={() => setSelectedTurf(null)}>
               Cancel
-            </Button>
-            <Button variant="destructive" onClick={handleConfirmDelete}>
+            </NeonButton>
+            <NeonButton variant="danger" onClick={handleConfirmDelete}>
               Delete
-            </Button>
+            </NeonButton>
           </DialogFooter>
         </DialogContent>
       </Dialog>

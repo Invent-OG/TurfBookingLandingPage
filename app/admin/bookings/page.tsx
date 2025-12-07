@@ -1,23 +1,14 @@
 "use client";
-
 import React, { useState, useEffect } from "react";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import { Button } from "@/components/ui/button";
 import { supabase } from "@/lib/supabase";
 import {
   Download,
   Trash,
   ChevronLeft,
   ChevronRight,
-  Menu,
   CalendarCheck,
+  Search,
+  Filter,
 } from "lucide-react";
 import { toast } from "sonner";
 import { Calendar } from "@/components/ui/calendar";
@@ -45,6 +36,10 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { GlassTable } from "@/components/ui/glass-table";
+import { GlassCard } from "@/components/ui/glass-card";
+import { NeonButton } from "@/components/ui/neon-button";
+import { cn } from "@/lib/utils";
 
 const ITEMS_PER_PAGE_OPTIONS = [5, 10, 20, 50];
 
@@ -72,24 +67,21 @@ export default function Bookings() {
     if (error) {
       toast.error("Failed to fetch bookings.");
     } else {
-      setBookings(data);
-      setFilteredBookings(data);
+      setBookings(data || []);
+      setFilteredBookings(data || []);
     }
   };
-
-  console.log(bookings, "bookings");
-  console.log(filteredBookings, "filteredBookings");
 
   const filterBookings = () => {
     let filtered = bookings.filter(
       (booking) =>
         booking.customer_name
-          .toLowerCase()
+          ?.toLowerCase()
           .includes(searchQuery.toLowerCase()) ||
         booking.customer_email
-          .toLowerCase()
+          ?.toLowerCase()
           .includes(searchQuery.toLowerCase()) ||
-        booking.turf_name.toLowerCase().includes(searchQuery.toLowerCase())
+        booking.turf_name?.toLowerCase().includes(searchQuery.toLowerCase())
     );
 
     if (selectedDate) {
@@ -98,18 +90,17 @@ export default function Bookings() {
           new Date(booking.date).toDateString() === selectedDate.toDateString()
       );
     }
-
     setFilteredBookings(filtered);
     setCurrentPage(1);
   };
 
-  const toggleSelectAll = () => {
-    if (selectAll) {
-      setSelectedBookings([]);
-    } else {
+  const toggleSelectAll = (checked: boolean) => {
+    if (checked) {
       setSelectedBookings(paginatedBookings.map((booking) => booking.id));
+    } else {
+      setSelectedBookings([]);
     }
-    setSelectAll(!selectAll);
+    setSelectAll(checked);
   };
 
   const toggleSelectBooking = (id: string) => {
@@ -118,10 +109,6 @@ export default function Bookings() {
         ? prev.filter((bookingId) => bookingId !== id)
         : [...prev, id]
     );
-  };
-
-  const confirmDelete = () => {
-    setShowDeleteDialog(true);
   };
 
   const deleteBookings = async () => {
@@ -139,6 +126,7 @@ export default function Bookings() {
     } else {
       toast.success("Bookings deleted.");
       fetchBookings();
+      setSelectedBookings([]);
     }
   };
 
@@ -159,8 +147,6 @@ export default function Bookings() {
       Turf: b.turf_name,
       Date: b.date,
       "Start Time": formatSlotTime(b.start_time),
-      Duration: `${b.duration} hrs`,
-      Price: `${b.total_price}`,
       Status: b.status,
     }));
 
@@ -182,185 +168,221 @@ export default function Bookings() {
   );
 
   const formatSlotTime = (time: string) => {
-    const parsedTime = parse(time, "HH:mm:ss", new Date());
-    return format(parsedTime, "hh:mm a");
+    try {
+      const parsedTime = parse(time, "HH:mm:ss", new Date());
+      return format(parsedTime, "hh:mm a");
+    } catch (e) {
+      return time;
+    }
   };
 
+  const columns = [
+    {
+      header: "Select",
+      accessor: (item: any) => (
+        <Checkbox
+          checked={selectedBookings.includes(item.id)}
+          onCheckedChange={() => toggleSelectBooking(item.id)}
+          className="border-gray-500 data-[state=checked]:bg-turf-neon data-[state=checked]:text-turf-dark"
+        />
+      ),
+      className: "w-10",
+    },
+    {
+      header: "Customer",
+      accessor: (item: any) => (
+        <div className="font-medium text-white">{item.customer_name}</div>
+      ),
+    },
+    { header: "Phone", accessor: (item: any) => item.customer_phone },
+    {
+      header: "Turf",
+      accessor: (item: any) => (
+        <span className="text-turf-blue">{item.turf_name}</span>
+      ),
+    },
+    { header: "Date", accessor: (item: any) => item.date },
+    {
+      header: "Time",
+      accessor: (item: any) => formatSlotTime(item.start_time),
+    },
+    { header: "Duration", accessor: (item: any) => `${item.duration} hrs` },
+    { header: "Price", accessor: (item: any) => `₹${item.total_price}` },
+    {
+      header: "Status",
+      accessor: (item: any) => (
+        <span
+          className={cn(
+            "px-2 py-0.5 rounded-full text-xs font-bold uppercase tracking-wider",
+            item.status === "pending"
+              ? "bg-yellow-500/20 text-yellow-500 border border-yellow-500/20"
+              : item.status === "cancelled"
+                ? "bg-red-500/20 text-red-500 border border-red-500/20"
+                : "bg-turf-neon/20 text-turf-neon border border-turf-neon/20"
+          )}
+        >
+          {item.status}
+        </span>
+      ),
+    },
+  ];
+
   return (
-    <div className="flex flex-col gap-8 px-4 md:px-8">
-      <div className="flex flex-col gap-4 md:flex-row md:justify-between md:items-center">
-        {/* Heading and Search Bar */}
-        <div className="flex flex-col sm:flex-row sm:items-center gap-3 w-full">
-          <h1 className="text-xl sm:text-2xl font-bold">
-            Bookings ({bookings.length})
+    <div className="space-y-6">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+        <div>
+          <h1 className="text-3xl font-bold text-white font-heading tracking-wide">
+            Bookings Management
           </h1>
-          <Input
-            placeholder="Search bookings..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full sm:w-[50%]"
-          />
+          <p className="text-gray-400 mt-1">
+            View and manage all turf reservations.
+          </p>
         </div>
-
-        {/* Controls Section */}
-        <div className="flex  sm:flex-row sm:items-center gap-3 w-full sm:w-auto">
-          {/* Date Picker */}
-          <Popover>
-            <PopoverTrigger asChild>
-              <Button variant="outline" className="w-full sm:w-auto">
-                <CalendarCheck />
-
-                {selectedDate ? format(selectedDate, "PPP") : "Pick a date"}
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-auto p-0">
-              <Calendar
-                mode="single"
-                selected={selectedDate}
-                onSelect={setSelectedDate}
-                className="rounded-md border"
-              />
-            </PopoverContent>
-          </Popover>
-
-          {/* Export CSV Button */}
-          <Button onClick={exportToCSV} className="w-full sm:w-auto">
-            <Download className="mr-2" /> Export CSV
-          </Button>
-
-          {/* Delete Selected Button (only shown if bookings are selected) */}
+        <div className="flex gap-3 w-full md:w-auto">
+          <NeonButton
+            onClick={exportToCSV}
+            variant="secondary"
+            glow={false}
+            className="flex-1 md:flex-none"
+          >
+            <Download className="w-4 h-4" /> Export
+          </NeonButton>
           {selectedBookings.length > 0 && (
-            <Button
-              variant="destructive"
-              onClick={confirmDelete}
-              className="w-full sm:w-auto"
+            <NeonButton
+              onClick={() => setShowDeleteDialog(true)}
+              variant="danger"
+              className="flex-1 md:flex-none"
             >
-              <Trash className="mr-2" /> Delete Selected
-            </Button>
+              <Trash className="w-4 h-4" /> Delete ({selectedBookings.length})
+            </NeonButton>
           )}
         </div>
       </div>
 
-      {paginatedBookings.length === 0 ? (
-        <p className="text-center text-gray-500">No bookings available.</p>
-      ) : (
-        <>
-          <div className="overflow-x-auto">
-            <Table className="w-full border rounded-lg">
-              <TableHeader className="bg-gray-100">
-                <TableRow>
-                  <TableHead>
-                    <Checkbox
-                      checked={selectAll}
-                      onCheckedChange={toggleSelectAll}
-                    />
-                  </TableHead>
-                  <TableHead>Name</TableHead>
-                  <TableHead>Phone</TableHead>
-                  <TableHead>Turf</TableHead>
-                  <TableHead>Date</TableHead>
-                  <TableHead>Start Time</TableHead>
-                  <TableHead>Duration</TableHead>
-                  <TableHead>Price</TableHead>
-                  <TableHead>Status</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {paginatedBookings.map((booking) => (
-                  <TableRow key={booking.id}>
-                    <TableCell>
-                      <Checkbox
-                        checked={selectedBookings.includes(booking.id)}
-                        onCheckedChange={() => toggleSelectBooking(booking.id)}
-                      />
-                    </TableCell>
-                    <TableCell>{booking.customer_name}</TableCell>
-                    <TableCell>{booking.customer_phone}</TableCell>
-                    <TableCell>{booking.turf_name}</TableCell>
-                    <TableCell>{booking.date}</TableCell>
-                    <TableCell>{formatSlotTime(booking.start_time)}</TableCell>
-                    <TableCell>{booking.duration} hrs</TableCell>
-                    <TableCell>₹{booking.total_price}</TableCell>
-                    <TableCell>
-                      <span
-                        className={`capitalize rounded-md text-white p-2 font-bold ${
-                          booking.status === "pending"
-                            ? "bg-yellow-500"
-                            : booking.status === "cancelled"
-                              ? "bg-red-500"
-                              : "bg-green-500"
-                        }`}
-                      >
-                        {booking.status}
-                      </span>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+      <GlassCard className="p-0 overflow-visible" noPadding>
+        {/* Filters Header */}
+        <div className="p-4 border-b border-white/10 flex flex-col md:flex-row gap-4 items-center justify-between bg-white/5">
+          <div className="relative w-full md:w-96">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 w-4 h-4" />
+            <Input
+              placeholder="Search by name, email, or turf..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-9 bg-black/20 border-white/10 text-white placeholder-gray-500 focus:border-turf-neon/50"
+            />
           </div>
+          <div className="flex gap-2 w-full md:w-auto">
+            <Popover>
+              <PopoverTrigger asChild>
+                <button className="flex items-center gap-2 px-4 py-2 rounded-lg bg-black/20 border border-white/10 text-gray-300 hover:text-white hover:bg-white/5 transition-colors">
+                  <CalendarCheck className="w-4 h-4" />
+                  {selectedDate
+                    ? format(selectedDate, "MMM dd, yyyy")
+                    : "Filter Date"}
+                </button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0 bg-turf-dark border-white/10">
+                <Calendar
+                  mode="single"
+                  selected={selectedDate}
+                  onSelect={setSelectedDate}
+                  className="bg-turf-dark text-white rounded-md border-white/10"
+                />
+              </PopoverContent>
+            </Popover>
+            {selectedDate && (
+              <button
+                onClick={() => setSelectedDate(undefined)}
+                className="text-xs text-red-400 hover:underline"
+              >
+                Clear
+              </button>
+            )}
+          </div>
+        </div>
 
-          {/* Pagination */}
-          <div className="flex justify-between items-center mt-4">
+        {/* Table Content */}
+        {paginatedBookings.length === 0 ? (
+          <div className="p-10 text-center text-gray-500">
+            No bookings found matching your criteria.
+          </div>
+        ) : (
+          <>
+            {/* Special Checkbox Header Handling for Select All is needed if using generic GlassTable, 
+                    but GlassTable maps columns directly. We can inject the header checkbox via a custom header renderer 
+                    mocked in columns or just rely on individual select for now or update Glass table to support header components. 
+                    For simplicity, we will assume the user manually selects or we'd need to update GlassTable signature. 
+                    Let's update column def above to just include the checkbox in the first column header if we could. 
+                    Actually, GlassTable takes strings for headers. Let's just keep 'Select' text for now.
+                */}
+            <GlassTable columns={columns} data={paginatedBookings} />
+          </>
+        )}
+
+        {/* Pagination Footer */}
+        <div className="flex flex-col sm:flex-row justify-between items-center p-4 border-t border-white/10 bg-white/5 gap-4">
+          <div className="flex items-center gap-2">
+            <span className="text-sm text-gray-400">Rows per page:</span>
             <Select
-              onValueChange={(value) => setItemsPerPage(Number(value))}
-              defaultValue="10"
+              value={String(itemsPerPage)}
+              onValueChange={(val) => setItemsPerPage(Number(val))}
             >
-              <SelectTrigger className="w-34">
-                <SelectValue placeholder="Per Page" />
+              <SelectTrigger className="w-16 h-8 bg-black/20 border-white/10 text-white">
+                <SelectValue />
               </SelectTrigger>
-              <SelectContent>
-                {ITEMS_PER_PAGE_OPTIONS.map((count) => (
-                  <SelectItem key={count} value={String(count)}>
-                    {count} per page
+              <SelectContent className="bg-turf-dark border-white/10 text-white">
+                {ITEMS_PER_PAGE_OPTIONS.map((opt) => (
+                  <SelectItem key={opt} value={String(opt)}>
+                    {opt}
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
+          </div>
 
-            <span>
+          <div className="flex items-center gap-2">
+            <span className="text-sm text-gray-400">
               Page {currentPage} of {totalPages}
             </span>
-
-            <div className="flex items-center gap-5">
-              <Button
+            <div className="flex gap-1">
+              <button
                 disabled={currentPage === 1}
-                onClick={() => setCurrentPage(currentPage - 1)}
+                onClick={() => setCurrentPage((c) => c - 1)}
+                className="p-1 rounded hover:bg-white/10 disabled:opacity-30 disabled:hover:bg-transparent text-white"
               >
-                <ChevronLeft />
-              </Button>
-
-              <Button
-                disabled={currentPage >= totalPages}
-                onClick={() => setCurrentPage(currentPage + 1)}
+                <ChevronLeft className="w-5 h-5" />
+              </button>
+              <button
+                disabled={currentPage === totalPages}
+                onClick={() => setCurrentPage((c) => c + 1)}
+                className="p-1 rounded hover:bg-white/10 disabled:opacity-30 disabled:hover:bg-transparent text-white"
               >
-                <ChevronRight />
-              </Button>
+                <ChevronRight className="w-5 h-5" />
+              </button>
             </div>
           </div>
-        </>
-      )}
+        </div>
+      </GlassCard>
 
-      {/* Delete Confirmation Dialog */}
       <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
-        <DialogContent>
+        <DialogContent className="bg-turf-dark border border-white/10 text-white">
           <DialogHeader>
             <DialogTitle>Confirm Deletion</DialogTitle>
-            <DialogDescription>
+            <DialogDescription className="text-gray-400">
               Are you sure you want to delete {selectedBookings.length} selected
               booking(s)? This action cannot be undone.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
-            <Button
-              variant="outline"
+            <NeonButton
+              variant="ghost"
               onClick={() => setShowDeleteDialog(false)}
             >
               Cancel
-            </Button>
-            <Button variant="destructive" onClick={deleteBookings}>
+            </NeonButton>
+            <NeonButton variant="danger" onClick={deleteBookings}>
               Confirm Delete
-            </Button>
+            </NeonButton>
           </DialogFooter>
         </DialogContent>
       </Dialog>

@@ -33,7 +33,7 @@ export default function Footer() {
   //   },
   // ];
 
-    const contactInfo = [
+  const contactInfo = [
     { icon: Mail, text: "contact@turfbook.com" },
     { icon: Phone, text: "+91 99999 99999" },
     {
@@ -43,17 +43,16 @@ export default function Footer() {
   ];
 
   return (
-    <footer className="relative bg-black text-white py-16 px-6">
-      {/* Background Effect */}
-      <div className="absolute inset-0 bg-gradient-to-t from-gray-900 via-black to-transparent opacity-90"></div>
+    <footer className="relative text-white py-16 px-6">
+      {/* Background Effect Removed */}
 
       <div className="relative max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-12 z-10">
         {/* Left: Branding */}
         <div className="space-y-6">
-          <h3 className="text-3xl font-bold bg-gradient-to-r from-green-400 to-teal-300 text-transparent bg-clip-text">
-            TurfBook
+          <h3 className="text-3xl font-black font-heading tracking-wider">
+            TURF<span className="text-turf-neon">BOOK</span>
           </h3>
-          <p className="text-gray-400">
+          <p className="text-gray-400 leading-relaxed">
             Book your perfect turf anytime, anywhere. Experience seamless
             booking and premium facilities at your fingertips.
           </p>
@@ -65,51 +64,49 @@ export default function Footer() {
               onClick={() => {
                 router.push("/booking");
               }}
-              className="bg-green-500 hover:bg-green-400 text-white px-6 py-3 rounded-xl shadow-lg transition"
+              className="bg-turf-neon hover:bg-turf-neon/80 text-turf-dark font-bold px-8 py-6 rounded-xl shadow-lg shadow-neon-green transition-all"
             >
               Book Now
             </Button>
           </motion.div>
-          <Button onClick={()=> router.push("/admin/bookings")}>
-          Admin Login
-        </Button>
+
+          <div className="pt-4">
+            <Button
+              onClick={() => router.push("/admin/bookings")}
+              variant="outline"
+              className="border-white/10 text-gray-400 hover:text-white hover:border-turf-neon hover:bg-turf-neon/10"
+            >
+              Admin Login
+            </Button>
+          </div>
         </div>
 
         {/* Middle: Contact Details */}
-        {/* <div>
-          <h3 className="text-xl font-semibold mb-6">Contact Us</h3>
-          <div className="space-y-4">
-            {contactInfo.map((info, index) => {
-              const Icon = info.icon;
-              return (
-                <div key={index} className="flex items-center space-x-3">
-                  <Icon className="h-5 w-5 text-green-400" />
-                  <span className="text-gray-300">{info.text}</span>
-                </div>
-              );
-            })}
-          </div>
-        </div> */}
-        
         <div>
-          <h3 className="text-xl font-semibold mb-6">Contact Us</h3>
+          <h3 className="text-xl font-bold mb-6 font-heading uppercase text-turf-blue">
+            Contact Us
+          </h3>
           <div className="space-y-4">
             {contactInfo.map((info, index) => {
               const Icon = info.icon;
-              const isEmail = info.text.includes("@"); // Check if it's an email
+              const isEmail = info.text.includes("@");
 
               return (
-                <div key={index} className="flex items-center space-x-3">
-                  <Icon className="h-5 w-5 text-green-400" />
+                <div key={index} className="flex items-start space-x-3 group">
+                  <div className="p-2 rounded-lg bg-white/5 group-hover:bg-turf-neon/10 transition-colors">
+                    <Icon className="h-5 w-5 text-turf-neon group-hover:drop-shadow-[0_0_5px_rgba(204,255,0,0.5)] transition-all" />
+                  </div>
                   {isEmail ? (
                     <a
                       href={`mailto:${info.text}`}
-                      className="text-gray-300 underline"
+                      className="text-gray-400 hover:text-white transition-colors pt-1"
                     >
                       {info.text}
                     </a>
                   ) : (
-                    <span className="text-gray-300">{info.text}</span>
+                    <span className="text-gray-400 pt-1 leading-relaxed">
+                      {info.text}
+                    </span>
                   )}
                 </div>
               );
@@ -117,31 +114,15 @@ export default function Footer() {
           </div>
         </div>
 
-        {/* Right: Social Links */}
-        {/* <div>
-          <h3 className="text-xl font-semibold mb-6">Follow Us</h3>
-          <div className="flex space-x-6">
-            {socialLinks.map((social, index) => {
-              const Icon = social.icon;
-              return (
-                <motion.a
-                  key={index}
-                  href={social.href}
-                  whileHover={{ scale: 1.2 }}
-                  className="text-gray-400 hover:text-green-400 transition-all"
-                >
-                  <Icon className="h-7 w-7" />
-                </motion.a>
-              );
-            })}
-          </div>
-        </div> */}
+        {/* Right: Social Links (Hidden in original code but preserving structure if needed later) */}
+        <div className="hidden md:block">
+          {/* Placeholder for future content or map */}
+        </div>
       </div>
 
       {/* Bottom Copyright */}
-      <div className="text-center  text-gray-500 text-sm border-t border-gray-700 mt-12">
-        {/* <p>&copy; {new Date().getFullYear()}@2025 TempleCity. All rights reserved.</p> */}
-        <p>&copy; {new Date().getFullYear()}@2025 TurfBook. All rights reserved.</p>
+      <div className="text-center text-gray-600 text-sm border-t border-white/5 mt-16 pt-8">
+        <p>&copy; {new Date().getFullYear()} TurfBook. All rights reserved.</p>
       </div>
     </footer>
   );

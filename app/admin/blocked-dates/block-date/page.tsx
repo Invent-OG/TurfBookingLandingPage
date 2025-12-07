@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Button } from "@/components/ui/button";
+import { GlassCard } from "@/components/ui/glass-card";
+import { NeonButton } from "@/components/ui/neon-button";
 import { Input } from "@/components/ui/input";
 import { Calendar } from "@/components/ui/calendar";
 import {
@@ -17,11 +18,13 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
+  DialogFooter,
 } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { supabase } from "@/lib/supabase";
-
 import { format, isBefore } from "date-fns";
+import { Ban, Trash2, Calendar as CalendarIcon } from "lucide-react";
+import { Label } from "@/components/ui/label";
 
 type Turf = {
   id: string;
@@ -31,7 +34,7 @@ type Turf = {
 type BlockedDate = {
   id: string;
   start_date: string;
-  end_date?: string; // Support for blocking date ranges
+  end_date?: string;
   reason: string;
   blocked_times: string[];
 };
@@ -55,7 +58,6 @@ export default function BlockDatePage() {
     const fetchTurfs = async () => {
       const { data, error } = await supabase.from("turfs").select("id, name");
       if (error) {
-        console.error("Failed to fetch turfs:", error.message);
         toast.error("Failed to load turfs.");
         return;
       }
@@ -71,7 +73,7 @@ export default function BlockDatePage() {
     const fetchBlockedAndBookedDates = async () => {
       const { data: blockedData, error: blockedError } = await supabase
         .from("blocked_dates")
-        .select("id, start_date, end_date, reason, blocked_times") // Fetching both start_date & end_date
+        .select("id, start_date, end_date, reason, blocked_times")
         .eq("turf_id", selectedTurf);
 
       const { data: bookedData, error: bookedError } = await supabase
@@ -80,13 +82,11 @@ export default function BlockDatePage() {
         .eq("turf_id", selectedTurf);
 
       if (blockedError) {
-        console.error("Failed to fetch blocked dates:", blockedError.message);
         toast.error("Failed to load blocked dates.");
         return;
       }
 
       if (bookedError) {
-        console.error("Failed to fetch booked dates:", bookedError.message);
         toast.error("Failed to load booked dates.");
         return;
       }
@@ -103,20 +103,19 @@ export default function BlockDatePage() {
     fetchBlockedAndBookedDates();
   }, [selectedTurf]);
 
-  // ✅ Updated to handle both single blocked dates and blocked ranges
   const isDateDisabled = (date: Date) => {
     const formattedDate = format(date, "yyyy-MM-dd");
 
     return (
-      isBefore(date, new Date()) || // Disable past dates
+      isBefore(date, new Date()) ||
       blockedDates.some(
         (d) =>
-          formattedDate === d.start_date || // Single blocked date
+          formattedDate === d.start_date ||
           (d.end_date &&
             formattedDate >= d.start_date &&
-            formattedDate <= d.end_date) // Range blocked dates
+            formattedDate <= d.end_date)
       ) ||
-      bookedDates.includes(formattedDate) // Already booked dates
+      bookedDates.includes(formattedDate)
     );
   };
 
@@ -169,105 +168,151 @@ export default function BlockDatePage() {
     }
   };
 
+  const inputClasses =
+    "bg-white/5 border-white/10 text-white placeholder-gray-500 focus:border-turf-neon/50 focus:ring-1 focus:ring-turf-neon/20 rounded-xl";
+  const labelClasses = "text-gray-300 font-medium mb-1.5 block";
+
   return (
-    <div className="p-6 space-y-6">
-      <div className="flex justify-between items-center">
-        <div className="w-1/4">
-          <Select onValueChange={setSelectedTurf}>
-            <SelectTrigger>
-              <SelectValue placeholder="Select Turf" />
-            </SelectTrigger>
-            <SelectContent>
-              {turfs.map((turf) => (
-                <SelectItem key={turf.id} value={turf.id}>
-                  {turf.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+    <div className="max-w-4xl mx-auto pb-10 space-y-8">
+      <div>
+        <h1 className="text-3xl font-bold text-white font-heading tracking-wide">
+          Block Specific Date
+        </h1>
+        <p className="text-gray-400 mt-1">
+          Prevent bookings on specific single dates for maintenance or holidays.
+        </p>
+      </div>
+
+      <GlassCard className="overflow-visible">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-8">
+          <div className="flex-1 w-full md:w-auto space-y-2">
+            <Label className={labelClasses}>Select Arena</Label>
+            <Select value={selectedTurf} onValueChange={setSelectedTurf}>
+              <SelectTrigger className={inputClasses}>
+                <SelectValue placeholder="Choose an arena..." />
+              </SelectTrigger>
+              <SelectContent className="bg-turf-dark border-white/10 text-white">
+                {turfs.map((turf) => (
+                  <SelectItem key={turf.id} value={turf.id}>
+                    {turf.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+            <DialogTrigger asChild>
+              <NeonButton
+                disabled={!selectedTurf}
+                variant="primary"
+                glow
+                className="mt-6 md:mt-2"
+              >
+                <Ban className="w-4 h-4 mr-2" /> Block a Date
+              </NeonButton>
+            </DialogTrigger>
+            <DialogContent className="bg-turf-dark border border-white/10 text-white">
+              <DialogHeader>
+                <DialogTitle>Block Date Reference</DialogTitle>
+              </DialogHeader>
+              <div className="space-y-4 flex flex-col justify-center items-center py-4">
+                <div className="p-4 bg-white/5 rounded-xl border border-white/10">
+                  <Calendar
+                    mode="single"
+                    selected={date}
+                    onSelect={setDate}
+                    disabled={isDateDisabled}
+                    className="text-white"
+                  />
+                </div>
+                <div className="w-full space-y-1">
+                  <Label>Reason (Optional)</Label>
+                  <Input
+                    type="text"
+                    placeholder="e.g. Maintenance"
+                    value={reason}
+                    onChange={(e) => setReason(e.target.value)}
+                    className={inputClasses}
+                  />
+                </div>
+              </div>
+              <DialogFooter>
+                <NeonButton
+                  className="w-full"
+                  variant="primary"
+                  glow
+                  onClick={createBlockedDate}
+                >
+                  Confirm Block
+                </NeonButton>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
         </div>
 
-        <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-          <DialogTrigger asChild>
-            <Button disabled={!selectedTurf}>Block a Date</Button>
-          </DialogTrigger>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Block a Date</DialogTitle>
-            </DialogHeader>
-            <div className="space-y-4 flex flex-col justify-center items-center">
-              <Calendar
-                mode="single"
-                selected={date}
-                onSelect={setDate}
-                disabled={isDateDisabled}
-              />
-              <Input
-                type="text"
-                placeholder="Reason (Optional)"
-                value={reason}
-                onChange={(e) => setReason(e.target.value)}
-              />
-              <Button className="w-full" onClick={createBlockedDate}>
-                Confirm Block
-              </Button>
-            </div>
-          </DialogContent>
-        </Dialog>
-      </div>
-
-      <div>
-        <table className="w-full text-left rounded-lg">
-          <thead className="bg-gray-100 ">
-            <tr>
-              <th className="border-b p-2">Date</th>
-              <th className="border-b p-2">Reason</th>
-              <th className="border-b p-2">Action</th>
-            </tr>
-          </thead>
-
-          <tbody>
-            {blockedDates.filter(
-              (d) =>
-                !d.end_date &&
-                (!d.blocked_times || d.blocked_times.length === 0)
-            ).length > 0 ? (
-              blockedDates
-                .filter(
-                  (d) =>
-                    !d.end_date &&
-                    (!d.blocked_times || d.blocked_times.length === 0)
-                )
-                .map((blockedDate) => (
-                  <tr key={blockedDate.id}>
-                    <td className="border-b p-2">{blockedDate.start_date}</td>
-                    <td className="border-b p-2">
-                      {blockedDate.reason || "No reason provided"}
-                    </td>
-                    <td className="border-b p-2">
-                      <Button
-                        size="sm"
-                        variant="destructive"
-                        onClick={() => deleteBlockedDate(blockedDate.id)}
-                      >
-                        Delete
-                      </Button>
-                    </td>
-                  </tr>
-                ))
-            ) : (
+        <div className="rounded-xl border border-white/10 overflow-hidden">
+          <table className="w-full text-left">
+            <thead className="bg-white/5 text-gray-400 uppercase text-xs font-semibold tracking-wider">
               <tr>
-                <td
-                  colSpan={3}
-                  className="border-b p-2 text-center text-gray-500"
-                >
-                  No blocked dates found
-                </td>
+                <th className="px-6 py-4">Date</th>
+                <th className="px-6 py-4">Reason</th>
+                <th className="px-6 py-4 text-right">Action</th>
               </tr>
-            )}
-          </tbody>
-        </table>
-      </div>
+            </thead>
+            <tbody className="divide-y divide-white/5">
+              {blockedDates.filter(
+                (d) =>
+                  !d.end_date &&
+                  (!d.blocked_times || d.blocked_times.length === 0)
+              ).length > 0 ? (
+                blockedDates
+                  .filter(
+                    (d) =>
+                      !d.end_date &&
+                      (!d.blocked_times || d.blocked_times.length === 0)
+                  )
+                  .map((blockedDate) => (
+                    <tr
+                      key={blockedDate.id}
+                      className="hover:bg-white/5 transition-colors"
+                    >
+                      <td className="px-6 py-4 text-white font-medium flex items-center gap-2">
+                        <CalendarIcon className="w-4 h-4 text-turf-neon" />
+                        {format(
+                          new Date(blockedDate.start_date),
+                          "MMM d, yyyy"
+                        )}
+                      </td>
+                      <td className="px-6 py-4 text-gray-400">
+                        {blockedDate.reason || "No reason provided"}
+                      </td>
+                      <td className="px-6 py-4 text-right">
+                        <NeonButton
+                          size="sm"
+                          variant="danger"
+                          onClick={() => deleteBlockedDate(blockedDate.id)}
+                          className="h-8 px-3"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </NeonButton>
+                      </td>
+                    </tr>
+                  ))
+              ) : (
+                <tr>
+                  <td
+                    colSpan={3}
+                    className="px-6 py-12 text-center text-gray-500 bg-white/5"
+                  >
+                    No blocked dates found for this arena.
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      </GlassCard>
     </div>
   );
 }
