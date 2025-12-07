@@ -41,7 +41,7 @@
     "@radix-ui/react-toggle": "^1.1.0",
     "@radix-ui/react-toggle-group": "^1.1.0",
     "@radix-ui/react-tooltip": "^1.1.8",
-    "@react-email/components": "^0.0.33",
+    "@react-email/components": "^1.0.1",
     "@react-spring/web": "^9.7.5",
     "@supabase/supabase-js": "^2.49.1",
     "@tanstack/react-table": "^8.21.2",
@@ -49,7 +49,7 @@
     "autoprefixer": "10.4.15",
     "axios": "^1.7.9",
     "bcryptjs": "^3.0.2",
-    "cashfree-pg-sdk-nodejs": "^2.0.2",
+    "buffer": "^6.0.3",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "cmdk": "^1.0.0",
@@ -57,8 +57,6 @@
     "dotenv": "^16.4.7",
     "drizzle-orm": "^0.40.0",
     "embla-carousel-react": "^8.5.2",
-    "eslint": "8.49.0",
-    "eslint-config-next": "13.5.1",
     "framer-motion": "^11.0.8",
     "gsap": "^3.12.5",
     "input-otp": "^1.2.4",
@@ -70,7 +68,6 @@
     "next-themes": "^0.3.0",
     "papaparse": "^5.5.2",
     "pg": "^8.13.3",
-    "postcss": "8.4.30",
     "postgres": "^3.4.5",
     "react": "18.2.0",
     "react-day-picker": "^8.10.1",
@@ -86,9 +83,7 @@
     "sonner": "^1.7.4",
     "swiper": "^11.2.1",
     "tailwind-merge": "^2.6.0",
-    "tailwindcss": "3.3.3",
     "tailwindcss-animate": "^1.0.7",
-    "typescript": "5.2.2",
     "uuid": "^11.1.0",
     "vaul": "^0.9.9",
     "zod": "^3.23.8",
@@ -100,10 +95,10 @@
     "@types/jsonwebtoken": "^9.0.7",
     "@types/node": "^22.13.10",
     "@types/papaparse": "^5.3.15",
-    "@types/react": "^19.0.10",
-    "@types/react-dom": "^19.0.4",
+    "@types/react": "^18.2.0",
+    "@types/react-dom": "^18.2.0",
     "@types/uuid": "^10.0.0",
-    "drizzle-kit": "^0.30.5",
+    "drizzle-kit": "^0.31.8",
     "eslint": "^9",
     "eslint-config-next": "15.1.6",
     "postcss": "^8",
@@ -111,6 +106,7 @@
     "typescript": "^5"
   },
   "overrides": {
-    "react-is": "^19.0.0-rc-69d4b800-20241021"
+    "react-is": "^19.0.0-rc-69d4b800-20241021",
+    "esbuild": "^0.25.0"
   }
 }
