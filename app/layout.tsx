@@ -1,6 +1,7 @@
 import "./globals.css";
 import { Metadata } from "next";
 import { Toaster } from "@/components/ui/sonner";
+import Providers from "./providers";
 
 export const metadata: Metadata = {
   title: "Next.js App with NextAuth",
@@ -15,8 +16,10 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body>
-        {children}
-        <Toaster />
+        <Providers>
+          {children}
+          <Toaster />
+        </Providers>
       </body>
     </html>
   );

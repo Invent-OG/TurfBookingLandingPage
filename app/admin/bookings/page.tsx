@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { supabase } from "@/lib/supabase";
 import {
   Download,
@@ -8,7 +8,6 @@ import {
   ChevronRight,
   CalendarCheck,
   Search,
-  Filter,
 } from "lucide-react";
 import { toast } from "sonner";
 import { Calendar } from "@/components/ui/calendar";
@@ -40,68 +39,101 @@ import { GlassTable } from "@/components/ui/glass-table";
 import { GlassCard } from "@/components/ui/glass-card";
 import { NeonButton } from "@/components/ui/neon-button";
 import { cn } from "@/lib/utils";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 
 const ITEMS_PER_PAGE_OPTIONS = [5, 10, 20, 50];
 
 export default function Bookings() {
-  const [bookings, setBookings] = useState<any[]>([]);
-  const [filteredBookings, setFilteredBookings] = useState<any[]>([]);
+  const queryClient = useQueryClient();
   const [selectedBookings, setSelectedBookings] = useState<string[]>([]);
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
-  const [selectAll, setSelectAll] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const [bookingToCancel, setBookingToCancel] = useState<string | null>(null);
 
-  useEffect(() => {
-    fetchBookings();
-  }, []);
+  // TanStack Query for Fetching Bookings
+  const { data, isLoading } = useQuery({
+    queryKey: [
+      "bookings",
+      currentPage,
+      itemsPerPage,
+      searchQuery,
+      selectedDate,
+    ],
+    queryFn: async () => {
+      const params = new URLSearchParams({
+        page: currentPage.toString(),
+        limit: itemsPerPage.toString(),
+        search: searchQuery,
+      });
 
-  useEffect(() => {
-    filterBookings();
-  }, [searchQuery, selectedDate, bookings, itemsPerPage]);
+      const res = await fetch(`/api/admin/bookings?${params.toString()}`);
+      if (!res.ok) throw new Error("Failed to fetch bookings");
+      const result = await res.json();
 
-  const fetchBookings = async () => {
-    const { data, error } = await supabase.from("bookings").select("*");
-    if (error) {
-      toast.error("Failed to fetch bookings.");
-    } else {
-      setBookings(data || []);
-      setFilteredBookings(data || []);
-    }
-  };
+      let fetchedData = result.data || [];
+      // Client-side date filter (temporary, if API doesn't support it)
+      if (selectedDate) {
+        fetchedData = fetchedData.filter(
+          (b: any) =>
+            new Date(b.date).toDateString() === selectedDate.toDateString()
+        );
+      }
+      return {
+        data: fetchedData,
+        totalPages: result.pagination?.totalPages || 1,
+      };
+    },
+    placeholderData: (previousData) => previousData, // Keep previous data while fetching
+  });
 
-  const filterBookings = () => {
-    let filtered = bookings.filter(
-      (booking) =>
-        booking.customer_name
-          ?.toLowerCase()
-          .includes(searchQuery.toLowerCase()) ||
-        booking.customer_email
-          ?.toLowerCase()
-          .includes(searchQuery.toLowerCase()) ||
-        booking.turf_name?.toLowerCase().includes(searchQuery.toLowerCase())
-    );
+  const bookings = data?.data || [];
+  const totalPages = data?.totalPages || 1;
 
-    if (selectedDate) {
-      filtered = filtered.filter(
-        (booking) =>
-          new Date(booking.date).toDateString() === selectedDate.toDateString()
-      );
-    }
-    setFilteredBookings(filtered);
-    setCurrentPage(1);
-  };
-
-  const toggleSelectAll = (checked: boolean) => {
-    if (checked) {
-      setSelectedBookings(paginatedBookings.map((booking) => booking.id));
-    } else {
+  // Mutation for Deleting Bookings
+  const deleteMutation = useMutation({
+    mutationFn: async () => {
+      if (selectedBookings.length === 0) return;
+      const { error } = await supabase
+        .from("bookings")
+        .delete()
+        .in("id", selectedBookings);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("Bookings deleted.");
+      queryClient.invalidateQueries({ queryKey: ["bookings"] });
       setSelectedBookings([]);
-    }
-    setSelectAll(checked);
-  };
+      setShowDeleteDialog(false);
+    },
+    onError: () => {
+      toast.error("Failed to delete bookings.");
+    },
+  });
+
+  // Mutation for Cancelling Bookings
+  const cancelMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const res = await fetch(`/api/admin/bookings/${id}/cancel`, {
+        method: "POST",
+      });
+      if (!res.ok) {
+        const errorData = await res.json();
+        throw new Error(errorData.error || "Failed to cancel");
+      }
+      return res.json();
+    },
+    onSuccess: () => {
+      toast.success("Booking cancelled successfully.");
+      queryClient.invalidateQueries({ queryKey: ["bookings"] });
+      setBookingToCancel(null);
+    },
+    onError: (error: Error) => {
+      toast.error(error.message || "An error occurred while cancelling.");
+    },
+  });
 
   const toggleSelectBooking = (id: string) => {
     setSelectedBookings((prev) =>
@@ -111,42 +143,23 @@ export default function Bookings() {
     );
   };
 
-  const deleteBookings = async () => {
-    setShowDeleteDialog(false);
-    if (selectedBookings.length === 0) {
-      toast.error("No bookings selected.");
-      return;
-    }
-    const { error } = await supabase
-      .from("bookings")
-      .delete()
-      .in("id", selectedBookings);
-    if (error) {
-      toast.error("Failed to delete bookings.");
-    } else {
-      toast.success("Bookings deleted.");
-      fetchBookings();
-      setSelectedBookings([]);
-    }
-  };
-
   const exportToCSV = () => {
     const dataToExport =
       selectedBookings.length > 0
-        ? filteredBookings.filter((b) => selectedBookings.includes(b.id))
-        : filteredBookings;
+        ? bookings.filter((b: any) => selectedBookings.includes(b.id))
+        : bookings;
 
     if (dataToExport.length === 0) {
       toast.error("No bookings available for export.");
       return;
     }
 
-    const csvData = dataToExport.map((b) => ({
-      Name: b.customer_name,
-      Email: b.customer_email,
-      Turf: b.turf_name,
+    const csvData = dataToExport.map((b: any) => ({
+      Name: b.customerName,
+      Email: b.customerEmail,
+      Turf: b.turfName,
       Date: b.date,
-      "Start Time": formatSlotTime(b.start_time),
+      "Start Time": formatSlotTime(b.startTime),
       Status: b.status,
     }));
 
@@ -160,12 +173,6 @@ export default function Bookings() {
     a.click();
     document.body.removeChild(a);
   };
-
-  const totalPages = Math.ceil(filteredBookings.length / itemsPerPage);
-  const paginatedBookings = filteredBookings.slice(
-    (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage
-  );
 
   const formatSlotTime = (time: string) => {
     try {
@@ -191,23 +198,23 @@ export default function Bookings() {
     {
       header: "Customer",
       accessor: (item: any) => (
-        <div className="font-medium text-white">{item.customer_name}</div>
+        <div className="font-medium text-white">{item.customerName}</div>
       ),
     },
-    { header: "Phone", accessor: (item: any) => item.customer_phone },
+    { header: "Phone", accessor: (item: any) => item.customerPhone },
     {
       header: "Turf",
       accessor: (item: any) => (
-        <span className="text-turf-blue">{item.turf_name}</span>
+        <span className="text-turf-blue">{item.turfName}</span>
       ),
     },
     { header: "Date", accessor: (item: any) => item.date },
     {
       header: "Time",
-      accessor: (item: any) => formatSlotTime(item.start_time),
+      accessor: (item: any) => formatSlotTime(item.startTime),
     },
     { header: "Duration", accessor: (item: any) => `${item.duration} hrs` },
-    { header: "Price", accessor: (item: any) => `₹${item.total_price}` },
+    { header: "Price", accessor: (item: any) => `₹${item.totalPrice}` },
     {
       header: "Status",
       accessor: (item: any) => (
@@ -224,6 +231,25 @@ export default function Bookings() {
           {item.status}
         </span>
       ),
+    },
+    {
+      header: "Actions",
+      accessor: (item: any) => (
+        <div className="flex justify-end gap-2">
+          {["booked", "pending"].includes(item.status) && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                setBookingToCancel(item.id);
+              }}
+              className="px-2 py-1 text-xs font-semibold text-red-400 border border-red-500/30 rounded hover:bg-red-500/10 transition-colors"
+            >
+              Cancel
+            </button>
+          )}
+        </div>
+      ),
+      className: "text-right",
     },
   ];
 
@@ -302,21 +328,16 @@ export default function Bookings() {
         </div>
 
         {/* Table Content */}
-        {paginatedBookings.length === 0 ? (
+        {isLoading ? (
+          <div className="p-10 flex justify-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-turf-neon"></div>
+          </div>
+        ) : bookings.length === 0 ? (
           <div className="p-10 text-center text-gray-500">
             No bookings found matching your criteria.
           </div>
         ) : (
-          <>
-            {/* Special Checkbox Header Handling for Select All is needed if using generic GlassTable, 
-                    but GlassTable maps columns directly. We can inject the header checkbox via a custom header renderer 
-                    mocked in columns or just rely on individual select for now or update Glass table to support header components. 
-                    For simplicity, we will assume the user manually selects or we'd need to update GlassTable signature. 
-                    Let's update column def above to just include the checkbox in the first column header if we could. 
-                    Actually, GlassTable takes strings for headers. Let's just keep 'Select' text for now.
-                */}
-            <GlassTable columns={columns} data={paginatedBookings} />
-          </>
+          <GlassTable columns={columns} data={bookings} />
         )}
 
         {/* Pagination Footer */}
@@ -342,18 +363,18 @@ export default function Bookings() {
 
           <div className="flex items-center gap-2">
             <span className="text-sm text-gray-400">
-              Page {currentPage} of {totalPages}
+              Page {currentPage} of {totalPages || 1}
             </span>
             <div className="flex gap-1">
               <button
                 disabled={currentPage === 1}
-                onClick={() => setCurrentPage((c) => c - 1)}
+                onClick={() => setCurrentPage((c) => Math.max(1, c - 1))}
                 className="p-1 rounded hover:bg-white/10 disabled:opacity-30 disabled:hover:bg-transparent text-white"
               >
                 <ChevronLeft className="w-5 h-5" />
               </button>
               <button
-                disabled={currentPage === totalPages}
+                disabled={currentPage >= totalPages}
                 onClick={() => setCurrentPage((c) => c + 1)}
                 className="p-1 rounded hover:bg-white/10 disabled:opacity-30 disabled:hover:bg-transparent text-white"
               >
@@ -380,8 +401,43 @@ export default function Bookings() {
             >
               Cancel
             </NeonButton>
-            <NeonButton variant="danger" onClick={deleteBookings}>
-              Confirm Delete
+            <NeonButton
+              variant="danger"
+              onClick={() => deleteMutation.mutate()}
+            >
+              {deleteMutation.isPending ? "Deleting..." : "Confirm Delete"}
+            </NeonButton>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Cancellation Dialog */}
+      <Dialog
+        open={!!bookingToCancel}
+        onOpenChange={(open) => !open && setBookingToCancel(null)}
+      >
+        <DialogContent className="bg-turf-dark border border-white/10 text-white">
+          <DialogHeader>
+            <DialogTitle>Confirm Cancellation</DialogTitle>
+            <DialogDescription className="text-gray-400">
+              Are you sure you want to cancel this booking? This will free up
+              the slot for others.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <NeonButton
+              variant="ghost"
+              onClick={() => setBookingToCancel(null)}
+            >
+              Close
+            </NeonButton>
+            <NeonButton
+              variant="danger"
+              onClick={() =>
+                bookingToCancel && cancelMutation.mutate(bookingToCancel)
+              }
+            >
+              {cancelMutation.isPending ? "Cancelling..." : "Confirm Cancel"}
             </NeonButton>
           </DialogFooter>
         </DialogContent>

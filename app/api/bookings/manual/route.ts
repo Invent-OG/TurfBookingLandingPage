@@ -1,19 +1,21 @@
-import { supabase } from "@/lib/supabase";
+import { db } from "@/db/db";
+import { turfs, users, bookings, blockedDates } from "@/db/schema";
+import { eq, and, or, sql, notInArray } from "drizzle-orm";
 
 export async function POST(req: Request) {
   try {
     const body = await req.json();
-    console.log("🟢 Received Booking Payload:", body);
+    console.log("🟢 Received Manual Booking Payload:", body);
 
     const {
-      userId, // Nullable for walk-ins
+      userId,
       turfId,
-      turf_name, // 🔥 Fixed: Match frontend key
+      turf_name,
       date,
       startTime,
       duration,
       totalPrice,
-      status = "booked", // Default to "booked"
+      status = "booked",
       paymentMethod,
       customerName,
       customerPhone,
@@ -21,14 +23,7 @@ export async function POST(req: Request) {
       createdBy,
     } = body;
 
-    // 🔍 Extra Debugging for Missing Fields
-    if (!turfId) console.error("❌ Missing turfId");
-    if (!turf_name) console.error("❌ Missing turf_name"); // 🔥 Fixed key
-    if (!date) console.error("❌ Missing date");
-    if (!startTime) console.error("❌ Missing startTime");
-    if (!customerName) console.error("❌ Missing customerName");
-    if (!customerPhone) console.error("❌ Missing customerPhone");
-
+    // Basic Validation
     if (
       !turfId ||
       !turf_name ||
@@ -38,65 +33,154 @@ export async function POST(req: Request) {
       !customerPhone
     ) {
       return new Response(
-        JSON.stringify({
-          error: "Missing required fields",
-          receivedData: body,
-        }),
+        JSON.stringify({ error: "Missing required fields" }),
         { status: 400 }
       );
     }
 
-    // ✅ Ensure `duration` and `totalPrice` are numbers
+    // Ensure numeric types
     const parsedDuration = Number(duration);
     const parsedTotalPrice = Number(totalPrice);
     if (isNaN(parsedDuration) || isNaN(parsedTotalPrice)) {
-      console.error(
-        "❌ Invalid Duration or Total Price:",
-        duration,
-        totalPrice
-      );
       return new Response(
-        JSON.stringify({ error: "Invalid duration or total price" }),
-        {
-          status: 400,
-        }
+        JSON.stringify({ error: "Invalid duration or price" }),
+        { status: 400 }
       );
     }
 
-    // ✅ Insert booking into Supabase
-    const { data, error } = await supabase.from("bookings").insert([
-      {
-        user_id: userId, // Can be null for walk-ins
-        turf_id: turfId,
-        turf_name, // 🔥 Fixed: Use the correct variable name
-        date,
-        start_time: startTime,
-        duration: parsedDuration,
-        total_price: parsedTotalPrice,
-        status, // Default to "booked"
-        payment_method: paymentMethod,
-        customer_name: customerName,
-        customer_phone: customerPhone,
-        customer_email: customerEmail,
-        created_by: createdBy,
-        created_at: new Date().toISOString(), // Auto-set timestamp
-      },
-    ]);
+    // ✅ Fetch Turf Details (Including Closing Time & Slot Interval)
+    const turfDetails = await db
+      .select({
+        closingTime: turfs.closingTime,
+        slotInterval: turfs.slotInterval,
+      })
+      .from(turfs)
+      .where(eq(turfs.id, turfId));
 
-    if (error) {
-      console.error("❌ Supabase Error:", error.message);
-      return new Response(JSON.stringify({ error: error.message }), {
-        status: 500,
+    if (!turfDetails.length) {
+      return new Response(JSON.stringify({ error: "Turf not found" }), {
+        status: 404,
       });
     }
 
-    return new Response(JSON.stringify({ success: true, booking: data }), {
-      status: 200,
+    const { closingTime, slotInterval } = turfDetails[0];
+
+    return await db.transaction(async (trx) => {
+      // ✅ Lock for consistency
+      const lockKey = hashCode(`${turfId}-${date}`);
+      await trx.execute(sql`SELECT pg_advisory_xact_lock(${lockKey})`);
+
+      let finalUserId = userId;
+
+      // Handle Walk-in User Creation
+      if (!userId && customerEmail) {
+        const existingUser = await trx
+          .select()
+          .from(users)
+          .where(eq(users.email, customerEmail));
+
+        if (existingUser.length) {
+          finalUserId = existingUser[0].id;
+        } else {
+          const [newUser] = await trx
+            .insert(users)
+            .values({
+              name: customerName,
+              email: customerEmail,
+              password: "walk-in-manual",
+              role: "user",
+            })
+            .returning({ id: users.id });
+          finalUserId = newUser.id;
+        }
+      }
+
+      // Calculate End Time
+      const totalMinutes = parsedDuration * slotInterval!;
+      const endTimeSQL = sql`(${startTime}::time + make_interval(mins => ${totalMinutes}))`;
+
+      // Check Closing Time limits (Optional for manual override, but safer to enforce)
+      // Admins might want to overbook, but let's enforce closing time for now or log warning
+      const exceedsClosingTime = await trx.execute(
+        sql`SELECT ${endTimeSQL} > ${closingTime} AS exceeds`
+      );
+      if ((exceedsClosingTime as any)[0].exceeds) {
+        return new Response(JSON.stringify({ error: "Exceeds closing time" }), {
+          status: 400,
+        });
+      }
+
+      // ✅ Check for overlapping bookings (excluding cancelled)
+      // Admins might want to force book, but we should default to preventing errors
+      const conflictingBooking = await trx
+        .select()
+        .from(bookings)
+        .where(
+          and(
+            eq(bookings.turfId, turfId),
+            eq(bookings.date, date),
+            notInArray(bookings.status, ["cancelled", "rejected"]),
+            or(
+              and(
+                sql`${startTime} >= ${bookings.startTime}`,
+                sql`${startTime} < (${bookings.startTime} + make_interval(mins => ${slotInterval} * ${bookings.duration}))`
+              ),
+              and(
+                sql`${bookings.startTime} >= ${startTime}`,
+                sql`${bookings.startTime} < ${endTimeSQL}`
+              )
+            )
+          )
+        );
+
+      if (conflictingBooking.length > 0) {
+        return new Response(JSON.stringify({ error: "Slot already booked" }), {
+          status: 409,
+        });
+      }
+
+      // ✅ Insert Manual Booking
+      const [newBooking] = await trx
+        .insert(bookings)
+        .values({
+          userId: finalUserId || null, // Allow null if no email provided for walk-in (though schema might want UUID, checked earlier)
+          turfId,
+          turfName: turf_name,
+          date,
+          startTime,
+          duration: parsedDuration,
+          totalPrice: parsedTotalPrice.toString(),
+          paymentMethod,
+          customerName,
+          customerPhone,
+          customerEmail,
+          createdBy: createdBy, // Admin ID
+          status: status,
+        })
+        .returning({ id: bookings.id });
+
+      return new Response(
+        JSON.stringify({ success: true, booking: newBooking }),
+        { status: 201 }
+      );
     });
   } catch (error) {
-    console.error("❌ Booking error:", error);
-    return new Response(JSON.stringify({ error: "Server error" }), {
-      status: 500,
-    });
+    console.error("Manual Booking Error:", error);
+    return new Response(
+      JSON.stringify({
+        error: error instanceof Error ? error.message : "Internal Server Error",
+      }),
+      { status: 500 }
+    );
   }
+}
+
+// Helper
+function hashCode(str: string): number {
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    hash = (hash << 5) - hash + str.charCodeAt(i);
+    hash |= 0;
+  }
+  return hash;
 }

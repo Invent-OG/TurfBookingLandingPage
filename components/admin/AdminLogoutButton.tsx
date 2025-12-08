@@ -1,5 +1,7 @@
 "use client";
 
+import { LogOut } from "lucide-react";
+
 import { useRouter } from "next/navigation";
 
 export const AdminLogoutButton = () => {
@@ -13,9 +15,10 @@ export const AdminLogoutButton = () => {
   return (
     <button
       onClick={handleLogout}
-      className="bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-600 transition"
+      className="p-2 rounded-lg text-gray-500 hover:text-red-400 hover:bg-white/5 transition-colors"
+      title="Logout"
     >
-      Logout
+      <LogOut size={18} />
     </button>
   );
 };

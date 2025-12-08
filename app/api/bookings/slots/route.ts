@@ -141,7 +141,7 @@
 
 import { NextResponse } from "next/server";
 import { bookings, turfs, blockedDates } from "@/db/schema";
-import { eq, and, lt, or } from "drizzle-orm";
+import { eq, and, lt, or, notInArray } from "drizzle-orm";
 import { db } from "@/db/db";
 
 // Convert HH:mm:ss to total minutes from midnight
@@ -217,13 +217,19 @@ export async function GET(req: Request) {
         )
       );
 
+    // Get booked slots (excluding cancelled/rejected)
     const bookedSlots = await db
       .select({ startTime: bookings.startTime, duration: bookings.duration })
       .from(bookings)
       .where(
-        and(eq(bookings.turfId, turfId), eq(bookings.date, date.split("T")[0]))
+        and(
+          eq(bookings.turfId, turfId),
+          eq(bookings.date, date.split("T")[0]),
+          notInArray(bookings.status, ["cancelled", "rejected"])
+        )
       );
 
+    // Get blocked times
     const blockedSlots = await db
       .select({ blockedTimes: blockedDates.blockedTimes })
       .from(blockedDates)
@@ -233,6 +239,11 @@ export async function GET(req: Request) {
           eq(blockedDates.startDate, date.split("T")[0])
         )
       );
+
+    // Check for full day block
+    const isFullDayBlocked = blockedSlots.some(
+      (slot) => !slot.blockedTimes || slot.blockedTimes.length === 0
+    );
 
     const blockedTimesSet = new Set(
       blockedSlots.flatMap((slot) => slot.blockedTimes || [])
@@ -249,13 +260,18 @@ export async function GET(req: Request) {
         continue;
       }
 
+      // Check if booked
       const isBooked = bookedSlots.some((slot) => {
         const bookingStart = timeToMinutes(slot.startTime);
         const bookingEnd = bookingStart + slot.duration * 60;
         return slotMinutes >= bookingStart && slotMinutes < bookingEnd;
       });
 
-      const isBlocked = blockedTimesSet.has(slotTime);
+      // Check if blocked: full day blocked OR specific slot blocked
+      const isBlocked =
+        isFullDayBlocked ||
+        blockedTimesSet.has(slotTime) ||
+        blockedTimesSet.has(slotTime.slice(0, 5)); // Check HH:mm
 
       availableSlots.push({
         time: slotTime,

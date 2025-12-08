@@ -256,10 +256,10 @@ export function DurationSelector({
       </Button>
 
       <Drawer open={isOpen} onOpenChange={setIsOpen}>
-        <DrawerContent>
+        <DrawerContent className="bg-turf-dark border-white/10 text-white">
           <DrawerHeader>
             <DrawerTitle>Select Duration</DrawerTitle>
-            <DrawerDescription>
+            <DrawerDescription className="text-gray-400">
               Starting from {formatSlotTime(startTime)}
             </DrawerDescription>
           </DrawerHeader>
@@ -271,12 +271,13 @@ export function DurationSelector({
                   size="icon"
                   onClick={() => handleDurationChange(-1)}
                   disabled={duration <= minDuration}
+                  className="bg-white/5 border-white/10 text-white hover:bg-white/10 hover:text-turf-neon disabled:opacity-30 disabled:hover:bg-transparent"
                 >
                   <Minus className="h-4 w-4" />
                 </Button>
                 <div className="text-center">
                   <div className="text-2xl font-bold">{duration} hr</div>
-                  <div className="text-sm text-muted-foreground">
+                  <div className="text-sm text-gray-400">
                     {formatSlotTime(startTime)} -{" "}
                     {calculateEndTime(formatSlotTime(startTime), duration)}
                   </div>
@@ -286,21 +287,23 @@ export function DurationSelector({
                   size="icon"
                   onClick={() => handleDurationChange(1)}
                   disabled={duration >= maxDuration}
+                  className="bg-white/5 border-white/10 text-white hover:bg-white/10 hover:text-turf-neon disabled:opacity-30 disabled:hover:bg-transparent"
                 >
                   <Plus className="h-4 w-4" />
                 </Button>
               </div>
 
               <div className="text-center">
-                <div className="text-sm text-muted-foreground">
-                  Total Amount
-                </div>
-                <div className="text-2xl font-bold">
+                <div className="text-sm text-gray-400">Total Amount</div>
+                <div className="text-2xl font-bold text-turf-neon">
                   ₹{calculatePrice(duration)}
                 </div>
               </div>
 
-              <Button className="w-full" onClick={handleConfirm}>
+              <Button
+                className="w-full bg-turf-neon text-black font-bold hover:bg-turf-neon/90"
+                onClick={handleConfirm}
+              >
                 Confirm Booking
               </Button>
             </div>

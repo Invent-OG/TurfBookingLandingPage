@@ -106,10 +106,14 @@ function BookingFormContent() {
     }
 
     try {
-      const isAvailable = await fetchAvailableSlots();
-      if (!isAvailable) {
+      const availableSlots = await fetchAvailableSlots();
+      const selectedSlot = availableSlots?.find((slot: any) =>
+        slot.time.startsWith(startTime)
+      );
+
+      if (!selectedSlot || selectedSlot.isBooked || selectedSlot.isBlocked) {
         toast.error(
-          "Selected time slot is already booked. Please choose another."
+          "Selected time slot is already booked or unavailable. Please choose another."
         );
         setLoading(false);
         return;

@@ -276,13 +276,13 @@ export default function Booking() {
                 <SwiperSlide key={turf.id} className="h-full">
                   <div
                     className={clsx(
-                      "relative group rounded-2xl overflow-hidden border transition-all duration-300 h-full",
+                      "relative group rounded-2xl overflow-hidden border transition-all duration-300 h-full flex flex-col",
                       turfId === turf.id
                         ? "border-turf-neon shadow-[0_0_30px_-5px_rgba(204,255,0,0.3)] bg-black/40"
                         : "border-white/10 hover:border-white/30 bg-white/5"
                     )}
                   >
-                    <div className="relative h-48 overflow-hidden">
+                    <div className="relative h-48 flex-shrink-0 overflow-hidden">
                       <img
                         src={
                           turf.image_url || "/images/Carousel/Comp 1_00002.webp"
@@ -293,7 +293,7 @@ export default function Booking() {
                       <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
 
                       <div className="absolute bottom-4 left-4 right-4">
-                        <h3 className="text-xl font-bold text-white mb-1">
+                        <h3 className="text-xl font-bold text-white mb-1 uppercase font-heading italic">
                           {turf.name}
                         </h3>
                         <p className="text-sm text-gray-300 line-clamp-1">
@@ -302,12 +302,12 @@ export default function Booking() {
                       </div>
                     </div>
 
-                    <div className="p-5 space-y-4">
+                    <div className="p-5 space-y-4 flex flex-col flex-1">
                       <p className="text-sm text-gray-400 line-clamp-2 h-10">
                         {turf.description}
                       </p>
 
-                      <div className="flex items-center justify-between pt-2 border-t border-white/10">
+                      <div className="flex items-center justify-between pt-2 border-t border-white/10 mt-auto">
                         <div>
                           <p className="text-xs text-gray-500 uppercase font-bold tracking-wider">
                             Price
@@ -345,7 +345,7 @@ export default function Booking() {
                       </div>
 
                       {turf.is_disabled && (
-                        <p className="text-xs text-red-400 bg-red-500/10 p-2 rounded border border-red-500/20">
+                        <p className="text-xs text-red-400 bg-red-500/10 p-2 rounded border border-red-500/20 text-center">
                           {turf.disabled_reason}
                         </p>
                       )}
