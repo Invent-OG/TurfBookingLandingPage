@@ -14,6 +14,7 @@ import {
   LogOut,
   Ticket,
   Users,
+  Image as ImageIcon,
 } from "lucide-react";
 import { useRouter, usePathname } from "next/navigation";
 import { useState, useEffect } from "react";
@@ -62,6 +63,11 @@ const sections: SidebarSection[] = [
         title: "Turfs",
         url: "/admin/turfs",
         icon: MapPin,
+      },
+      {
+        title: "Gallery",
+        url: "/admin/gallery",
+        icon: ImageIcon,
       },
     ],
   },

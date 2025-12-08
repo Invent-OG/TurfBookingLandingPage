@@ -95,8 +95,8 @@
   * {
     @apply border-border;
   }
-  body {
-    @apply bg-background text-foreground;
+  html, body {
+    @apply bg-turf-dark text-foreground overflow-x-hidden;
   }
 }
 

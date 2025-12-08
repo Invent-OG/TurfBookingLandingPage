@@ -49,7 +49,7 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
       <AdminSidebar />
       <div className="flex-1 flex flex-col lg:pl-64 min-h-screen relative z-0">
         <AdminHeader />
-        <main className="flex-1 p-4 lg:p-10 overflow-auto">
+        <main className="flex-1 p-4 lg:p-10 overflow-y-auto overflow-x-hidden">
           <div className="max-w-7xl mx-auto space-y-6 lg:space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
             {children}
           </div>

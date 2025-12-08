@@ -136,3 +136,9 @@ export const siteSettings = pgTable("site_settings", {
   supportEmail: text("support_email"),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
+
+export const galleryImages = pgTable("gallery_images", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  imageUrl: text("image_url").notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+});

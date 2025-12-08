@@ -34,7 +34,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body>
+      <body className="bg-turf-dark text-white antialiased">
         <Providers>
           {children}
           <Toaster />
