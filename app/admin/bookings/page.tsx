@@ -113,25 +113,37 @@ export default function Bookings() {
     },
   });
 
-  // Mutation for Cancelling Bookings
+  const [issueRefund, setIssueRefund] = useState(false);
+
+  // Mutation for Cancelling/Refunding Bookings
   const cancelMutation = useMutation({
-    mutationFn: async (id: string) => {
-      const res = await fetch(`/api/admin/bookings/${id}/cancel`, {
+    mutationFn: async ({ id, refund }: { id: string; refund: boolean }) => {
+      const endpoint = refund
+        ? `/api/admin/bookings/${id}/refund`
+        : `/api/admin/bookings/${id}/cancel`;
+
+      const res = await fetch(endpoint, {
         method: "POST",
       });
+
       if (!res.ok) {
         const errorData = await res.json();
-        throw new Error(errorData.error || "Failed to cancel");
+        throw new Error(errorData.error || "Failed to process request");
       }
       return res.json();
     },
-    onSuccess: () => {
-      toast.success("Booking cancelled successfully.");
+    onSuccess: (data, variables) => {
+      toast.success(
+        variables.refund
+          ? "Booking refunded successfully."
+          : "Booking cancelled successfully."
+      );
       queryClient.invalidateQueries({ queryKey: ["bookings"] });
       setBookingToCancel(null);
+      setIssueRefund(false); // Reset checkbox
     },
     onError: (error: Error) => {
-      toast.error(error.message || "An error occurred while cancelling.");
+      toast.error(error.message || "An error occurred.");
     },
   });
 
@@ -223,7 +235,7 @@ export default function Bookings() {
             "px-2 py-0.5 rounded-full text-xs font-bold uppercase tracking-wider",
             item.status === "pending"
               ? "bg-yellow-500/20 text-yellow-500 border border-yellow-500/20"
-              : item.status === "cancelled"
+              : item.status === "cancelled" || item.status === "refunded"
                 ? "bg-red-500/20 text-red-500 border border-red-500/20"
                 : "bg-turf-neon/20 text-turf-neon border border-turf-neon/20"
           )}
@@ -414,7 +426,12 @@ export default function Bookings() {
       {/* Cancellation Dialog */}
       <Dialog
         open={!!bookingToCancel}
-        onOpenChange={(open) => !open && setBookingToCancel(null)}
+        onOpenChange={(open) => {
+          if (!open) {
+            setBookingToCancel(null);
+            setIssueRefund(false);
+          }
+        }}
       >
         <DialogContent className="bg-turf-dark border border-white/10 text-white">
           <DialogHeader>
@@ -424,20 +441,49 @@ export default function Bookings() {
               the slot for others.
             </DialogDescription>
           </DialogHeader>
+
+          <div className="flex items-center space-x-2 py-4">
+            <Checkbox
+              id="refund"
+              checked={issueRefund}
+              onCheckedChange={(checked) => setIssueRefund(checked as boolean)}
+              className="border-gray-500 data-[state=checked]:bg-turf-neon data-[state=checked]:text-black"
+            />
+            <label
+              htmlFor="refund"
+              className="text-sm font-medium leading-none text-white peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+            >
+              Issue Refund via Cashfree
+            </label>
+          </div>
+
           <DialogFooter>
             <NeonButton
               variant="ghost"
-              onClick={() => setBookingToCancel(null)}
+              onClick={() => {
+                setBookingToCancel(null);
+                setIssueRefund(false);
+              }}
             >
               Close
             </NeonButton>
             <NeonButton
               variant="danger"
               onClick={() =>
-                bookingToCancel && cancelMutation.mutate(bookingToCancel)
+                bookingToCancel &&
+                cancelMutation.mutate({
+                  id: bookingToCancel,
+                  refund: issueRefund,
+                })
               }
             >
-              {cancelMutation.isPending ? "Cancelling..." : "Confirm Cancel"}
+              {cancelMutation.isPending
+                ? issueRefund
+                  ? "Processing Refund..."
+                  : "Cancelling..."
+                : issueRefund
+                  ? "Refund & Cancel"
+                  : "Confirm Cancel"}
             </NeonButton>
           </DialogFooter>
         </DialogContent>

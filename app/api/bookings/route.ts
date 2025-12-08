@@ -145,7 +145,7 @@ export async function POST(req: Request) {
           and(
             eq(bookings.turfId, turfId),
             eq(bookings.date, date),
-            notInArray(bookings.status, ["cancelled", "rejected"]),
+            notInArray(bookings.status, ["cancelled", "rejected", "refunded"]),
             or(
               and(
                 sql`${startTime} >= ${bookings.startTime}`,

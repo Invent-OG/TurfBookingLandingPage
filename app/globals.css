@@ -97,7 +97,6 @@
   }
   body {
     @apply bg-background text-foreground;
-    background: red !important; /* DEBUG: Check if CSS is loaded */
   }
 }
 
