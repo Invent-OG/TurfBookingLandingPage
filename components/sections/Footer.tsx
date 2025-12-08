@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import { Button } from "../ui/button";
 import { useRouter } from "next/navigation";
+import { useState, useEffect } from "react";
 
 export default function Footer() {
   const router = useRouter();
@@ -33,12 +34,31 @@ export default function Footer() {
   //   },
   // ];
 
+  const [branding, setBranding] = useState({
+    companyName: "TurfBook",
+    supportEmail: "contact@turfbook.com",
+  });
+
+  useEffect(() => {
+    fetch("/api/admin/settings")
+      .then((res) => res.json())
+      .then((data) => {
+        if (data && !data.error) {
+          setBranding({
+            companyName: data.companyName || "TurfBook",
+            supportEmail: data.supportEmail || "contact@turfbook.com",
+          });
+        }
+      })
+      .catch((err) => console.error("Failed to load branding", err));
+  }, []);
+
   const contactInfo = [
-    { icon: Mail, text: "contact@turfbook.com" },
-    { icon: Phone, text: "+91 99999 99999" },
+    { icon: Mail, text: branding.supportEmail },
+    { icon: Phone, text: "+91 91515 96868" },
     {
       icon: MapPin,
-      text: "coimbatore, Tamil Nadu, 600000",
+      text: "bypass, opp. to DSR madhanam inn, Malik Nagar, Asur, Kumbakonam, Tamil Nadu, Kumbakonam 612001",
     },
   ];
 
@@ -49,8 +69,14 @@ export default function Footer() {
       <div className="relative max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-12 z-10">
         {/* Left: Branding */}
         <div className="space-y-6">
-          <h3 className="text-3xl font-black font-heading tracking-wider">
-            TURF<span className="text-turf-neon">BOOK</span>
+          <h3 className="text-3xl font-black font-heading tracking-wider uppercase">
+            {branding.companyName === "TurfBook" ? (
+              <>
+                TURF<span className="text-turf-neon">BOOK</span>
+              </>
+            ) : (
+              <span className="text-white">{branding.companyName}</span>
+            )}
           </h3>
           <p className="text-gray-400 leading-relaxed">
             Book your perfect turf anytime, anywhere. Experience seamless
@@ -122,7 +148,10 @@ export default function Footer() {
 
       {/* Bottom Copyright */}
       <div className="text-center text-gray-600 text-sm border-t border-white/5 mt-16 pt-8">
-        <p>&copy; {new Date().getFullYear()} TurfBook. All rights reserved.</p>
+        <p>
+          &copy; {new Date().getFullYear()} {branding.companyName}. All rights
+          reserved.
+        </p>
       </div>
     </footer>
   );

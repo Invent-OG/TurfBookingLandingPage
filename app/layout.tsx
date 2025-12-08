@@ -3,10 +3,29 @@ import { Metadata } from "next";
 import { Toaster } from "@/components/ui/sonner";
 import Providers from "./providers";
 
-export const metadata: Metadata = {
-  title: "Next.js App with NextAuth",
-  description: "Next.js authentication with NextAuth.js",
-};
+import { db } from "@/db/db";
+import { siteSettings } from "@/db/schema";
+
+export async function generateMetadata(): Promise<Metadata> {
+  try {
+    const settings = await db.select().from(siteSettings).limit(1);
+    const companyName = settings[0]?.companyName || "TurfBook";
+
+    return {
+      title: `${companyName} | Premium Turf Booking`,
+      description: `Book your favorite sports arena with ${companyName}.`,
+    };
+  } catch (error) {
+    console.warn(
+      "Error fetching site settings for metadata (table might be missing):",
+      error
+    );
+    return {
+      title: "TurfBook | Premium Turf Booking",
+      description: "Book your favorite sports arena with TurfBook.",
+    };
+  }
+}
 
 export default function RootLayout({
   children,

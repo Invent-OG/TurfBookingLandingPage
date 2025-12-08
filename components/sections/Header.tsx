@@ -15,6 +15,22 @@ export default function Navbar() {
   const menuRef = useRef<HTMLDivElement | null>(null);
   const linksRef = useRef<HTMLLIElement[]>([]);
 
+  const [branding, setBranding] = useState<{
+    companyName: string;
+    logoUrl: string | null;
+  } | null>(null);
+
+  useEffect(() => {
+    fetch("/api/admin/settings")
+      .then((res) => res.json())
+      .then((data) => {
+        if (data && !data.error) {
+          setBranding(data);
+        }
+      })
+      .catch((err) => console.error("Failed to load branding", err));
+  }, []);
+
   // Detect scroll event
   useEffect(() => {
     const handleScroll = () => {
@@ -62,12 +78,31 @@ export default function Navbar() {
         )}
       >
         <div className="flex items-center gap-2">
-          {/* Logo Placeholder - replaced with text for now as per image logic */}
-          <div className="w-10 h-10 rounded-full bg-turf-neon flex items-center justify-center shadow-neon-green">
-            <span className="text-turf-dark font-bold text-xl">T</span>
-          </div>
-          <span className="text-2xl font-bold font-heading tracking-wider">
-            TURF<span className="text-turf-neon">BOOK</span>
+          {branding?.logoUrl ? (
+            <div className="relative w-10 h-10 rounded-full overflow-hidden shadow-neon-green border border-turf-neon/20">
+              <Image
+                src={branding.logoUrl}
+                alt={branding.companyName}
+                fill
+                className="object-cover"
+              />
+            </div>
+          ) : (
+            <div className="w-10 h-10 rounded-full bg-turf-neon flex items-center justify-center shadow-neon-green">
+              <span className="text-turf-dark font-bold text-xl">
+                {branding?.companyName ? branding.companyName.charAt(0) : "T"}
+              </span>
+            </div>
+          )}
+
+          <span className="text-2xl font-bold font-heading tracking-wider flex gap-1">
+            {branding?.companyName ? (
+              <span className="text-white">{branding.companyName}</span>
+            ) : (
+              <>
+                TURF<span className="text-turf-neon">BOOK</span>
+              </>
+            )}
           </span>
         </div>
 

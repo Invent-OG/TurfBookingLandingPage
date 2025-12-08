@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { NeonButton } from "@/components/ui/neon-button";
 import { Input } from "@/components/ui/input";
@@ -15,7 +15,27 @@ export default function AdminLogin() {
   const [loading, setLoading] = useState(false);
   const router = useRouter();
 
+  const [branding, setBranding] = useState({
+    companyName: "TurfBook",
+    logoUrl: null as string | null,
+  });
+
+  useEffect(() => {
+    fetch("/api/admin/settings")
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.companyName) {
+          setBranding({
+            companyName: data.companyName,
+            logoUrl: data.logoUrl,
+          });
+        }
+      })
+      .catch((err) => console.error("Failed to load branding", err));
+  }, []);
+
   const handleLogin = async (e: React.FormEvent) => {
+    // ... (keep existing login logic)
     e.preventDefault();
     setLoading(true);
 
@@ -56,11 +76,25 @@ export default function AdminLogin() {
 
       <div className="w-full max-w-md p-6 relative z-10">
         <div className="mb-8 text-center">
-          <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-turf-neon to-turf-blue mx-auto mb-6 flex items-center justify-center shadow-[0_0_30px_rgba(34,197,94,0.3)]">
-            <ShieldCheck className="w-8 h-8 text-turf-dark" />
+          <div className="w-20 h-20 mx-auto mb-6 flex items-center justify-center">
+            {branding.logoUrl ? (
+              <div className="relative w-20 h-20">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={branding.logoUrl}
+                  alt="Logo"
+                  className="object-contain w-full h-full drop-shadow-[0_0_15px_rgba(34,197,94,0.5)]"
+                />
+              </div>
+            ) : (
+              <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-turf-neon to-turf-blue flex items-center justify-center shadow-[0_0_30px_rgba(34,197,94,0.3)]">
+                <ShieldCheck className="w-8 h-8 text-turf-dark" />
+              </div>
+            )}
           </div>
+
           <h1 className="text-4xl font-bold text-white tracking-wider font-heading mb-2">
-            TURF<span className="text-turf-neon text-glow">ADMIN</span>
+            {branding.companyName.toUpperCase()}
           </h1>
           <p className="text-gray-400">Secure Access Portal</p>
         </div>

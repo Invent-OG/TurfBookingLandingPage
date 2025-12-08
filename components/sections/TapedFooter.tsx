@@ -2,6 +2,8 @@
 import { cn } from "@/lib/utils";
 import Link from "next/link";
 import { Linkedin, Twitter, Facebook, Instagram } from "lucide-react";
+import { useState, useEffect } from "react";
+import Image from "next/image";
 
 const tape = (
   <svg
@@ -56,6 +58,22 @@ const TapeSVG = () => (
 
 export default function TapedFooter() {
   const currentYear = new Date().getFullYear();
+  const [branding, setBranding] = useState<{
+    companyName: string;
+    logoUrl: string | null;
+    supportEmail?: string;
+  } | null>(null);
+
+  useEffect(() => {
+    fetch("/api/admin/settings")
+      .then((res) => res.json())
+      .then((data) => {
+        if (data && !data.error) {
+          setBranding(data);
+        }
+      })
+      .catch((err) => console.error("Failed to load branding", err));
+  }, []);
 
   return (
     <footer className="my-8 px-4 max-w-7xl mx-auto text-white relative z-10">
@@ -75,8 +93,24 @@ export default function TapedFooter() {
               href="/"
               className="flex items-center gap-2 text-3xl font-heading font-black italic uppercase tracking-tighter"
             >
-              <span className="text-white">TURF</span>
-              <span className="text-turf-neon">BOOK</span>
+              <div className="flex items-center gap-2">
+                {branding?.logoUrl && (
+                  <div className="relative w-8 h-8 rounded-full overflow-hidden border border-turf-neon/20">
+                    <Image
+                      src={branding.logoUrl}
+                      alt={branding.companyName}
+                      fill
+                      className="object-cover"
+                    />
+                  </div>
+                )}
+                <span className="text-white">
+                  {branding?.companyName ? branding.companyName : "TURF"}
+                </span>
+                {!branding?.companyName && (
+                  <span className="text-turf-neon">BOOK</span>
+                )}
+              </div>
             </Link>
             <p className="text-gray-400 font-medium">
               The ultimate platform for booking premium sports arenas.
@@ -115,6 +149,14 @@ export default function TapedFooter() {
                 >
                   Contact
                 </Link>
+                {branding?.supportEmail && (
+                  <a
+                    href={`mailto:${branding.supportEmail}`}
+                    className="text-turf-neon hover:underline break-all"
+                  >
+                    {branding.supportEmail}
+                  </a>
+                )}
               </nav>
             </div>
 
@@ -145,7 +187,10 @@ export default function TapedFooter() {
 
         {/* Bottom */}
         <div className="flex flex-col md:flex-row justify-between items-center w-full gap-4 text-sm text-gray-500 mt-8">
-          <p>© {currentYear} TurfBook. All rights reserved.</p>
+          <p>
+            © {currentYear} {branding?.companyName || "TurfBook"}. All rights
+            reserved.
+          </p>
           <div className="flex gap-6">
             <a href="#" className="hover:text-turf-neon transition-colors">
               <Twitter size={20} />

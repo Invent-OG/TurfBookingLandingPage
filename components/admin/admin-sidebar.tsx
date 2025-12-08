@@ -16,9 +16,10 @@ import {
   Users,
 } from "lucide-react";
 import { useRouter, usePathname } from "next/navigation";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
+import Image from "next/image";
 import { AdminLogoutButton } from "./AdminLogoutButton";
 
 interface MenuItem {
@@ -102,12 +103,61 @@ export function AdminSidebar() {
   const [openMenu, setOpenMenu] = useState<string | null>(null);
   const [isMobileOpen, setIsMobileOpen] = useState(false);
 
+  // Branding State
+  const [branding, setBranding] = useState({
+    companyName: "TurfBook",
+    logoUrl: null as string | null,
+  });
+
+  useEffect(() => {
+    const fetchBranding = async () => {
+      try {
+        const res = await fetch("/api/admin/settings");
+        if (res.ok) {
+          const data = await res.json();
+          setBranding({
+            companyName: data.companyName || "TurfBook",
+            logoUrl: data.logoUrl,
+          });
+        }
+      } catch (error) {
+        console.error("Error fetching branding:", error);
+      }
+    };
+    fetchBranding();
+  }, []);
+
   const toggleMenu = (title: string) => {
     setOpenMenu(openMenu === title ? null : title);
   };
 
   const isActive = (url: string) =>
     pathname === url || pathname.startsWith(url + "/");
+
+  // Helper to split company name for styling (e.g., first word normal, rest neon)
+  const formatCompanyName = (name: string) => {
+    const parts = name.split(" ");
+    if (parts.length === 1) {
+      // If single word, split roughly in half for effect, or just standard
+      if (name.length > 4) {
+        const mid = Math.ceil(name.length / 2);
+        return (
+          <>
+            {name.slice(0, mid)}
+            <span className="text-turf-neon">{name.slice(mid)}</span>
+          </>
+        );
+      }
+      return <span className="text-turf-neon">{name}</span>;
+    }
+    // Multi-word: First word white, rest neon
+    return (
+      <>
+        {parts[0]}{" "}
+        <span className="text-turf-neon">{parts.slice(1).join(" ")}</span>
+      </>
+    );
+  };
 
   return (
     <>
@@ -139,14 +189,26 @@ export function AdminSidebar() {
         {/* Logo / Brand */}
         <div className="h-20 flex items-center px-6 border-b border-white/5">
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-turf-neon to-turf-neon/70 flex items-center justify-center shadow-[0_0_15px_rgba(204,255,0,0.3)]">
-              <span className="text-black font-black text-lg font-heading italic">
-                T
-              </span>
-            </div>
+            {branding.logoUrl ? (
+              <div className="relative w-9 h-9">
+                <Image
+                  src={branding.logoUrl}
+                  alt="Logo"
+                  fill
+                  className="object-contain"
+                />
+              </div>
+            ) : (
+              <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-turf-neon to-turf-neon/70 flex items-center justify-center shadow-[0_0_15px_rgba(204,255,0,0.3)]">
+                <span className="text-black font-black text-lg font-heading italic">
+                  {branding.companyName.charAt(0)}
+                </span>
+              </div>
+            )}
+
             <div className="flex flex-col">
               <h1 className="text-lg font-bold text-white tracking-wide font-heading leading-none">
-                TURF<span className="text-turf-neon">BOOK</span>
+                {formatCompanyName(branding.companyName)}
               </h1>
               <span className="text-[10px] text-gray-500 font-medium tracking-widest uppercase mt-1">
                 Admin Panel

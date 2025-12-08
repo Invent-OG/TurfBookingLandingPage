@@ -128,3 +128,11 @@ export const blockedDates = pgTable(
     uniqueTurfDate: unique().on(t.turfId, t.startDate),
   })
 );
+
+export const siteSettings = pgTable("site_settings", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  companyName: text("company_name").default("TurfBook").notNull(),
+  logoUrl: text("logo_url"),
+  supportEmail: text("support_email"),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
