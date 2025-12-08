@@ -1,3 +1,5 @@
+"use client";
+
 import { useRef, useEffect } from "react";
 import { MarqueeDemo } from "../TestimonialsMarquee/main";
 import { gsap } from "gsap";

@@ -1,3 +1,5 @@
+"use client";
+
 import { BlurFade } from "../ui/blur-fade";
 import { GlassCard } from "../ui/glass-card";
 import { useState, useEffect } from "react";
