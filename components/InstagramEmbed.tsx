@@ -29,7 +29,7 @@ const InstagramEmbed = () => {
         <CardContent className="p-0 rounded-xl overflow-hidden">
           <blockquote
             className="instagram-media"
-            data-instgrm-permalink="https://www.instagram.com/cristiano/"
+            data-instgrm-permalink="https://www.instagram.com/krpsportszone/?hl=en"
             data-instgrm-version="12"
             style={{
               width: "100%",
