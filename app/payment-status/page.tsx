@@ -76,22 +76,44 @@ function BookingStatusContent({ bookingId }: { bookingId: string | null }) {
     }
   }
 
-  async function deleteBookingFromSupabase(orderId: string) {
+  async function verifyPayment(id: string) {
+    // setIsVerifying(true); // You might want to show a spinner
     try {
-      const { error } = await supabase
-        .from("bookings")
-        .delete()
-        .eq("id", orderId);
-      if (error) throw error;
-      console.log(`🗑️ Booking ${orderId} removed after failed payment`);
-    } catch (error) {
-      console.error("❌ Error deleting booking:", error);
+      console.log("🔄 Verifying payment with backend...");
+      const res = await fetch("/api/payment/verify", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ bookingId: id }),
+      });
+      const data = await res.json();
+
+      console.log("✅ Verification result:", data);
+
+      if (data.status === "booked") {
+        setBookingData((prev) => (prev ? { ...prev, status: "booked" } : null));
+      }
+    } catch (e) {
+      console.error("❌ Verification failed", e);
     }
   }
 
+  // async function deleteBookingFromSupabase(orderId: string) {
+  //   try {
+  //     const { error } = await supabase
+  //       .from("bookings")
+  //       .delete()
+  //       .eq("id", orderId);
+  //     if (error) throw error;
+  //     console.log(`🗑️ Booking ${orderId} removed after failed payment`);
+  //   } catch (error) {
+  //     console.error("❌ Error deleting booking:", error);
+  //   }
+  // }
+
   useEffect(() => {
     if (bookingData && bookingData.status !== "booked" && bookingId) {
-      deleteBookingFromSupabase(bookingId);
+      // deleteBookingFromSupabase(bookingId);
+      verifyPayment(bookingId);
     }
   }, [bookingData, bookingId]);
 
