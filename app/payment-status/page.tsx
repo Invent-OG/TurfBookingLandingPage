@@ -134,20 +134,24 @@ function BookingStatusContent({ bookingId }: { bookingId: string | null }) {
   }
 
   return (
-    <div className="h-screen bg-turf-dark flex items-center justify-center p-4">
+    <div className="min-h-screen bg-turf-dark flex items-center justify-center p-4 relative overflow-hidden">
+      {/* Background Ambience */}
+      <div className="absolute inset-0 bg-[url('/noise.png')] opacity-5 pointer-events-none" />
+      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[400px] bg-turf-neon/10 blur-[100px] rounded-full pointer-events-none" />
+
       {bookingData ? (
         bookingData.status === "booked" ? (
-          <div className="w-full max-w-md">
+          <div className="w-full max-w-md z-10">
             <Success bookingData={bookingData} />
           </div>
         ) : (
-          <div className="w-full max-w-md">
+          <div className="w-full max-w-md z-10">
             <Failure bookingData={bookingData} />
           </div>
         )
       ) : (
-        <div className="h-screen flex items-center justify-center text-white">
-          <p className="text-red-500 font-semibold bg-white/5 px-6 py-3 rounded-xl border border-white/10">
+        <div className="h-screen flex items-center justify-center text-white z-10">
+          <p className="text-red-500 font-semibold bg-white/5 px-6 py-3 rounded-xl border border-white/10 backdrop-blur-md">
             Booking not found.
           </p>
         </div>
