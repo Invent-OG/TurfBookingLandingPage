@@ -1,6 +1,6 @@
 "use client";
-import { supabase } from "@/lib/supabase";
 import { useState, useEffect } from "react";
+import { useTurfs, useDeleteTurf } from "@/hooks/use-turfs";
 import {
   Dialog,
   DialogContent,
@@ -22,31 +22,18 @@ import {
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { Turf } from "@/types/turf";
-import { useTurfStore } from "@/lib/store/turf";
+import { useUploadFile, useDeleteFile } from "@/hooks/use-storage"; // useUpload unused but consistent import if needed
 import { GlassCard } from "@/components/ui/glass-card";
 import { NeonButton } from "@/components/ui/neon-button";
 import { cn } from "@/lib/utils";
 
 function ManageTurfs() {
-  const { turfs, setTurfs } = useTurfStore();
-  const [isLoading, setIsLoading] = useState(true);
+  const { data: turfs = [], isLoading } = useTurfs();
+  const deleteTurfMutation = useDeleteTurf();
+  const deleteFileMutation = useDeleteFile();
+
   const [selectedTurf, setSelectedTurf] = useState<Turf | null>(null);
   const router = useRouter();
-
-  useEffect(() => {
-    fetchTurfs();
-  }, []);
-
-  const fetchTurfs = async () => {
-    setIsLoading(true);
-    const { data, error } = await supabase.from("turfs").select("*");
-    if (error) {
-      toast.error("Error fetching turfs");
-    } else {
-      setTurfs((data as Turf[]) || []);
-    }
-    setIsLoading(false);
-  };
 
   const formatTime = (time: string) => {
     if (!time) return "N/A";
@@ -60,27 +47,20 @@ function ManageTurfs() {
   const handleConfirmDelete = async () => {
     if (!selectedTurf) return;
     try {
-      if (selectedTurf.image_url) {
+      if (selectedTurf.imageUrl) {
         try {
-          const urlParts = new URL(selectedTurf.image_url);
-          const fullPath = decodeURIComponent(urlParts.pathname);
-          const bucketName = "turf-images";
-          const filePath = fullPath.split(`/${bucketName}/`)[1];
-          if (filePath)
-            await supabase.storage.from(bucketName).remove([filePath]);
-        } catch (e) {
-          console.error(e);
+          await deleteFileMutation.mutateAsync({
+            bucket: "turf-images",
+            path: selectedTurf.imageUrl,
+          });
+        } catch (err) {
+          console.error("Failed to delete image", err);
+          // Continue deleting turf even if image delete fails
         }
       }
 
-      const { error: dbError } = await supabase
-        .from("turfs")
-        .delete()
-        .eq("id", selectedTurf.id);
-      if (dbError) throw dbError;
-
+      await deleteTurfMutation.mutateAsync(selectedTurf.id);
       toast.success("Turf deleted successfully");
-      fetchTurfs();
     } catch (error: any) {
       toast.error("Error deleting turf");
     } finally {
@@ -137,9 +117,9 @@ function ManageTurfs() {
             >
               {/* Image Section */}
               <div className="relative h-48 w-full overflow-hidden bg-black/50">
-                {turf.image_url ? (
+                {turf.imageUrl ? (
                   <img
-                    src={turf.image_url}
+                    src={turf.imageUrl}
                     alt={turf.name}
                     className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
                   />
@@ -151,7 +131,7 @@ function ManageTurfs() {
 
                 {/* Status Badge */}
                 <div className="absolute top-4 left-4">
-                  {turf.is_disabled ? (
+                  {turf.isDisabled ? (
                     <span className="px-3 py-1 bg-red-500 text-white text-xs font-bold rounded-full shadow-lg">
                       Disabled
                     </span>
@@ -165,7 +145,7 @@ function ManageTurfs() {
                 {/* Price Badge */}
                 <div className="absolute bottom-4 right-4 bg-turf-dark/80 backdrop-blur px-3 py-1 rounded-lg border border-white/10">
                   <span className="text-turf-neon font-bold">
-                    ₹{turf.price_per_hour}
+                    ₹{turf.pricePerHour}
                   </span>
                   <span className="text-gray-400 text-xs">/hr</span>
                 </div>
@@ -194,8 +174,8 @@ function ManageTurfs() {
                         Hours
                       </span>
                       <span className="text-xs text-white font-medium">
-                        {formatTime(turf.opening_time)} -{" "}
-                        {formatTime(turf.closing_time)}
+                        {formatTime(turf.openingTime)} -{" "}
+                        {formatTime(turf.closingTime)}
                       </span>
                     </div>
                   </div>
@@ -208,7 +188,7 @@ function ManageTurfs() {
                         Capacity
                       </span>
                       <span className="text-xs text-white font-medium">
-                        {turf.max_players} Players
+                        {turf.maxPlayers} Players
                       </span>
                     </div>
                   </div>

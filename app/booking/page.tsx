@@ -1,13 +1,12 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, Suspense } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { format, isBefore, parseISO } from "date-fns";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { ChevronLeft, ChevronRight, HomeIcon } from "lucide-react";
 import DateSelector from "@/components/date-picker";
-import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
 import clsx from "clsx";
 import { DurationSelector } from "@/components/booking/DurationSelector";
@@ -16,28 +15,30 @@ import "swiper/css";
 import "swiper/css/pagination";
 import { Navigation } from "swiper/modules";
 import "swiper/css/navigation";
-import { useTurfStore } from "@/lib/store/turf";
-import { parse } from "path";
+import { useTurfs } from "@/hooks/use-turfs";
+import { useSlots, useBlockedTimes, Slot } from "@/hooks/use-slots";
+import { useBlockedDates } from "@/hooks/use-blocked-dates";
+import { usePeakHours } from "@/hooks/use-peak-hours";
 import { usePeakHourStore } from "@/lib/store/peakHours";
 import { calculateSlotPrice } from "@/lib/calculateSlotPrice";
 
-interface Slot {
-  time: string;
-  isBooked: boolean;
-  isBlocked?: boolean;
-}
+function BookingContent() {
+  const { data: turfs = [], isLoading: turfLoading } = useTurfs();
+  const searchParams = useSearchParams();
+  const turfIdParam = searchParams.get("turfId");
+  const [selectedTurfId, setSelectedTurfId] = useState<string | null>(
+    turfIdParam
+  );
 
-type BlockedDate = {
-  id: string;
-  start_date: string;
-  end_date?: string;
-  reason: string;
-};
+  // Update selectedTurfId if URL changes (optional, but good for back navigation)
+  useEffect(() => {
+    if (turfIdParam) setSelectedTurfId(turfIdParam);
+  }, [turfIdParam]);
 
-export default function Booking() {
-  const { turfs, setTurfs, selectedTurf, setSelectedTurf } = useTurfStore();
+  // Derived selectedTurf from turfs list
+  const selectedTurf = turfs.find((t) => t.id === selectedTurfId) || null;
 
-  const { setPeakHours, peakHours } = usePeakHourStore();
+  const { data: peakHours = [] } = usePeakHours(selectedTurfId || undefined);
 
   const [selectedStartTime, setSelectedStartTime] = useState<string | null>(
     null
@@ -51,19 +52,26 @@ export default function Booking() {
 
   const [date, setDate] = useState(format(new Date(), "yyyy-MM-dd"));
 
-  const [turfId, setTurfId] = useState(selectedTurf?.id);
+  // Sync state with selectedTurfId
+  // const [turfId, setTurfId] = useState(selectedTurf?.id); // Removed redundant state
 
-  const [availableSlots, setAvailableSlots] = useState<Slot[]>([]);
-
-  const [blockedDates, setBlockedDates] = useState<BlockedDate[]>([]);
-
-  const [blockedSlots, setBlockedSlots] = useState<string[]>([]);
+  const { data: availableSlots = [] } = useSlots(
+    selectedTurfId || undefined,
+    date ? new Date(date) : null
+  );
+  const { data: blockedSlots = [] } = useBlockedTimes(
+    selectedTurfId || undefined,
+    date ? new Date(date) : null
+  );
+  const { data: blockedDates = [] } = useBlockedDates(
+    selectedTurfId || undefined
+  );
 
   const [startTime, setStartTime] = useState("");
 
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(false); // Can use hook isLoading if needed, but for now kept for compatibility or transition
 
-  const [turfLoading, setTurfLoading] = useState(false);
+  // const [turfLoading, setTurfLoading] = useState(false); // Handled by hook
 
   const router = useRouter();
 
@@ -76,103 +84,32 @@ export default function Booking() {
   }, [step && !loading]);
 
   useEffect(() => {
-    if (selectedTurf && selectedTurf.id) {
-      setTurfId(selectedTurf.id);
-
+    if (selectedTurfId) {
       if (step < 2) setStep(2); // Ensure it shows date picker
 
       // If date is already selected (maybe from query param in future), go to step 3
       if (date && step < 3) setStep(3);
     }
-  }, [selectedTurf]);
+  }, [selectedTurfId]);
 
-  useEffect(() => {
-    if (!turfId || !date) return;
-
-    const fetchData = async () => {
-      setLoading(true);
-
-      const formattedDate = format(date, "yyyy-MM-dd");
-      const now = new Date();
-      const localTime = now.toTimeString().split(" ")[0];
-
-      try {
-        const [slotsRes, blockedRes] = await Promise.all([
-          fetch(
-            `/api/bookings/slots?turfId=${turfId}&date=${formattedDate}&localTime=${localTime}&slotParam=${selectedTurf?.slot_interval}`
-          ),
-          fetch(`/api/block-time?turfId=${turfId}&date=${formattedDate}`),
-        ]);
-
-        const slotsData = await slotsRes.json();
-        const blockedData = await blockedRes.json();
-
-        setAvailableSlots(slotsData.availableSlots || []);
-        setBlockedSlots(blockedData.blockedTimes || []);
-
-        // ✅ Fetch peak hours directly from Supabase
-        const { data: peakHours, error } = await supabase
-          .from("turf_peak_hours")
-          .select("*")
-          .eq("turf_id", turfId);
-
-        if (error) {
-          console.error("Error fetching peak hours:", error);
-          toast.error("Failed to fetch peak hours");
-        } else {
-          setPeakHours(peakHours || []);
-
-          console.log(peakHours, "peak hours from supabase");
-        }
-      } catch (error) {
-        toast.error("Error fetching data.");
-        console.error("Fetch error:", error);
-      }
-
-      setLoading(false);
-    };
-
-    fetchData();
-  }, [turfId, date]);
-
-  useEffect(() => {
-    if (!turfId) return;
-
-    const fetchBlockedAndBookedDates = async () => {
-      const { data: blockedData, error: blockedError } = await supabase
-        .from("blocked_dates")
-        .select("id, start_date, end_date, reason")
-        .eq("turf_id", turfId)
-        .is("blocked_times", null); // ✅ Fetch only dates with no blocked times
-
-      if (blockedError) {
-        console.error("Failed to fetch blocked dates:", blockedError.message);
-        toast.error("Failed to load blocked dates.");
-        return;
-      }
-
-      setBlockedDates(blockedData || []);
-    };
-
-    fetchBlockedAndBookedDates();
-
-    console.log(blockedDates, "blocked dates");
-  }, [turfId]);
+  // Removed manual fetching effects as hooks handle it
 
   // ✅ Updated to handle both single blocked dates and blocked ranges
 
   const getDisabledDates = (
-    blockedDates: { start_date: string; end_date?: string }[]
+    blockedDates: { startDate: string; endDate?: string | null }[]
   ) => {
     const disabledDates: Date[] = [];
     const disabledRanges: { start: Date; end: Date }[] = [];
 
-    blockedDates.forEach(({ start_date, end_date }) => {
-      const startDate = parseISO(start_date);
+    blockedDates.forEach((d) => {
+      if (!d.startDate) return;
+      const startDate = parseISO(d.startDate);
+
       if (isBefore(startDate, new Date())) return; // Skip past dates
 
-      if (end_date) {
-        const endDate = parseISO(end_date);
+      if (d.endDate) {
+        const endDate = parseISO(d.endDate);
         disabledRanges.push({ start: startDate, end: endDate });
       } else {
         disabledDates.push(startDate);
@@ -277,7 +214,7 @@ export default function Booking() {
                   <div
                     className={clsx(
                       "relative group rounded-2xl overflow-hidden border transition-all duration-300 h-full flex flex-col",
-                      turfId === turf.id
+                      selectedTurfId === turf.id
                         ? "border-turf-neon shadow-[0_0_30px_-5px_rgba(204,255,0,0.3)] bg-black/40"
                         : "border-white/10 hover:border-white/30 bg-white/5"
                     )}
@@ -285,7 +222,7 @@ export default function Booking() {
                     <div className="relative h-48 flex-shrink-0 overflow-hidden">
                       <img
                         src={
-                          turf.image_url || "/images/Carousel/Comp 1_00002.webp"
+                          turf.imageUrl || "/images/Carousel/Comp 1_00002.webp"
                         }
                         alt={turf.name}
                         className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
@@ -313,14 +250,14 @@ export default function Booking() {
                             Price
                           </p>
                           <p className="text-lg font-bold text-turf-neon">
-                            ₹{turf.price_per_hour}
+                            ₹{turf.pricePerHour}
                             <span className="text-xs text-gray-400 font-normal">
                               /hr
                             </span>
                           </p>
                         </div>
 
-                        {turf.is_disabled ? (
+                        {turf.isDisabled ? (
                           <div className="px-3 py-1 rounded-full bg-red-500/20 border border-red-500/30 text-red-500 text-xs font-bold">
                             UNAVAILABLE
                           </div>
@@ -328,25 +265,24 @@ export default function Booking() {
                           <Button
                             onClick={() => {
                               setStartTime("");
-                              setTurfId(turf.id);
-                              setSelectedTurf(turf);
+                              setSelectedTurfId(turf.id);
                               setStep(2);
                             }}
                             className={clsx(
                               "rounded-lg font-bold px-6 transition-all",
-                              turfId === turf.id
+                              selectedTurfId === turf.id
                                 ? "bg-turf-neon text-black hover:bg-turf-neon/90"
                                 : "bg-white/10 hover:bg-white/20 text-white"
                             )}
                           >
-                            {turfId === turf.id ? "Selected" : "Select"}
+                            {selectedTurfId === turf.id ? "Selected" : "Select"}
                           </Button>
                         )}
                       </div>
 
-                      {turf.is_disabled && (
+                      {turf.isDisabled && (
                         <p className="text-xs text-red-400 bg-red-500/10 p-2 rounded border border-red-500/20 text-center">
-                          {turf.disabled_reason}
+                          {turf.disabledReason}
                         </p>
                       )}
                     </div>
@@ -411,8 +347,8 @@ export default function Booking() {
                       startTime={time}
                       onTimeSelect={handleTimeSelect}
                       isDisabled={isBooked || isBlocked}
-                      minHours={parseInt(selectedTurf?.min_hours ?? "0")}
-                      maxHours={parseInt(selectedTurf?.max_hours ?? "0")}
+                      minHours={parseInt(String(selectedTurf?.minHours ?? "0"))}
+                      maxHours={parseInt(String(selectedTurf?.maxHours ?? "0"))}
                       slotClassName={clsx(
                         "w-full py-3 px-2 rounded-xl text-sm font-medium border transition-all duration-200",
                         isBooked
@@ -448,5 +384,19 @@ export default function Booking() {
         )}
       </div>
     </main>
+  );
+}
+
+export default function Booking() {
+  return (
+    <Suspense
+      fallback={
+        <div className="flex justify-center items-center h-screen w-full bg-turf-dark">
+          <div className="inline-block w-12 h-12 border-4 border-turf-neon border-t-transparent rounded-full animate-spin"></div>
+        </div>
+      }
+    >
+      <BookingContent />
+    </Suspense>
   );
 }

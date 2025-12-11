@@ -1,6 +1,41 @@
 import { db } from "@/db/db";
 import { turfs, users, bookings, blockedDates } from "@/db/schema";
-import { eq, and, or, sql, notInArray } from "drizzle-orm";
+import { eq, and, or, sql, notInArray, desc } from "drizzle-orm";
+
+export async function GET(req: Request) {
+  try {
+    const url = new URL(req.url);
+    const turfId = url.searchParams.get("turfId");
+
+    if (!turfId) {
+      return new Response(
+        JSON.stringify({ error: "Missing turfId parameter" }),
+        {
+          status: 400,
+        }
+      );
+    }
+
+    const data = await db
+      .select({
+        id: bookings.id,
+        date: bookings.date,
+        startTime: bookings.startTime,
+        duration: bookings.duration,
+        status: bookings.status,
+      })
+      .from(bookings)
+      .where(eq(bookings.turfId, turfId))
+      .orderBy(desc(bookings.date));
+
+    return new Response(JSON.stringify(data), { status: 200 });
+  } catch (error) {
+    console.error("Error fetching bookings:", error);
+    return new Response(JSON.stringify({ error: "Failed to fetch bookings" }), {
+      status: 500,
+    });
+  }
+}
 
 export async function POST(req: Request) {
   try {

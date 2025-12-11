@@ -13,6 +13,9 @@ import { GlobalBackground } from "@/components/ui/global-background";
 import { db } from "@/db/db";
 import { siteSettings } from "@/db/schema";
 
+import { EventBanner } from "@/components/sections/EventBanner";
+import { HomeEvents } from "@/components/sections/HomeEvents";
+
 // Server Component (no 'use client')
 export default async function Home() {
   // Fetch branding settings
@@ -24,8 +27,10 @@ export default async function Home() {
     <main className="relative min-h-screen w-full text-white selection:bg-turf-neon/30 selection:text-turf-neon overflow-x-hidden">
       <GlobalBackground />
       <div className="relative z-10">
+        <EventBanner />
         <TubelightHeader companyName={companyName} logoUrl={logoUrl} />
         <HeroCarousel />
+        <HomeEvents />
         <TurfImageGallery />
         <BlurFadeDemo />
         <Features />

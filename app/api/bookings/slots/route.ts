@@ -140,8 +140,8 @@
 // }
 
 import { NextResponse } from "next/server";
-import { bookings, turfs, blockedDates } from "@/db/schema";
-import { eq, and, lt, or, notInArray } from "drizzle-orm";
+import { bookings, turfs, blockedDates, events } from "@/db/schema";
+import { eq, and, lt, or, notInArray, lte, gte } from "drizzle-orm";
 import { db } from "@/db/db";
 
 // Convert HH:mm:ss to total minutes from midnight
@@ -240,6 +240,19 @@ export async function GET(req: Request) {
         )
       );
 
+    // Get active events for this date
+    const activeEvents = await db
+      .select()
+      .from(events)
+      .where(
+        and(
+          eq(events.turfId, turfId),
+          lte(events.startDate, date.split("T")[0]),
+          gte(events.endDate, date.split("T")[0]),
+          notInArray(events.status, ["cancelled"])
+        )
+      );
+
     // Check for full day block
     const isFullDayBlocked = blockedSlots.some(
       (slot) => !slot.blockedTimes || slot.blockedTimes.length === 0
@@ -248,6 +261,15 @@ export async function GET(req: Request) {
     const blockedTimesSet = new Set(
       blockedSlots.flatMap((slot) => slot.blockedTimes || [])
     );
+
+    // Helper to check if a slot is blocked by an event
+    const isBlockedByEvent = (slotMinutes: number) => {
+      return activeEvents.some((event) => {
+        const eventStart = timeToMinutes(event.startTime);
+        const eventEnd = timeToMinutes(event.endTime);
+        return slotMinutes >= eventStart && slotMinutes < eventEnd;
+      });
+    };
 
     const availableSlots = [];
     let slotMinutes = openingMinutes;
@@ -271,7 +293,8 @@ export async function GET(req: Request) {
       const isBlocked =
         isFullDayBlocked ||
         blockedTimesSet.has(slotTime) ||
-        blockedTimesSet.has(slotTime.slice(0, 5)); // Check HH:mm
+        blockedTimesSet.has(slotTime.slice(0, 5)) ||
+        isBlockedByEvent(slotMinutes); // Check if blocked by event
 
       availableSlots.push({
         time: slotTime,

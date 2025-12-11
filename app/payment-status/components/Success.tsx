@@ -29,9 +29,9 @@ export default function Success({ bookingData }: any) {
               <MapPin className="w-5 h-5 text-turf-neon mt-1" />
               <div>
                 <p className="text-sm text-gray-400">Arena</p>
-                <p className="text-lg font-semibold text-white">
-                  {bookingData.turf_name}
-                </p>
+                <span className="text-white font-medium">
+                  {bookingData.turfName}
+                </span>
               </div>
             </div>
 
@@ -48,7 +48,7 @@ export default function Success({ bookingData }: any) {
                 <div>
                   <p className="text-sm text-gray-400">Time</p>
                   <p className="font-medium text-white">
-                    {formatToAMPM(bookingData.start_time)}
+                    {formatToAMPM(bookingData.startTime)}
                   </p>
                 </div>
               </div>
@@ -67,8 +67,8 @@ export default function Success({ bookingData }: any) {
 
           <div className="flex justify-between items-center py-4 border-t border-white/10 border-dashed">
             <span className="text-gray-400">Total Paid</span>
-            <span className="text-2xl font-bold text-green-400">
-              ₹{bookingData.total_price}
+            <span className="text-white font-medium">
+              ₹{bookingData.totalPrice}
             </span>
           </div>
 

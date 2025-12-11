@@ -1,6 +1,6 @@
 "use client";
 import React, { useState } from "react";
-import { supabase } from "@/lib/supabase";
+import { apiClient } from "@/lib/api-client";
 import {
   Download,
   Trash,
@@ -96,11 +96,7 @@ export default function Bookings() {
   const deleteMutation = useMutation({
     mutationFn: async () => {
       if (selectedBookings.length === 0) return;
-      const { error } = await supabase
-        .from("bookings")
-        .delete()
-        .in("id", selectedBookings);
-      if (error) throw error;
+      await apiClient.delete("/api/admin/bookings", { ids: selectedBookings });
     },
     onSuccess: () => {
       toast.success("Bookings deleted.");

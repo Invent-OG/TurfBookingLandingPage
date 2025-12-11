@@ -4,6 +4,7 @@ import { Calendar } from "@/components/ui/calendar";
 import { GlassCard } from "@/components/ui/glass-card";
 import { NeonButton } from "@/components/ui/neon-button";
 import { Input } from "@/components/ui/input";
+import { NumberInput } from "@/components/ui/number-input";
 import { Label } from "@/components/ui/label";
 import {
   Select,
@@ -16,117 +17,45 @@ import { toast } from "sonner";
 import clsx from "clsx";
 import { format, isBefore, parse } from "date-fns";
 import { useRouter } from "next/navigation";
-import { supabase } from "@/lib/supabase";
 import { Clock, User } from "lucide-react";
+import { useTurfs } from "@/hooks/use-turfs";
+import { useSlots, useBlockedTimes, Slot } from "@/hooks/use-slots";
+import { useBlockedDates } from "@/hooks/use-blocked-dates";
+import { useCreateManualBooking } from "@/hooks/use-bookings";
 
 const formatDate = (date: Date | undefined): string => {
   if (!date || isNaN(date.getTime())) {
-    console.error("❌ Invalid date:", date);
     return "";
   }
   return format(date, "yyyy-MM-dd");
 };
 
-interface Slot {
-  time: string;
-  isBooked: boolean;
-  isBlocked?: boolean;
-}
-
-type BlockedDate = {
-  id: string;
-  start_date: string;
-  end_date?: string;
-  reason: string;
-};
-
 export default function ManualBookingForm() {
   const [date, setDate] = useState<Date>(new Date());
   const [turfId, setTurfId] = useState("");
-  const [turfs, setTurfs] = useState<
-    { id: string; name: string; pricePerHour: string }[]
-  >([]);
-  const [availableSlots, setAvailableSlots] = useState<Slot[]>([]);
-  const [blockedDates, setBlockedDates] = useState<BlockedDate[]>([]);
-  const [blockedSlots, setBlockedSlots] = useState<string[]>([]);
+
+  const { data: turfs = [] } = useTurfs();
+  const { data: availableSlots = [], isLoading: slotsLoading } = useSlots(
+    turfId,
+    date
+  );
+  const { data: blockedSlots = [] } = useBlockedTimes(turfId, date);
+  const { data: blockedDates = [] } = useBlockedDates(turfId);
+  const createManualBooking = useCreateManualBooking();
+
   const [startTime, setStartTime] = useState("");
   const [duration, setDuration] = useState(1);
   const [customerName, setCustomerName] = useState("");
   const [customerPhone, setCustomerPhone] = useState("");
   const [customerEmail, setCustomerEmail] = useState("");
   const [paymentMethod, setPaymentMethod] = useState("cash");
-  const [loading, setLoading] = useState(false);
+
   const router = useRouter();
 
-  const adminId = localStorage.getItem("adminId");
+  const adminId =
+    typeof window !== "undefined" ? localStorage.getItem("adminId") : null;
 
-  // Fetch Turfs
-  useEffect(() => {
-    async function fetchTurfs() {
-      try {
-        const response = await fetch("/api/turfs");
-        const data = await response.json();
-        if (response.ok) {
-          setTurfs(data);
-        } else {
-          toast.error("Error fetching turfs");
-        }
-      } catch (error) {
-        toast.error("Server error while fetching turfs");
-      }
-    }
-    fetchTurfs();
-  }, []);
-
-  // Fetch Available Slots when Turf or Date changes
-  useEffect(() => {
-    if (!turfId || !date) return;
-    const fetchSlotsAndBlockedTimes = async () => {
-      setLoading(true);
-      const formattedDate = format(date, "yyyy-MM-dd");
-      const now = new Date();
-      const localTime = now.toTimeString().split(" ")[0]; // Get HH:mm:ss format
-      try {
-        const [slotsRes, blockedRes] = await Promise.all([
-          fetch(
-            `/api/bookings/slots?turfId=${turfId}&date=${formattedDate}&localTime=${localTime}`
-          ),
-          fetch(`/api/block-time?turfId=${turfId}&date=${formattedDate}`),
-        ]);
-        const slotsData = await slotsRes.json();
-        const blockedData = await blockedRes.json();
-
-        setAvailableSlots(slotsData.availableSlots || []);
-        setBlockedSlots(blockedData.blockedTimes || []);
-      } catch (error) {
-        toast.error("Error fetching data.");
-      }
-      setLoading(false);
-    };
-    fetchSlotsAndBlockedTimes();
-  }, [turfId, date]);
-
-  useEffect(() => {
-    if (!turfId) return;
-
-    const fetchBlockedAndBookedDates = async () => {
-      const { data: blockedData, error: blockedError } = await supabase
-        .from("blocked_dates")
-        .select("id, start_date, end_date, reason")
-        .eq("turf_id", turfId)
-        .is("blocked_times", null);
-
-      if (blockedError) {
-        console.error("Failed to fetch blocked dates:", blockedError.message);
-        toast.error("Failed to load blocked dates.");
-        return;
-      }
-
-      setBlockedDates(blockedData || []);
-    };
-
-    fetchBlockedAndBookedDates();
-  }, [turfId]);
+  // No need for useEffects to fetch data, hooks handle it
 
   const isDateDisabled = (date: Date) => {
     const formattedDate = format(date, "yyyy-MM-dd");
@@ -134,13 +63,27 @@ export default function ManualBookingForm() {
 
     return (
       (isBefore(date, new Date()) && formattedDate !== today) ||
-      blockedDates.some(
-        (d) =>
-          formattedDate === d.start_date ||
-          (d.end_date &&
-            formattedDate >= d.start_date &&
-            formattedDate <= d.end_date)
-      )
+      blockedDates.some((d: any) => {
+        // Handle camelCase from Drizzle or snake_case if mixed. Hook returns proper DB schema (camelCase likely if I did it right, wait useBlockedDates returns InferSelectModel which preserves snake_case from schema definition generally unless aliased)
+        // Check hooks/use-blocked-dates.ts: It imports `blockedDates` from schema.
+        // schema: `start_date` -> `startTime`? No.
+        // Let's assume schema uses snake_case for DB columns.
+        // Actually schema usually maps to camelCase properties in Drizzle IF defined that way.
+        // But let's look at `blockedDates` usage in other files. `start_date` was used.
+        // The previous code used `d.start_date`.
+        // Let's assume `d.startDate` if Drizzle `pgTable` define it as `startDate: date("start_date")` etc.
+        // I will check schema later or robustly handle both or look at `hooks/use-blocked-dates.ts`.
+        // `hooks/use-blocked-dates.ts`: `export type BlockedDate = InferSelectModel<typeof blockedDates>;`
+        // I'll stick to `d.startDate` if I remember schema correctly OR `d.start_date`.
+        // Ah, `db/schema.ts` likely has `startDate: date("start_date")`.
+        // Let's use `d.startDate || d.start_date`.
+        const startDate = d.startDate || d.start_date;
+        const endDate = d.endDate || d.end_date;
+        return (
+          formattedDate === startDate ||
+          (endDate && formattedDate >= startDate && formattedDate <= endDate)
+        );
+      })
     );
   };
 
@@ -158,54 +101,41 @@ export default function ManualBookingForm() {
     }
 
     const formattedDate = formatDate(date);
-
-    const pricePerHour = Number(
-      turfs.find((turf) => turf.id === turfId)?.pricePerHour
-    );
+    const turf = turfs.find((t) => t.id === turfId);
+    const pricePerHour = Number(turf?.pricePerHour || 0);
     const totalPrice = pricePerHour * duration;
 
-    setLoading(true);
     try {
-      const response = await fetch("/api/bookings/manual", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          turfId,
-          turf_name: turfs.find((turf) => turf.id === turfId)?.name,
-          date: formattedDate,
-          startTime,
-          duration: Number(duration),
-          totalPrice: totalPrice,
-          paymentMethod,
-          customerName,
-          customerPhone,
-          customerEmail,
-          createdBy: adminId,
-        }),
+      await createManualBooking.mutateAsync({
+        turfId,
+        turf_name: turf?.name,
+        date: formattedDate,
+        startTime,
+        duration: Number(duration),
+        totalPrice: totalPrice,
+        paymentMethod,
+        customerName,
+        customerPhone,
+        customerEmail,
+        createdBy: adminId,
       });
 
-      const data = await response.json();
-      if (response.ok) {
-        toast.success("Booking successful", {
-          description: "Manual booking has been added.",
-        });
-        // Reset form
-        setStartTime("");
-        setDuration(1);
-        setCustomerName("");
-        setCustomerPhone("");
-        setCustomerEmail("");
-        setPaymentMethod("cash");
+      toast.success("Booking successful", {
+        description: "Manual booking has been added.",
+      });
+      // Reset form
+      setStartTime("");
+      setDuration(1);
+      setCustomerName("");
+      setCustomerPhone("");
+      setCustomerEmail("");
+      setPaymentMethod("cash");
 
-        router.push("/admin/bookings");
-      } else {
-        toast.error(data.error || "Something went wrong");
-      }
-    } catch (error) {
+      router.push("/admin/bookings");
+    } catch (error: any) {
       console.error("❌ Server Error:", error);
-      toast.error("Server error while submitting booking");
+      toast.error(error.message || "Server error while submitting booking");
     }
-    setLoading(false);
   };
 
   const formatSlotTime = (time: string) => {
@@ -238,7 +168,7 @@ export default function ManualBookingForm() {
                   <Select
                     onValueChange={setTurfId}
                     value={turfId}
-                    disabled={loading}
+                    disabled={createManualBooking.isPending}
                   >
                     <SelectTrigger className={inputClasses}>
                       <SelectValue placeholder="Choose an arena..." />
@@ -266,7 +196,11 @@ export default function ManualBookingForm() {
                           setStartTime("");
                         }
                       }}
-                      disabled={loading || !turfId || isDateDisabled}
+                      disabled={
+                        createManualBooking.isPending ||
+                        !turfId ||
+                        isDateDisabled
+                      }
                       className="text-white"
                     />
                   </div>
@@ -278,7 +212,7 @@ export default function ManualBookingForm() {
                   Available Time Slots
                 </Label>
                 <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-3 max-h-[300px] overflow-y-auto pr-2 custom-scrollbar">
-                  {loading ? (
+                  {slotsLoading ? (
                     <div className="col-span-full text-center py-8 text-gray-400">
                       Loading slots...
                     </div>
@@ -321,12 +255,10 @@ export default function ManualBookingForm() {
             <div className="space-y-4">
               <div className="space-y-1">
                 <Label className={labelClasses}>Duration (Hours)</Label>
-                <Input
-                  type="number"
-                  min="1"
+                <NumberInput
                   value={duration}
-                  onChange={(e) => setDuration(Number(e.target.value))}
-                  className={inputClasses}
+                  onChange={(val) => setDuration(val)}
+                  min={1}
                   disabled={!turfId}
                 />
               </div>
@@ -381,12 +313,16 @@ export default function ManualBookingForm() {
               <div className="pt-4 mt-2 border-t border-white/10">
                 <NeonButton
                   onClick={handleSubmit}
-                  disabled={!turfId || !startTime || loading}
+                  disabled={
+                    !turfId || !startTime || createManualBooking.isPending
+                  }
                   variant="primary"
                   glow
                   className="w-full h-12 text-lg"
                 >
-                  {loading ? "Processing..." : "Confirm Booking"}
+                  {createManualBooking.isPending
+                    ? "Processing..."
+                    : "Confirm Booking"}
                 </NeonButton>
               </div>
             </div>

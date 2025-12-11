@@ -5,6 +5,7 @@ import Providers from "./providers";
 
 import { db } from "@/db/db";
 import { siteSettings } from "@/db/schema";
+import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 
 export async function generateMetadata(): Promise<Metadata> {
   try {
@@ -37,6 +38,7 @@ export default function RootLayout({
       <body className="bg-turf-dark text-white antialiased">
         <Providers>
           {children}
+          <ReactQueryDevtools initialIsOpen={false} />
           <Toaster />
         </Providers>
       </body>

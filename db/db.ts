@@ -11,5 +11,13 @@ if (!connectionString) {
 // Disable prefetch as it is not supported for "Transaction" pool mode
 import * as schema from "./schema";
 
-export const client = postgres(connectionString, { prepare: false });
+const globalForDb = globalThis as unknown as {
+  client: postgres.Sql | undefined;
+};
+
+export const client =
+  globalForDb.client ?? postgres(connectionString, { prepare: false });
+
+if (process.env.NODE_ENV !== "production") globalForDb.client = client;
+
 export const db = drizzle(client, { schema });

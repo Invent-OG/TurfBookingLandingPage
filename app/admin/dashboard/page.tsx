@@ -18,141 +18,57 @@ import { GlassCard } from "@/components/ui/glass-card";
 import { GlassTable } from "@/components/ui/glass-table";
 import { NeonButton } from "@/components/ui/neon-button";
 import { cn } from "@/lib/utils";
-import { supabase } from "@/lib/supabase";
 import { format, subDays, startOfDay, endOfDay, isSameDay } from "date-fns";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
+import { useDashboardStats } from "@/hooks/use-dashboard";
 
 export default function Dashboard() {
-  const [loading, setLoading] = useState(true);
-  const [stats, setStats] = useState([
+  const { data, isLoading: loading, error } = useDashboardStats();
+  const router = useRouter();
+
+  // Derived state from hook data
+  const stats = [
     {
       title: "Total Revenue",
-      value: "₹0",
+      value: `₹${data?.stats.totalRevenue.toLocaleString() || "0"}`,
       icon: CreditCard,
       trend: { value: 0, isPositive: true },
       color: "neon" as const,
     },
     {
       title: "Active Bookings",
-      value: 0,
+      value: data?.stats.activeBookings || 0,
       icon: CalendarCheck,
       trend: { value: 0, isPositive: true },
       color: "blue" as const,
     },
     {
       title: "Total Customers",
-      value: 0,
+      value: data?.stats.totalCustomers || 0,
       icon: Users,
       trend: { value: 0, isPositive: true },
       color: "white" as const,
     },
-  ]);
-  const [recentBookings, setRecentBookings] = useState<any[]>([]);
-  const [chartData, setChartData] = useState<any[]>([]);
-  const router = useRouter();
+  ];
+
+  const recentBookings =
+    data?.recentBookings.map((b) => ({
+      id: b.id.slice(0, 8).toUpperCase(),
+      user: b.customerName,
+      turf: b.turfName,
+      date: b.date,
+      status: b.status.charAt(0).toUpperCase() + b.status.slice(1),
+      amount: `₹${b.totalPrice}`,
+    })) || [];
+
+  const chartData = data?.chartData || [];
 
   useEffect(() => {
-    fetchDashboardData();
-  }, []);
-
-  const fetchDashboardData = async () => {
-    try {
-      setLoading(true);
-
-      // 1. Fetch Bookings (All time for total, recent for table)
-      const { data: bookings, error: bookingError } = await supabase
-        .from("bookings")
-        .select("*")
-        .order("created_at", { ascending: false });
-
-      if (bookingError) throw bookingError;
-
-      // 2. Fetch Users
-      const { count: userCount, error: userError } = await supabase
-        .from("users")
-        .select("*", { count: "exact", head: true });
-
-      if (userError) throw userError;
-
-      // --- Calculate Stats ---
-
-      // Revenue
-      const totalRevenue = bookings?.reduce(
-        (acc, curr) => acc + (Number(curr.total_price) || 0),
-        0
-      );
-
-      // Active Bookings (Status confirmed or pending)
-      const activeBookingsCount = bookings?.filter((b) =>
-        ["confirmed", "pending"].includes(b.status.toLowerCase())
-      ).length;
-
-      // Chart Data (Last 7 Days)
-      const last7Days = Array.from({ length: 7 }).map((_, i) => {
-        const d = subDays(new Date(), 6 - i);
-        return {
-          date: d,
-          name: format(d, "EEE"),
-          revenue: 0,
-          bookings: 0,
-        };
-      });
-
-      bookings?.forEach((booking) => {
-        const bookingDate = new Date(booking.date);
-        const dayStat = last7Days.find((d) => isSameDay(d.date, bookingDate));
-        if (dayStat) {
-          dayStat.revenue += Number(booking.total_price) || 0;
-          dayStat.bookings += 1;
-        }
-      });
-
-      // Recent Activity (Top 5)
-      const recent =
-        bookings?.slice(0, 5).map((b) => ({
-          id: b.id.slice(0, 8).toUpperCase(),
-          user: b.customer_name,
-          turf: b.turf_name,
-          date: b.date,
-          status: b.status.charAt(0).toUpperCase() + b.status.slice(1),
-          amount: `₹${b.total_price}`,
-        })) || [];
-
-      // Update States
-      setStats([
-        {
-          title: "Total Revenue",
-          value: `₹${totalRevenue?.toLocaleString()}`,
-          icon: CreditCard,
-          trend: { value: 12, isPositive: true }, // Mock trend for now
-          color: "neon",
-        },
-        {
-          title: "Active Bookings",
-          value: activeBookingsCount || 0,
-          icon: CalendarCheck,
-          trend: { value: 8, isPositive: true },
-          color: "blue",
-        },
-        {
-          title: "Total Customers",
-          value: userCount || 0,
-          icon: Users,
-          trend: { value: 5, isPositive: true },
-          color: "white",
-        },
-      ]);
-
-      setChartData(last7Days);
-      setRecentBookings(recent);
-    } catch (error) {
-      console.error("Error fetching dashboard data:", error);
+    if (error) {
       toast.error("Failed to load dashboard data");
-    } finally {
-      setLoading(false);
     }
-  };
+  }, [error]);
 
   const columns = [
     {

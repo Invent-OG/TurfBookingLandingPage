@@ -4,6 +4,8 @@ import { useEffect, useState, useTransition } from "react";
 import { GlassCard } from "@/components/ui/glass-card";
 import { NeonButton } from "@/components/ui/neon-button";
 import { Input } from "@/components/ui/input";
+import { TimePicker } from "@/components/ui/time-picker";
+import { NumberInput } from "@/components/ui/number-input";
 import { Label } from "@/components/ui/label";
 import {
   Select,
@@ -25,27 +27,16 @@ import { format } from "date-fns";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { toast } from "sonner";
 import { z } from "zod";
-import { useTurfStore } from "@/lib/store/turf";
-import { supabase } from "@/lib/supabase";
-import { formatToAMPM } from "@/lib/convertTime";
 import {
-  Clock,
-  Calendar as CalendarIcon,
-  Trash2,
-  Edit2,
-  Plus,
-} from "lucide-react";
-
-type PeakHour = {
-  id: string;
-  turf_id: string;
-  type: "day" | "date";
-  days_of_week?: string[];
-  specific_date?: string;
-  start_time: string;
-  end_time: string;
-  price: number;
-};
+  usePeakHours,
+  useCreatePeakHour,
+  useUpdatePeakHour,
+  useDeletePeakHour,
+  PeakHour,
+} from "@/hooks/use-peak-hours";
+import { useTurfs } from "@/hooks/use-turfs";
+import { CalendarIcon, Clock, Edit2, Plus, Trash2 } from "lucide-react";
+import { formatToAMPM } from "@/lib/convertTime";
 
 const weekDays = [
   "Monday",
@@ -66,10 +57,13 @@ const peakHourSchema = z.object({
 });
 
 export default function TurfPeakHoursUI() {
-  const { turfs } = useTurfStore(); // Assuming setTurfs is not needed directly here if store handles it or we just read
-
+  const { data: turfs = [] } = useTurfs();
   const [selectedTurfId, setSelectedTurfId] = useState<string>();
-  const [peakHours, setPeakHours] = useState<PeakHour[]>([]);
+  const { data: peakHours = [] } = usePeakHours(selectedTurfId);
+  const createMutation = useCreatePeakHour();
+  const updateMutation = useUpdatePeakHour();
+  const deleteMutation = useDeletePeakHour();
+
   const [open, setOpen] = useState(false);
   const [editMode, setEditMode] = useState(false);
   const [editingEntryId, setEditingEntryId] = useState<string | null>(null);
@@ -82,21 +76,6 @@ export default function TurfPeakHoursUI() {
   const [startTime, setStartTime] = useState("");
   const [endTime, setEndTime] = useState("");
   const [price, setPrice] = useState("");
-
-  useEffect(() => {
-    const fetchPeakHours = async () => {
-      if (!selectedTurfId) return;
-      const { data, error } = await supabase
-        .from("turf_peak_hours")
-        .select("*")
-        .eq("turf_id", selectedTurfId);
-
-      if (!error && data) {
-        setPeakHours(data);
-      }
-    };
-    fetchPeakHours();
-  }, [selectedTurfId]);
 
   const resetForm = () => {
     setSelectedDays([]);
@@ -134,7 +113,8 @@ export default function TurfPeakHoursUI() {
 
     const overlapExists = peakHours.some((entry) => {
       if (editMode && editingEntryId === entry.id) return false;
-      if (entry.turf_id !== selectedTurfId || entry.type !== type) return false;
+      // entry.type is just "day" or "date" from DB, casting safe if validated
+      if (entry.turfId !== selectedTurfId || entry.type !== type) return false;
 
       const overlap = (s1: string, e1: string, s2: string, e2: string) => {
         return s1 < e2 && s2 < e1;
@@ -142,13 +122,14 @@ export default function TurfPeakHoursUI() {
 
       if (type === "day") {
         return (
-          entry.days_of_week?.some((d) => selectedDays.includes(d)) &&
-          overlap(startTime, endTime, entry.start_time, entry.end_time)
+          entry.daysOfWeek?.some((d: string) => selectedDays.includes(d)) &&
+          overlap(startTime, endTime, entry.startTime, entry.endTime)
         );
       } else {
         return (
-          entry.specific_date === specificDate?.toISOString().split("T")[0] &&
-          overlap(startTime, endTime, entry.start_time, entry.end_time)
+          entry.specificDate ===
+            (specificDate?.toISOString().split("T")[0] || "") &&
+          overlap(startTime, endTime, entry.startTime, entry.endTime)
         );
       }
     });
@@ -159,70 +140,57 @@ export default function TurfPeakHoursUI() {
     }
 
     startTransition(async () => {
-      const newEntry = {
-        turf_id: selectedTurfId,
+      const entryData = {
+        turfId: selectedTurfId, // Ensure turfId is passed
         type,
-        days_of_week: type === "day" ? selectedDays : null,
-        specific_date:
+        daysOfWeek: type === "day" ? selectedDays : null,
+        specificDate:
           type === "date" && specificDate
             ? specificDate.toISOString().split("T")[0]
             : null,
-        start_time: startTime,
-        end_time: endTime,
-        price: Number(price),
+        startTime,
+        endTime,
+        price,
       };
 
-      if (editMode && editingEntryId) {
-        const { data, error } = await supabase
-          .from("turf_peak_hours")
-          .update(newEntry)
-          .eq("id", editingEntryId)
-          .select();
-
-        if (!error && data) {
-          setPeakHours((prev) =>
-            prev.map((entry) => (entry.id === editingEntryId ? data[0] : entry))
-          );
+      try {
+        if (editMode && editingEntryId) {
+          await updateMutation.mutateAsync({
+            id: editingEntryId,
+            data: entryData,
+          });
           toast.success("Peak hour updated successfully");
-        } else toast.error("Update failed");
-      } else {
-        const { data, error } = await supabase
-          .from("turf_peak_hours")
-          .insert([newEntry])
-          .select();
-
-        if (!error && data) {
-          setPeakHours([...peakHours, data[0]]);
+        } else {
+          await createMutation.mutateAsync(entryData);
           toast.success("Peak hour created successfully");
-        } else toast.error("Creation failed");
+        }
+        resetForm();
+      } catch (e) {
+        toast.error("Operation failed");
       }
-
-      resetForm();
     });
   };
 
   const handleDelete = async () => {
     if (!confirmDeleteId) return;
-    const { error } = await supabase
-      .from("turf_peak_hours")
-      .delete()
-      .eq("id", confirmDeleteId);
-    if (!error) {
-      setPeakHours((prev) => prev.filter((p) => p.id !== confirmDeleteId));
+    try {
+      await deleteMutation.mutateAsync(confirmDeleteId);
       toast.success("Peak hour deleted successfully");
-    } else toast.error("Delete failed");
+    } catch (e) {
+      toast.error("Delete failed");
+    }
     setConfirmDeleteId(null);
   };
 
   const handleEdit = (entry: PeakHour) => {
-    setType(entry.type);
-    setSelectedDays(entry.days_of_week || []);
+    setType(entry.type as "day" | "date");
+    setSelectedDays(entry.daysOfWeek || []); // camelCase from Hook/DB schema
     setSpecificDate(
-      entry.specific_date ? new Date(entry.specific_date) : undefined
+      entry.specificDate ? new Date(entry.specificDate) : undefined
     );
-    setStartTime(entry.start_time);
-    setEndTime(entry.end_time);
-    setPrice(entry.price.toString());
+    setStartTime(entry.startTime);
+    setEndTime(entry.endTime);
+    setPrice(entry.price);
     setEditingEntryId(entry.id);
     setEditMode(true);
     setOpen(true);
@@ -352,29 +320,27 @@ export default function TurfPeakHoursUI() {
                 <div className="grid grid-cols-3 gap-4">
                   <div className="space-y-1">
                     <Label className={labelClasses}>Start Time</Label>
-                    <Input
-                      type="time"
+                    <TimePicker
                       value={startTime}
-                      onChange={(e) => setStartTime(e.target.value)}
-                      className={inputClasses}
+                      onChange={setStartTime}
+                      className="bg-white/5 border-white/10"
                     />
                   </div>
                   <div className="space-y-1">
                     <Label className={labelClasses}>End Time</Label>
-                    <Input
-                      type="time"
+                    <TimePicker
                       value={endTime}
-                      onChange={(e) => setEndTime(e.target.value)}
-                      className={inputClasses}
+                      onChange={setEndTime}
+                      className="bg-white/5 border-white/10"
                     />
                   </div>
                   <div className="space-y-1">
                     <Label className={labelClasses}>Price (₹)</Label>
-                    <Input
-                      type="number"
-                      value={price}
-                      onChange={(e) => setPrice(e.target.value)}
-                      className={inputClasses}
+                    <NumberInput
+                      value={price ? Number(price) : 0}
+                      onChange={(val) => setPrice(val.toString())}
+                      min={0}
+                      step={100}
                     />
                   </div>
                 </div>
@@ -440,17 +406,17 @@ export default function TurfPeakHoursUI() {
                         </p>
                         <p className="text-xs text-gray-400 mt-0.5">
                           {entry.type === "day"
-                            ? entry.days_of_week?.join(", ")
-                            : entry.specific_date
-                              ? format(new Date(entry.specific_date), "PPP")
+                            ? entry.daysOfWeek?.join(", ")
+                            : entry.specificDate
+                              ? format(new Date(entry.specificDate), "PPP")
                               : ""}
                         </p>
                       </div>
                     </div>
                     <div className="flex items-center justify-between pt-3 border-t border-white/5">
                       <div className="text-sm text-gray-300">
-                        {formatToAMPM(entry.start_time)} –{" "}
-                        {formatToAMPM(entry.end_time)}
+                        {formatToAMPM(entry.startTime)} –{" "}
+                        {formatToAMPM(entry.endTime)}
                       </div>
                       <div className="text-lg font-bold text-turf-neon">
                         ₹{entry.price}

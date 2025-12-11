@@ -134,6 +134,13 @@
       "when": 1744011029975,
       "tag": "0018_minor_wind_dancer",
       "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "7",
+      "when": 1765427147220,
+      "tag": "0019_sad_strong_guy",
+      "breakpoints": true
     }
   ]
 }

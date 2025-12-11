@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { GlassCard } from "@/components/ui/glass-card";
 import { NeonButton } from "@/components/ui/neon-button";
 import { Input } from "@/components/ui/input";
@@ -21,87 +21,32 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { toast } from "sonner";
-import { supabase } from "@/lib/supabase";
 import { format, isBefore } from "date-fns";
 import { Ban, Trash2, Calendar as CalendarIcon } from "lucide-react";
 import { Label } from "@/components/ui/label";
-
-type Turf = {
-  id: string;
-  name: string;
-};
-
-type BlockedDate = {
-  id: string;
-  start_date: string;
-  end_date?: string;
-  reason: string;
-  blocked_times: string[];
-};
-
-type Booking = {
-  date: string;
-};
+import { useTurfs } from "@/hooks/use-turfs";
+import {
+  useBlockedDates,
+  useCreateBlockedDate,
+  useDeleteBlockedDate,
+} from "@/hooks/use-blocked-dates";
+import { useBookings } from "@/hooks/use-bookings";
 
 export default function BlockDatePage() {
-  const [turfs, setTurfs] = useState<Turf[]>([]);
-  const [blockedDates, setBlockedDates] = useState<BlockedDate[]>([]);
-  const [bookedDates, setBookedDates] = useState<string[]>([]);
+  const { data: turfs = [] } = useTurfs();
   const [selectedTurf, setSelectedTurf] = useState<string | undefined>(
     undefined
   );
+
+  const { data: blockedDates = [] } = useBlockedDates(selectedTurf);
+  const { data: bookings = [] } = useBookings(selectedTurf);
+
+  const createBlockedDateMutation = useCreateBlockedDate();
+  const deleteBlockedDateMutation = useDeleteBlockedDate();
+
   const [date, setDate] = useState<Date | undefined>(undefined);
   const [reason, setReason] = useState("");
   const [dialogOpen, setDialogOpen] = useState(false);
-
-  useEffect(() => {
-    const fetchTurfs = async () => {
-      const { data, error } = await supabase.from("turfs").select("id, name");
-      if (error) {
-        toast.error("Failed to load turfs.");
-        return;
-      }
-      setTurfs(data || []);
-    };
-
-    fetchTurfs();
-  }, []);
-
-  useEffect(() => {
-    if (!selectedTurf) return;
-
-    const fetchBlockedAndBookedDates = async () => {
-      const { data: blockedData, error: blockedError } = await supabase
-        .from("blocked_dates")
-        .select("id, start_date, end_date, reason, blocked_times")
-        .eq("turf_id", selectedTurf);
-
-      const { data: bookedData, error: bookedError } = await supabase
-        .from("bookings")
-        .select("date")
-        .eq("turf_id", selectedTurf);
-
-      if (blockedError) {
-        toast.error("Failed to load blocked dates.");
-        return;
-      }
-
-      if (bookedError) {
-        toast.error("Failed to load booked dates.");
-        return;
-      }
-
-      setBlockedDates(
-        blockedData.map((d: any) => ({
-          ...d,
-          blocked_times: d.blocked_times || [],
-        })) || []
-      );
-      setBookedDates(bookedData.map((b: Booking) => b.date));
-    };
-
-    fetchBlockedAndBookedDates();
-  }, [selectedTurf]);
 
   const isDateDisabled = (date: Date) => {
     const formattedDate = format(date, "yyyy-MM-dd");
@@ -110,12 +55,12 @@ export default function BlockDatePage() {
       isBefore(date, new Date()) ||
       blockedDates.some(
         (d) =>
-          formattedDate === d.start_date ||
-          (d.end_date &&
-            formattedDate >= d.start_date &&
-            formattedDate <= d.end_date)
+          formattedDate === d.startDate ||
+          (d.endDate &&
+            formattedDate >= d.startDate &&
+            formattedDate <= d.endDate)
       ) ||
-      bookedDates.includes(formattedDate)
+      bookings.some((b) => b.date === formattedDate)
     );
   };
 
@@ -126,45 +71,33 @@ export default function BlockDatePage() {
     }
 
     const formattedDate = format(date, "yyyy-MM-dd");
-    if (blockedDates.some((d) => d.start_date === formattedDate)) {
+    if (blockedDates.some((d) => d.startDate === formattedDate)) {
       toast.error("This date is already blocked.");
       return;
     }
 
-    const { data, error } = await supabase
-      .from("blocked_dates")
-      .insert([{ turf_id: selectedTurf, start_date: formattedDate, reason }])
-      .select();
-
-    if (error) {
-      toast.error("Failed to block date.");
-    } else {
+    try {
+      await createBlockedDateMutation.mutateAsync({
+        turfId: selectedTurf,
+        startDate: formattedDate,
+        reason,
+        blockedTimes: [], // Empty array for full day block
+      });
       toast.success("Date blocked successfully!");
-      setBlockedDates([
-        ...blockedDates,
-        {
-          id: data ? data[0].id : "",
-          start_date: formattedDate,
-          reason,
-          blocked_times: [],
-        },
-      ]);
       setDialogOpen(false);
       setDate(undefined);
       setReason("");
+    } catch (error) {
+      toast.error("Failed to block date.");
     }
   };
 
   const deleteBlockedDate = async (id: string) => {
-    const { error } = await supabase
-      .from("blocked_dates")
-      .delete()
-      .match({ id });
-    if (error) {
-      toast.error("Failed to delete blocked date.");
-    } else {
+    try {
+      await deleteBlockedDateMutation.mutateAsync(id);
       toast.success("Blocked date removed successfully.");
-      setBlockedDates(blockedDates.filter((date) => date.id !== id));
+    } catch (error) {
+      toast.error("Failed to delete blocked date.");
     }
   };
 
@@ -263,14 +196,13 @@ export default function BlockDatePage() {
             <tbody className="divide-y divide-white/5">
               {blockedDates.filter(
                 (d) =>
-                  !d.end_date &&
-                  (!d.blocked_times || d.blocked_times.length === 0)
+                  !d.endDate && (!d.blockedTimes || d.blockedTimes.length === 0)
               ).length > 0 ? (
                 blockedDates
                   .filter(
                     (d) =>
-                      !d.end_date &&
-                      (!d.blocked_times || d.blocked_times.length === 0)
+                      !d.endDate &&
+                      (!d.blockedTimes || d.blockedTimes.length === 0)
                   )
                   .map((blockedDate) => (
                     <tr
@@ -279,10 +211,7 @@ export default function BlockDatePage() {
                     >
                       <td className="px-6 py-4 text-white font-medium flex items-center gap-2">
                         <CalendarIcon className="w-4 h-4 text-turf-neon" />
-                        {format(
-                          new Date(blockedDate.start_date),
-                          "MMM d, yyyy"
-                        )}
+                        {format(new Date(blockedDate.startDate), "MMM d, yyyy")}
                       </td>
                       <td className="px-6 py-4 text-gray-400">
                         {blockedDate.reason || "No reason provided"}

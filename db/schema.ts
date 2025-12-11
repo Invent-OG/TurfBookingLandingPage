@@ -10,6 +10,7 @@ import {
   boolean,
   varchar,
   unique,
+  jsonb,
 } from "drizzle-orm/pg-core";
 
 // Users Table
@@ -141,4 +142,58 @@ export const galleryImages = pgTable("gallery_images", {
   id: uuid("id").defaultRandom().primaryKey(),
   imageUrl: text("image_url").notNull(),
   createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Events Table
+export const events = pgTable("events", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  title: text("title").notNull(),
+  description: text("description"), // Rich text
+  turfId: uuid("turf_id")
+    .references(() => turfs.id, { onDelete: "cascade" })
+    .notNull(),
+  eventType: text("event_type").notNull(), // Tournament, League, etc.
+  startDate: date("start_date").notNull(),
+  endDate: date("end_date").notNull(),
+  startTime: time("start_time").notNull(),
+  endTime: time("end_time").notNull(),
+  registrationType: text("registration_type", {
+    enum: ["individual", "team"],
+  }).notNull(),
+  maxParticipants: integer("max_participants").notNull(),
+  currentParticipants: integer("current_participants").default(0).notNull(),
+  price: numeric("price").notNull(),
+  prizeDetails: text("prize_details"),
+  rules: text("rules"), // Rich text
+  bannerImage: text("banner_image"),
+  status: text("status", {
+    enum: ["upcoming", "active", "completed", "cancelled"],
+  })
+    .default("upcoming")
+    .notNull(),
+  createdBy: uuid("created_by").references(() => users.id, {
+    onDelete: "set null",
+  }), // Admin who created it
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Event Registrations Table
+export const eventRegistrations = pgTable("event_registrations", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  eventId: uuid("event_id")
+    .references(() => events.id, { onDelete: "cascade" })
+    .notNull(),
+  userId: uuid("user_id")
+    .references(() => users.id, { onDelete: "cascade" })
+    .notNull(),
+  teamName: text("team_name"), // Nullable if individual
+  members: jsonb("members"), // JSON array for team members details
+  paymentStatus: text("payment_status", {
+    enum: ["pending", "paid", "failed", "refunded"],
+  })
+    .default("pending")
+    .notNull(),
+  customerPhone: text("customer_phone"), // Added contact phone
+  registeredAt: timestamp("registered_at").defaultNow(),
 });

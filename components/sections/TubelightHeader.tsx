@@ -35,6 +35,7 @@ export default function TubelightHeader({
 
   const navItems = [
     { name: "Home", url: "#home", icon: Home },
+    { name: "Events", url: "/events", icon: Star },
     { name: "Gallery", url: "#photos", icon: Image }, // Updated to Gallery
     { name: "Features", url: "#features", icon: Sparkles },
     { name: "Contact", url: "#contact", icon: Phone },
@@ -57,7 +58,7 @@ export default function TubelightHeader({
         )}
       >
         {logoUrl ? (
-          <div className="relative w-10 h-10 md:w-12 md:h-12 rounded-xl overflow-hidden shadow-[0_0_15px_rgba(204,255,0,0.3)] border border-white/10 bg-black/50 backdrop-blur-sm">
+          <div className="relative w-10 h-10 md:w-12 md:h-12   backdrop-blur-sm">
             <img
               src={logoUrl}
               alt={companyName}
@@ -72,9 +73,6 @@ export default function TubelightHeader({
           </div>
         )}
         <div className="flex flex-col">
-          <span className="text-turf-neon text-[10px] md:text-xs font-bold tracking-[0.2em] uppercase">
-            Welcome to
-          </span>
           <h1 className="text-white font-heading font-black text-xl md:text-2xl tracking-wide italic leading-none drop-shadow-lg">
             {companyName}
           </h1>

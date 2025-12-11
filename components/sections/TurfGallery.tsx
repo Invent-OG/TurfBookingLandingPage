@@ -2,12 +2,12 @@
 
 import { useRouter } from "next/navigation";
 import { Button } from "../ui/button";
-import { supabase } from "@/lib/supabase";
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useRef } from "react";
 import { toast } from "sonner";
 import { Turf } from "@/types/turf";
 import { cn } from "@/lib/utils";
-import { useTurfStore } from "@/lib/store/turf";
+// import { useTurfStore } from "@/lib/store/turf";
+import { useTurfs } from "@/hooks/use-turfs";
 
 import { GlassCard } from "@/components/ui/glass-card";
 import { gsap } from "gsap";
@@ -16,28 +16,18 @@ import { ScrollTrigger } from "gsap/ScrollTrigger";
 gsap.registerPlugin(ScrollTrigger);
 
 export default function TurfImageGallery() {
-  const { setSelectedTurf, setTurfs, turfs } = useTurfStore();
+  // const { setSelectedTurf } = useTurfStore();
+  const { data: turfs = [], isLoading, error } = useTurfs();
 
   const router = useRouter();
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<any>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const galleryRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const fetchTurfs = async () => {
-      setIsLoading(true);
-      const { data, error } = await supabase.from("turfs").select("*");
-      if (error) {
-        setError(error);
-        toast.error("Error fetching turfs: " + error.message);
-      } else {
-        setTurfs(data as Turf[]);
-      }
-      setIsLoading(false);
-    };
-    fetchTurfs();
-  }, [setTurfs]);
+    if (error) {
+      toast.error("Error fetching turfs");
+    }
+  }, [error]);
 
   useEffect(() => {
     if (!isLoading && turfs.length > 0) {
@@ -131,13 +121,13 @@ export default function TurfImageGallery() {
             noPadding
             className={cn(
               "overflow-hidden group hover:-translate-y-2 transition-all duration-500 hover:shadow-neon-blue",
-              turf.is_disabled ? "opacity-70 grayscale" : "cursor-pointer"
+              turf.isDisabled ? "opacity-70 grayscale" : "cursor-pointer"
             )}
           >
             {/* Image Container */}
             <div className="relative h-64 overflow-hidden">
               <img
-                src={turf.image_url}
+                src={turf.imageUrl || ""}
                 alt={turf.name}
                 className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
               />
@@ -145,7 +135,7 @@ export default function TurfImageGallery() {
 
               <div className="absolute top-4 right-4 bg-black/60 backdrop-blur-md px-3 py-1 rounded-full border border-white/10">
                 <span className="text-xs font-bold text-turf-neon uppercase tracking-wider">
-                  {turf.is_disabled ? "Coming Soon" : "Available"}
+                  {turf.isDisabled ? "Coming Soon" : "Available"}
                 </span>
               </div>
             </div>
@@ -160,17 +150,21 @@ export default function TurfImageGallery() {
                 Located at {turf.location}
               </p>
 
-              {turf.is_disabled ? (
+              {turf.isDisabled ? (
                 <div className="w-full text-center py-3 rounded-xl border border-red-500/20 bg-red-500/10 text-red-500 font-bold uppercase tracking-wider text-sm">
-                  {turf.disabled_reason}
+                  {turf.disabledReason}
                 </div>
               ) : (
                 <Button
-                  disabled={turf.is_disabled}
+                  disabled={!!turf.isDisabled}
                   onClick={() => {
-                    setSelectedTurf(turf);
+                    // setSelectedTurf(turf);
+                    // No need to set store, just pass ID via URL if needed.
+                    // But wait, does booking page read URL?
+                    // I will make it read URL param `turfId` if I can.
+                    // But for now let's just push to /booking?turfId=ID
                     toast.success("Turf selected: " + turf.name);
-                    router.push("/booking");
+                    router.push(`/booking?turfId=${turf.id}`);
                   }}
                   className="w-full bg-turf-neon hover:bg-turf-neon/80 text-turf-dark font-black py-6 rounded-xl transition-all shadow-lg shadow-neon-green/20 group-hover:shadow-neon-green/50 uppercase tracking-widest text-sm"
                 >

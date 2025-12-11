@@ -39,13 +39,13 @@ export default function Failure({ bookingData }: any) {
             <div className="flex justify-between items-center text-sm">
               <span className="text-gray-300">Turf</span>
               <span className="text-white font-medium">
-                {bookingData.turf_name}
+                {bookingData.turfName}
               </span>
             </div>
             <div className="flex justify-between items-center text-sm">
               <span className="text-gray-300">Amount</span>
               <span className="text-white font-medium">
-                ₹{bookingData.total_price}
+                ₹{bookingData.totalPrice}
               </span>
             </div>
           </div>

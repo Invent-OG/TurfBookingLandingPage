@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
+import { NumberInput } from "@/components/ui/number-input";
 import { ChevronLeft, X, UploadCloud, AlertTriangle } from "lucide-react";
 import React, { useEffect, useState } from "react";
 import { useDropzone } from "react-dropzone";
@@ -26,10 +27,10 @@ import {
 } from "@/components/ui/dialog";
 import { isAfter, parse } from "date-fns";
 import { useRouter, useSearchParams } from "next/navigation";
-import { supabase } from "@/lib/supabase";
 import { siteConfig } from "@/lib/config";
 import { Turf } from "@/types/turf";
-import { useTurfStore } from "@/lib/store/turf";
+import { useTurf, useUpdateTurf } from "@/hooks/use-turfs";
+import { useUploadFile } from "@/hooks/use-storage";
 import { generateTimeSlots } from "@/lib/convertTime";
 import { cn } from "@/lib/utils";
 
@@ -40,11 +41,16 @@ interface FileWithPreview extends File {
 const EditTurf = () => {
   const searchParams = useSearchParams();
   const turfId = searchParams.get("id");
-  const { turfs } = useTurfStore();
-  const existingTurf = turfs.find((t) => t.id === turfId);
+  const { data: existingTurf, isLoading: isTurfLoading } = useTurf(
+    turfId || ""
+  );
+  const updateTurfMutation = useUpdateTurf();
+  const uploadFileMutation = useUploadFile();
+
   const router = useRouter();
 
-  const [newTurf, setNewTurf] = useState<Turf | null>(existingTurf || null);
+  // Initialize with empty object, will be populated by useEffect
+  const [newTurf, setNewTurf] = useState<Turf | null>(null);
   const [files, setFiles] = useState<FileWithPreview[]>([]);
   const [loading, setLoading] = useState(false);
 
@@ -58,11 +64,19 @@ const EditTurf = () => {
   useEffect(() => {
     if (existingTurf) {
       setNewTurf(existingTurf);
-      setEnabled(existingTurf.is_disabled);
+      setEnabled(existingTurf.isDisabled || false);
     }
   }, [existingTurf]);
 
-  if (!newTurf) {
+  if (isTurfLoading) {
+    return (
+      <div className="p-20 text-center text-white">
+        Loading Arena Details...
+      </div>
+    );
+  }
+
+  if (!newTurf && !isTurfLoading) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[50vh] text-center">
         <h2 className="text-2xl font-bold text-white mb-2">Arena Not Found</h2>
@@ -76,6 +90,8 @@ const EditTurf = () => {
     );
   }
 
+  if (!newTurf) return null;
+
   // Handlers
   const handleToggle = (checked: boolean) => {
     if (checked) {
@@ -83,11 +99,13 @@ const EditTurf = () => {
       setShowDialog(true);
     } else {
       setEnabled(false);
-      setNewTurf({
-        ...newTurf,
-        is_disabled: false,
-        disabled_reason: "",
-      });
+      if (newTurf) {
+        setNewTurf({
+          ...newTurf,
+          isDisabled: false,
+          disabledReason: "",
+        });
+      }
     }
   };
 
@@ -96,11 +114,13 @@ const EditTurf = () => {
       selectedReason === "Custom Reason" ? customReason : selectedReason;
     setEnabled(true);
     setShowDialog(false);
-    setNewTurf({
-      ...newTurf,
-      is_disabled: true,
-      disabled_reason: reasonToSave,
-    });
+    if (newTurf) {
+      setNewTurf({
+        ...newTurf,
+        isDisabled: true,
+        disabledReason: reasonToSave,
+      });
+    }
     setSelectedReason("");
     setCustomReason("");
     setPendingState(null);
@@ -130,8 +150,9 @@ const EditTurf = () => {
   };
 
   const validateClosingTime = (closingTime: string) => {
+    if (!newTurf) return true;
     try {
-      const openingDate = parse(newTurf.opening_time, "HH:mm:ss", new Date());
+      const openingDate = parse(newTurf.openingTime, "HH:mm:ss", new Date());
       const closingDate = parse(closingTime, "HH:mm:ss", new Date());
       return isAfter(closingDate, openingDate);
     } catch (e) {
@@ -139,59 +160,42 @@ const EditTurf = () => {
     }
   };
 
-  const timeSlots = generateTimeSlots(parseInt(newTurf.slot_interval) || 60);
+  const timeSlots = newTurf
+    ? generateTimeSlots(newTurf.slotInterval || 60)
+    : [];
 
   const handleUpdateTurf = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!newTurf || !turfId) return;
+
     setLoading(true);
 
     try {
-      let imageUrl = newTurf.image_url;
-
-      if (files[0]) {
-        const fileName = `turf-${Date.now()}-${files[0].name}`;
-        const { data, error } = await supabase.storage
-          .from("turf-images")
-          .upload(fileName, files[0], {
-            cacheControl: "3600",
-            upsert: false,
+      let imageUrl = newTurf.imageUrl;
+      if (files.length > 0) {
+        try {
+          const { url } = await uploadFileMutation.mutateAsync({
+            bucket: "turf-images",
+            file: files[0],
           });
-
-        if (error) throw error;
-        imageUrl = supabase.storage.from("turf-images").getPublicUrl(data.path)
-          .data.publicUrl;
+          imageUrl = url;
+        } catch (err) {
+          toast.error("Failed to upload image");
+          setLoading(false);
+          return;
+        }
       }
 
       const formattedTurf = {
         ...newTurf,
-        opening_time: newTurf.opening_time.includes("1970-01-01")
-          ? newTurf.opening_time
-          : newTurf.opening_time
-            ? `1970-01-01 ${newTurf.opening_time}`
-            : null,
-        closing_time: newTurf.closing_time.includes("1970-01-01")
-          ? newTurf.closing_time
-          : newTurf.closing_time
-            ? `1970-01-01 ${newTurf.closing_time}`
-            : null,
-        image_url: imageUrl,
-        price_per_hour: String(newTurf.price_per_hour || "0"),
-        max_players: String(newTurf.max_players || "0"),
-        max_hours: String(newTurf.max_hours || "0"),
-        min_hours: String(newTurf.min_hours || "0"),
-        weekday_morning_price: String(newTurf.weekday_morning_price || "0"),
-        weekday_evening_price: String(newTurf.weekday_evening_price || "0"),
-        weekend_morning_price: String(newTurf.weekend_morning_price || "0"),
-        weekend_evening_price: String(newTurf.weekend_evening_price || "0"),
+        imageUrl: imageUrl,
+        pricePerHour: String(newTurf.pricePerHour || "0"),
       };
 
-      const { error } = await supabase
-        .from("turfs")
-        .update(formattedTurf)
-        .eq("id", turfId);
+      // Strip immutable fields
+      const { id, createdAt, ...updateData } = formattedTurf;
 
-      if (error) throw error;
-
+      await updateTurfMutation.mutateAsync({ id: turfId, data: updateData });
       toast.success("Turf updated successfully");
       router.push("/admin/turfs");
     } catch (error: any) {
@@ -212,6 +216,16 @@ const EditTurf = () => {
       return timeStr.split(" ")[1];
     }
     return timeStr;
+  };
+
+  const formatTo12Hour = (timeStr: string | undefined) => {
+    if (!timeStr) return undefined;
+    const [hours, minutes] = timeStr.split(":");
+    if (!hours || !minutes) return timeStr; // Fallback
+    const h = parseInt(hours, 10);
+    const ampm = h >= 12 ? "PM" : "AM";
+    const h12 = h % 12 || 12;
+    return `${h12}:${minutes} ${ampm}`;
   };
 
   return (
@@ -244,7 +258,9 @@ const EditTurf = () => {
                 placeholder="e.g. Neon Soccer Arena"
                 value={newTurf.name}
                 onChange={(e) =>
-                  setNewTurf({ ...newTurf, name: e.target.value })
+                  setNewTurf((prev) =>
+                    prev ? { ...prev, name: e.target.value } : null
+                  )
                 }
                 required
                 className={inputClasses}
@@ -257,7 +273,9 @@ const EditTurf = () => {
                 placeholder="e.g. Football 5v5"
                 value={newTurf.type}
                 onChange={(e) =>
-                  setNewTurf({ ...newTurf, type: e.target.value })
+                  setNewTurf((prev) =>
+                    prev ? { ...prev, type: e.target.value } : null
+                  )
                 }
                 required
                 className={inputClasses}
@@ -270,7 +288,9 @@ const EditTurf = () => {
                 placeholder="e.g. Downtown Sports Complex"
                 value={newTurf.location}
                 onChange={(e) =>
-                  setNewTurf({ ...newTurf, location: e.target.value })
+                  setNewTurf((prev) =>
+                    prev ? { ...prev, location: e.target.value } : null
+                  )
                 }
                 required
                 className={inputClasses}
@@ -283,15 +303,14 @@ const EditTurf = () => {
                 <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
                   ₹
                 </span>
-                <Input
-                  type="number"
-                  placeholder="0"
-                  value={newTurf.price_per_hour}
-                  onChange={(e) =>
-                    setNewTurf({ ...newTurf, price_per_hour: e.target.value })
+                <NumberInput
+                  value={Number(newTurf.pricePerHour)}
+                  onChange={(val) =>
+                    setNewTurf((prev) =>
+                      prev ? { ...prev, pricePerHour: String(val) } : null
+                    )
                   }
-                  required
-                  min={0}
+                  step={100}
                   className={cn(inputClasses, "pl-7")}
                 />
               </div>
@@ -303,7 +322,9 @@ const EditTurf = () => {
                 placeholder="Describe the arena amenities, surface type, etc."
                 value={newTurf.description}
                 onChange={(e) =>
-                  setNewTurf({ ...newTurf, description: e.target.value })
+                  setNewTurf((prev) =>
+                    prev ? { ...prev, description: e.target.value } : null
+                  )
                 }
                 required
                 className={cn(inputClasses, "min-h-[100px]")}
@@ -316,42 +337,39 @@ const EditTurf = () => {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div className="space-y-1">
               <Label className={labelClasses}>Max Players</Label>
-              <Input
-                type="number"
-                placeholder="10"
-                value={newTurf.max_players}
-                onChange={(e) =>
-                  setNewTurf({ ...newTurf, max_players: e.target.value })
+              <NumberInput
+                value={newTurf.maxPlayers}
+                onChange={(val) =>
+                  setNewTurf((prev) =>
+                    prev ? { ...prev, maxPlayers: val } : null
+                  )
                 }
-                required
                 min={1}
                 className={inputClasses}
               />
             </div>
             <div className="space-y-1">
               <Label className={labelClasses}>Min Duration (Hours)</Label>
-              <Input
-                type="number"
-                placeholder="1"
-                value={newTurf.min_hours}
-                onChange={(e) =>
-                  setNewTurf({ ...newTurf, min_hours: e.target.value })
+              <NumberInput
+                value={newTurf.minHours}
+                onChange={(val) =>
+                  setNewTurf((prev) =>
+                    prev ? { ...prev, minHours: val } : null
+                  )
                 }
-                required
                 min={1}
                 className={inputClasses}
               />
             </div>
             <div className="space-y-1">
               <Label className={labelClasses}>Max Duration (Hours)</Label>
-              <Input
-                type="number"
-                placeholder="3"
-                value={newTurf.max_hours}
-                onChange={(e) =>
-                  setNewTurf({ ...newTurf, max_hours: e.target.value })
+              <NumberInput
+                value={newTurf.maxHours}
+                onChange={(val) =>
+                  setNewTurf((prev) =>
+                    prev ? { ...prev, maxHours: val } : null
+                  )
                 }
-                required
                 min={1}
                 className={inputClasses}
               />
@@ -362,9 +380,11 @@ const EditTurf = () => {
                 <div className="flex-1 space-y-1">
                   <Label className={labelClasses}>Slot Interval</Label>
                   <Select
-                    value={newTurf.slot_interval || undefined}
+                    value={newTurf.slotInterval?.toString() || undefined}
                     onValueChange={(value) =>
-                      setNewTurf({ ...newTurf, slot_interval: value })
+                      setNewTurf((prev) =>
+                        prev ? { ...prev, slotInterval: parseInt(value) } : null
+                      )
                     }
                   >
                     <SelectTrigger className={inputClasses}>
@@ -384,19 +404,23 @@ const EditTurf = () => {
                   </Select>
                 </div>
 
-                {newTurf.slot_interval && (
+                {newTurf.slotInterval && (
                   <>
                     <div className="flex-1 space-y-1">
                       <Label className={labelClasses}>Opening Time</Label>
                       <div className={cn("p-1 rounded-xl", inputClasses)}>
                         <TimePicker
-                          interval={parseInt(newTurf.slot_interval)}
-                          defaultValue={getTimeString(newTurf.opening_time)}
+                          interval={newTurf.slotInterval}
+                          defaultValue={getTimeString(newTurf.openingTime)}
                           onChange={(e) =>
-                            setNewTurf({
-                              ...newTurf,
-                              opening_time: e.target.value,
-                            })
+                            setNewTurf((prev) =>
+                              prev
+                                ? {
+                                    ...prev,
+                                    openingTime: e.target.value,
+                                  }
+                                : null
+                            )
                           }
                         />
                       </div>
@@ -405,15 +429,19 @@ const EditTurf = () => {
                       <Label className={labelClasses}>Closing Time</Label>
                       <div className={cn("p-1 rounded-xl", inputClasses)}>
                         <TimePicker
-                          disabled={!newTurf.opening_time}
-                          interval={parseInt(newTurf.slot_interval)}
-                          startTime={getTimeString(newTurf.opening_time)}
-                          defaultValue={getTimeString(newTurf.closing_time)}
+                          disabled={!newTurf.openingTime}
+                          interval={newTurf.slotInterval}
+                          startTime={getTimeString(newTurf.openingTime)}
+                          defaultValue={getTimeString(newTurf.closingTime)}
                           onChange={(e) =>
-                            setNewTurf({
-                              ...newTurf,
-                              closing_time: e.target.value,
-                            })
+                            setNewTurf((prev) =>
+                              prev
+                                ? {
+                                    ...prev,
+                                    closingTime: e.target.value,
+                                  }
+                                : null
+                            )
                           }
                           validate={validateClosingTime}
                         />
@@ -429,7 +457,7 @@ const EditTurf = () => {
         {/* Image Upload */}
         <GlassCard title="Arena Image" className="overflow-visible">
           <div className="w-full">
-            {files.length === 0 && !newTurf.image_url ? (
+            {files.length === 0 && !newTurf.imageUrl ? (
               <div
                 {...getRootProps()}
                 className="border-2 border-dashed border-white/20 rounded-2xl p-10 text-center cursor-pointer hover:bg-white/5 hover:border-turf-neon/50 transition-all flex flex-col items-center gap-3 group"
@@ -450,7 +478,7 @@ const EditTurf = () => {
             ) : (
               <div className="relative w-full h-64 rounded-2xl overflow-hidden group border border-white/10">
                 <img
-                  src={files[0]?.preview || newTurf.image_url}
+                  src={files[0]?.preview || newTurf.imageUrl || undefined}
                   alt="Turf Preview"
                   className="w-full h-full object-cover"
                 />
@@ -460,7 +488,7 @@ const EditTurf = () => {
                     type="button"
                     onClick={() => {
                       setFiles([]);
-                      setNewTurf({ ...newTurf, image_url: "" });
+                      setNewTurf({ ...newTurf, imageUrl: "" });
                     }}
                   >
                     <X className="w-4 h-4 mr-2" /> Remove Image
@@ -485,9 +513,11 @@ const EditTurf = () => {
                 </Label>
                 <Switch
                   id="enable_weekday"
-                  checked={newTurf.is_weekday_pricing_enabled}
+                  checked={newTurf.isWeekdayPricingEnabled || false}
                   onCheckedChange={(e) =>
-                    setNewTurf({ ...newTurf, is_weekday_pricing_enabled: e })
+                    setNewTurf((prev) =>
+                      prev ? { ...prev, isWeekdayPricingEnabled: e } : null
+                    )
                   }
                 />
               </div>
@@ -495,7 +525,7 @@ const EditTurf = () => {
           }
           className="overflow-visible"
         >
-          {newTurf.is_weekday_pricing_enabled && (
+          {newTurf.isWeekdayPricingEnabled && (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 animate-in fade-in slide-in-from-top-2">
               <div className="space-y-4 p-4 rounded-xl bg-white/5 border border-white/5">
                 <h4 className="text-sm font-bold text-gray-300 uppercase tracking-wider">
@@ -505,13 +535,23 @@ const EditTurf = () => {
                   <div>
                     <Label className={labelClasses}>Start Time</Label>
                     <Select
-                      value={newTurf.weekday_morning_start || undefined}
+                      value={
+                        newTurf.weekdayMorningStart?.slice(0, 5) || undefined
+                      }
                       onValueChange={(val) =>
-                        setNewTurf({ ...newTurf, weekday_morning_start: val })
+                        setNewTurf((prev) =>
+                          prev ? { ...prev, weekdayMorningStart: val } : null
+                        )
                       }
                     >
                       <SelectTrigger className={inputClasses}>
-                        <SelectValue placeholder="Select Time" />
+                        <div className="flex items-center gap-2 flex-1 text-left">
+                          <span className="text-white flex-1">
+                            {formatTo12Hour(
+                              newTurf.weekdayMorningStart?.slice(0, 5)
+                            ) || "Select Time"}
+                          </span>
+                        </div>
                       </SelectTrigger>
                       <SelectContent className="bg-black border border-white/10 text-white max-h-60 z-[9999] overflow-y-auto">
                         {siteConfig.morningTimes.map((t) => (
@@ -528,17 +568,21 @@ const EditTurf = () => {
                   </div>
                   <div>
                     <Label className={labelClasses}>Price</Label>
-                    <Input
-                      type="number"
-                      className={inputClasses}
-                      placeholder="0"
-                      value={newTurf.weekday_morning_price}
-                      onChange={(e) =>
-                        setNewTurf({
-                          ...newTurf,
-                          weekday_morning_price: e.target.value,
-                        })
+                    <NumberInput
+                      value={Number(newTurf.weekdayMorningPrice) || 0}
+                      onChange={(val) =>
+                        setNewTurf((prev) =>
+                          prev
+                            ? {
+                                ...prev,
+                                weekdayMorningPrice: String(val),
+                              }
+                            : null
+                        )
                       }
+                      min={0}
+                      step={100}
+                      className={inputClasses}
                     />
                   </div>
                 </div>
@@ -552,13 +596,23 @@ const EditTurf = () => {
                   <div>
                     <Label className={labelClasses}>Start Time</Label>
                     <Select
-                      value={newTurf.weekday_evening_start || undefined}
+                      value={
+                        newTurf.weekdayEveningStart?.slice(0, 5) || undefined
+                      }
                       onValueChange={(val) =>
-                        setNewTurf({ ...newTurf, weekday_evening_start: val })
+                        setNewTurf((prev) =>
+                          prev ? { ...prev, weekdayEveningStart: val } : null
+                        )
                       }
                     >
                       <SelectTrigger className={inputClasses}>
-                        <SelectValue placeholder="Select Time" />
+                        <div className="flex items-center gap-2 flex-1 text-left">
+                          <span className="text-white flex-1">
+                            {formatTo12Hour(
+                              newTurf.weekdayEveningStart?.slice(0, 5)
+                            ) || "Select Time"}
+                          </span>
+                        </div>
                       </SelectTrigger>
                       <SelectContent className="bg-black border border-white/10 text-white max-h-60 z-[9999] overflow-y-auto">
                         {siteConfig.eveningTimes.map((t) => (
@@ -575,17 +629,21 @@ const EditTurf = () => {
                   </div>
                   <div>
                     <Label className={labelClasses}>Price</Label>
-                    <Input
-                      type="number"
-                      className={inputClasses}
-                      placeholder="0"
-                      value={newTurf.weekday_evening_price}
-                      onChange={(e) =>
-                        setNewTurf({
-                          ...newTurf,
-                          weekday_evening_price: e.target.value,
-                        })
+                    <NumberInput
+                      value={Number(newTurf.weekdayEveningPrice) || 0}
+                      onChange={(val) =>
+                        setNewTurf((prev) =>
+                          prev
+                            ? {
+                                ...prev,
+                                weekdayEveningPrice: String(val),
+                              }
+                            : null
+                        )
                       }
+                      min={0}
+                      step={100}
+                      className={inputClasses}
                     />
                   </div>
                 </div>
@@ -607,9 +665,11 @@ const EditTurf = () => {
                 </Label>
                 <Switch
                   id="enable_weekend"
-                  checked={newTurf.is_weekend_pricing_enabled}
+                  checked={newTurf.isWeekendPricingEnabled || false}
                   onCheckedChange={(e) =>
-                    setNewTurf({ ...newTurf, is_weekend_pricing_enabled: e })
+                    setNewTurf((prev) =>
+                      prev ? { ...prev, isWeekendPricingEnabled: e } : null
+                    )
                   }
                 />
               </div>
@@ -617,7 +677,7 @@ const EditTurf = () => {
           }
           className="overflow-visible"
         >
-          {newTurf.is_weekend_pricing_enabled && (
+          {newTurf.isWeekendPricingEnabled && (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 animate-in fade-in slide-in-from-top-2">
               <div className="space-y-4 p-4 rounded-xl bg-white/5 border border-white/5">
                 <h4 className="text-sm font-bold text-gray-300 uppercase tracking-wider">
@@ -627,13 +687,23 @@ const EditTurf = () => {
                   <div>
                     <Label className={labelClasses}>Start Time</Label>
                     <Select
-                      value={newTurf.weekend_morning_start || undefined}
+                      value={
+                        newTurf.weekendMorningStart?.slice(0, 5) || undefined
+                      }
                       onValueChange={(val) =>
-                        setNewTurf({ ...newTurf, weekend_morning_start: val })
+                        setNewTurf((prev) =>
+                          prev ? { ...prev, weekendMorningStart: val } : null
+                        )
                       }
                     >
                       <SelectTrigger className={inputClasses}>
-                        <SelectValue placeholder="Select Time" />
+                        <div className="flex items-center gap-2 flex-1 text-left">
+                          <span className="text-white flex-1">
+                            {formatTo12Hour(
+                              newTurf.weekendMorningStart?.slice(0, 5)
+                            ) || "Select Time"}
+                          </span>
+                        </div>
                       </SelectTrigger>
                       <SelectContent className="bg-black border border-white/10 text-white max-h-60 z-[9999] overflow-y-auto">
                         {siteConfig.morningTimes.map((t) => (
@@ -650,17 +720,21 @@ const EditTurf = () => {
                   </div>
                   <div>
                     <Label className={labelClasses}>Price</Label>
-                    <Input
-                      type="number"
-                      className={inputClasses}
-                      placeholder="0"
-                      value={newTurf.weekend_morning_price}
-                      onChange={(e) =>
-                        setNewTurf({
-                          ...newTurf,
-                          weekend_morning_price: e.target.value,
-                        })
+                    <NumberInput
+                      value={Number(newTurf.weekendMorningPrice) || 0}
+                      onChange={(val) =>
+                        setNewTurf((prev) =>
+                          prev
+                            ? {
+                                ...prev,
+                                weekendMorningPrice: String(val),
+                              }
+                            : null
+                        )
                       }
+                      min={0}
+                      step={100}
+                      className={inputClasses}
                     />
                   </div>
                 </div>
@@ -674,13 +748,23 @@ const EditTurf = () => {
                   <div>
                     <Label className={labelClasses}>Start Time</Label>
                     <Select
-                      value={newTurf.weekend_evening_start || undefined}
+                      value={
+                        newTurf.weekendEveningStart?.slice(0, 5) || undefined
+                      }
                       onValueChange={(val) =>
-                        setNewTurf({ ...newTurf, weekend_evening_start: val })
+                        setNewTurf((prev) =>
+                          prev ? { ...prev, weekendEveningStart: val } : null
+                        )
                       }
                     >
                       <SelectTrigger className={inputClasses}>
-                        <SelectValue placeholder="Select Time" />
+                        <div className="flex items-center gap-2 flex-1 text-left">
+                          <span className="text-white flex-1">
+                            {formatTo12Hour(
+                              newTurf.weekendEveningStart?.slice(0, 5)
+                            ) || "Select Time"}
+                          </span>
+                        </div>
                       </SelectTrigger>
                       <SelectContent className="bg-black border border-white/10 text-white max-h-60 z-[9999] overflow-y-auto">
                         {siteConfig.eveningTimes.map((t) => (
@@ -697,17 +781,21 @@ const EditTurf = () => {
                   </div>
                   <div>
                     <Label className={labelClasses}>Price</Label>
-                    <Input
-                      type="number"
-                      className={inputClasses}
-                      placeholder="0"
-                      value={newTurf.weekend_evening_price}
-                      onChange={(e) =>
-                        setNewTurf({
-                          ...newTurf,
-                          weekend_evening_price: e.target.value,
-                        })
+                    <NumberInput
+                      value={Number(newTurf.weekendEveningPrice) || 0}
+                      onChange={(val) =>
+                        setNewTurf((prev) =>
+                          prev
+                            ? {
+                                ...prev,
+                                weekendEveningPrice: String(val),
+                              }
+                            : null
+                        )
                       }
+                      className={inputClasses}
+                      min={0}
+                      step={100}
                     />
                   </div>
                 </div>
