@@ -5,10 +5,10 @@ import { eq } from "drizzle-orm";
 
 export async function POST(
   req: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const bookingId = params.id;
+    const { id: bookingId } = await params;
     const body = await req.json().catch(() => ({}));
     const { amount } = body; // Optional: allow partial refund logic later, for now we do full refund
 
