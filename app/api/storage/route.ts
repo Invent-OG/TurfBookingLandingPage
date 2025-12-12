@@ -3,11 +3,18 @@ import { NextResponse } from "next/server";
 
 // Initialize Supabase Admin Client for server-side operations
 // access to process.env is required. Ensure these env vars are set.
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
+// Initialize Supabase Admin Client for server-side operations
+// access to process.env is required. Ensure these env vars are set.
+const getSupabaseAdmin = () => {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
-// Use Service Role Key for Admin privileges (bypass RLS for admin operations)
-const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey);
+  if (!supabaseUrl || !supabaseServiceKey) {
+    throw new Error("Missing Supabase credentials");
+  }
+
+  return createClient(supabaseUrl, supabaseServiceKey);
+};
 
 export async function POST(req: Request) {
   try {
@@ -28,8 +35,8 @@ export async function POST(req: Request) {
 
     const fileName = path || `${Date.now()}-${file.name.replace(/\s/g, "_")}`;
 
-    const { data, error } = await supabaseAdmin.storage
-      .from(bucket)
+    const { data, error } = await getSupabaseAdmin()
+      .storage.from(bucket)
       .upload(fileName, buffer, {
         contentType: file.type,
         upsert: false,
@@ -40,8 +47,9 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
-    const publicUrl = supabaseAdmin.storage.from(bucket).getPublicUrl(data.path)
-      .data.publicUrl;
+    const publicUrl = getSupabaseAdmin()
+      .storage.from(bucket)
+      .getPublicUrl(data.path).data.publicUrl;
 
     return NextResponse.json(
       {
@@ -85,8 +93,8 @@ export async function DELETE(req: Request) {
       }
     }
 
-    const { error } = await supabaseAdmin.storage
-      .from(bucket)
+    const { error } = await getSupabaseAdmin()
+      .storage.from(bucket)
       .remove([relativePath]);
 
     if (error) {
