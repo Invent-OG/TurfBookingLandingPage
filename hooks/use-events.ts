@@ -7,9 +7,16 @@ export type Event = InferSelectModel<typeof events>;
 
 interface CreateEventData extends Omit<
   Event,
-  "id" | "createdAt" | "updatedAt" | "currentParticipants"
+  | "id"
+  | "createdAt"
+  | "updatedAt"
+  | "currentParticipants"
+  | "status"
+  | "createdBy"
 > {
   currentParticipants?: number; // Optional on create
+  status?: "upcoming" | "active" | "completed" | "cancelled";
+  createdBy?: string | null;
 }
 
 export const useEvents = (filters?: { status?: string; turfId?: string }) => {

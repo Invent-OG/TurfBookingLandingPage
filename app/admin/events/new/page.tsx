@@ -21,7 +21,7 @@ import { DatePicker } from "@/components/ui/date-picker";
 import { TimePicker } from "@/components/ui/time-picker";
 import { NumberInput } from "@/components/ui/number-input";
 import { format } from "date-fns";
-import { format } from "date-fns";
+
 import { useCreateEvent } from "@/hooks/use-events";
 import { useUploadFile } from "@/hooks/use-storage";
 import { useTurfs } from "@/hooks/use-turfs";
