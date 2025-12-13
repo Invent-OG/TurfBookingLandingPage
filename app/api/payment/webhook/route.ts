@@ -128,47 +128,24 @@ export async function POST(req: Request) {
       }
 
       // ✅ Send confirmation email using internal email route
-      // const emailResponse = await fetch(
-      //   `http://localhost:3000/api/send-email`,
-      //   {
-      //     method: "POST",
-      //     headers: { "Content-Type": "application/json" },
-      //     body: JSON.stringify({
-      //       email: booking.customerEmail,
-      //       name: booking.customerName,
-      //       turf: booking.turfName,
-      //       date: booking.date,
-      //       time: booking.startTime,
-      //       duration: booking.duration,
-      //       bookingId: booking.id,
-      //       amount: booking.totalPrice,
-      //       phone: booking.customerPhone,
-      //     }),
-      //   }
-      // );
-
       const emailResponse = await fetch(
-        "http://localhost:3000/api/send-email",
+        `${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/api/send-email`,
         {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
-            to: booking.customerEmail,
-            subject: `Booking Confirmed - ${booking.turfName}`,
-            message: `
-      Hi ${booking.customerName},<br /><br />
-      Your booking at <strong>${booking.turfName}</strong> is confirmed.<br />
-      📅 Date: <strong>${booking.date}</strong><br />
-      🕒 Time: <strong>${booking.startTime}</strong><br />
-      ⏳ Duration: <strong>${booking.duration} hour(s)</strong><br />
-      💰 Amount: <strong>₹${booking.totalPrice}</strong><br />
-      📞 Phone: <strong>${booking.customerPhone}</strong><br />
-      🔐 Booking ID: <strong>${booking.id}</strong><br /><br />
-      Thank you for booking with us! ⚽🏏<br />
-      — Turf Team
-    `,
+            type: "booking_confirmation",
+            email: booking.customerEmail,
+            name: booking.customerName,
+            turf: booking.turfName,
+            date: booking.date,
+            time: booking.startTime,
+            duration: booking.duration,
+            bookingId: booking.id,
+            amount: booking.totalPrice,
+            phone: booking.customerPhone,
           }),
         }
       );
@@ -199,6 +176,32 @@ export async function POST(req: Request) {
           { error: "Failed to update payment failure" },
           { status: 500 }
         );
+      }
+
+      // Fetch booking details for failure email
+      const { data: booking } = await supabase
+        .from("bookings")
+        .select("*")
+        .eq("id", orderId)
+        .single();
+
+      if (booking) {
+        // Send Failure Email
+        await fetch(
+          `${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/api/send-email`,
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              type: "payment_failure",
+              email: booking.customerEmail,
+              name: booking.customerName,
+              bookingId: booking.id,
+              amount: booking.totalPrice,
+              turf: booking.turfName,
+            }),
+          }
+        ).catch((err) => console.error("Failed to send failure email", err));
       }
 
       console.log(`🛑 Booking ${orderId} marked as payment_failed`);

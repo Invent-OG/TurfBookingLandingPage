@@ -54,6 +54,27 @@ export async function POST(
       .where(eq(bookings.id, id))
       .returning();
 
+    // 4. Send Cancellation Email
+    if (updatedBooking.length > 0) {
+      fetch(
+        `${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/api/send-email`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            type: "booking_cancellation",
+            email: booking[0].customerEmail, // Use original booking data since update might not return all fields in some configs
+            name: booking[0].customerName,
+            bookingId: booking[0].id,
+            turf: booking[0].turfName,
+            date: booking[0].date,
+          }),
+        }
+      ).catch((err) =>
+        console.error("Failed to send cancellation email:", err)
+      );
+    }
+
     return NextResponse.json(
       { success: true, booking: updatedBooking[0] },
       { status: 200 }

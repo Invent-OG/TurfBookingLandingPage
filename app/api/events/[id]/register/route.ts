@@ -133,14 +133,44 @@ export async function POST(
         })
         .where(eq(events.id, eventId));
 
-      return new Response(
-        JSON.stringify({ success: true, registration: newRegistration }),
-        {
-          status: 201,
-          headers: { "Content-Type": "application/json" },
-        }
-      );
+      return {
+        registration: newRegistration,
+        eventTitle: eventDetails.title,
+        eventDate: eventDetails.date,
+        amount: eventDetails.price,
+      };
     });
+
+    // 6. Send Email Notification (Outside transaction to avoid blocking/rollback issues)
+    if (result && result.registration) {
+      fetch(
+        `${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/api/send-email`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            type: "event_registration",
+            email: customerEmail,
+            name: customerName,
+            eventName: result.eventTitle,
+            eventDate: result.eventDate.toISOString().split("T")[0],
+            teamName: teamName,
+            amount: result.amount,
+            registrationId: result.registration.id,
+          }),
+        }
+      ).catch((err) =>
+        console.error("Failed to send event registration email:", err)
+      );
+    }
+
+    return new Response(
+      JSON.stringify({ success: true, registration: result.registration }),
+      {
+        status: 201,
+        headers: { "Content-Type": "application/json" },
+      }
+    );
   } catch (error) {
     console.error("Error registering for event:", error);
     return new Response(

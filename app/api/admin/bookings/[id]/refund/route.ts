@@ -89,6 +89,23 @@ export async function POST(
       .set({ status: "refunded" })
       .where(eq(bookings.id, bookingId));
 
+    // 5. Send Refund Email
+    fetch(
+      `${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/api/send-email`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          type: "refund_processed",
+          email: booking.customerEmail,
+          name: booking.customerName,
+          bookingId: booking.id,
+          amount: refundAmount,
+          date: new Date().toISOString().split("T")[0],
+        }),
+      }
+    ).catch((err) => console.error("Failed to send refund email:", err));
+
     return NextResponse.json({
       success: true,
       message: "Refund initiated successfully",
