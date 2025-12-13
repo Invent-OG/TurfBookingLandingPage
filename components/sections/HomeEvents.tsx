@@ -47,7 +47,7 @@ export const HomeEvents = () => {
   if (!loading && events.length === 0) return null;
 
   return (
-    <section className="relative py-20 bg-turf-dark overflow-hidden">
+    <section className="relative py-20 overflow-hidden">
       <div className="max-w-7xl mx-auto px-4 space-y-12 relative z-10">
         <div className="text-center space-y-4">
           <Badge
@@ -79,35 +79,54 @@ export const HomeEvents = () => {
                   transition={{ delay: index * 0.1 }}
                   className="h-full"
                 >
-                  <GlassCard className="h-full flex flex-col p-0 overflow-hidden hover:border-turf-neon/50 transition-all duration-300 group cursor-pointer hover:-translate-y-1">
-                    <div className="relative h-48 w-full overflow-hidden">
+                  <div className="h-full group relative bg-black/40 backdrop-blur-md border border-white/10 rounded-xl overflow-hidden hover:border-turf-neon hover:shadow-[0_0_30px_rgba(204,255,0,0.15)] transition-all duration-300">
+                    {/* Image Section */}
+                    <div className="relative h-56 w-full overflow-hidden">
+                      <div className="absolute inset-0 bg-turf-neon/20 mix-blend-overlay z-10 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                       <img
                         src={
                           event.bannerImage ||
                           "https://images.unsplash.com/photo-1579952363873-27f3bade9f55?q=80&w=1000&auto=format&fit=crop"
                         }
                         alt={event.title}
-                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                        className="w-full h-full object-cover group-hover:scale-110 group-hover:rotate-1 transition-transform duration-700"
                       />
-                      <div className="absolute top-4 right-4">
-                        <Badge className="bg-turf-neon text-turf-dark font-bold hover:bg-turf-neon">
+
+                      {/* Sporty Skewed Badge */}
+                      <div className="absolute top-4 right-[-10px] z-20 transform skew-x-[-15deg]">
+                        <div className="bg-turf-neon text-black font-black text-xs uppercase px-6 py-1.5 shadow-lg border-l-4 border-black">
                           {event.eventType}
-                        </Badge>
-                      </div>
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/90 to-transparent"></div>
-                      <div className="absolute bottom-4 left-4 right-4">
-                        <h3 className="text-lg font-bold text-white line-clamp-1 group-hover:text-turf-neon transition-colors">
-                          {event.title}
-                        </h3>
-                        <div className="flex items-center gap-2 text-xs text-gray-300 mt-1">
-                          <Calendar className="w-3 h-3 text-turf-neon" />
-                          <span>
-                            {format(new Date(event.startDate), "MMM d, yyyy")}
-                          </span>
                         </div>
                       </div>
+
+                      <div className="absolute inset-0 bg-gradient-to-t from-black via-black/50 to-transparent"></div>
                     </div>
-                  </GlassCard>
+
+                    {/* Content Section */}
+                    <div className="p-6 relative">
+                      {/* Decorative Line */}
+                      <div className="absolute top-0 left-6 right-6 h-[1px] bg-gradient-to-r from-transparent via-turf-neon/50 to-transparent"></div>
+
+                      <div className="flex items-center gap-3 mb-3">
+                        <div className="flex items-center gap-1.5 text-turf-neon font-mono text-xs font-bold uppercase tracking-wider bg-turf-neon/10 px-2 py-1 rounded">
+                          <Calendar className="w-3 h-3" />
+                          {format(new Date(event.startDate), "MMM d, yyyy")}
+                        </div>
+                      </div>
+
+                      <h3 className="text-2xl font-black text-white font-heading italic uppercase leading-none mb-4 group-hover:text-turf-neon transition-colors">
+                        {event.title}
+                      </h3>
+
+                      <div className="flex items-center justify-between mt-auto pt-4 border-t border-white/5">
+                        <div className="text-gray-400 text-sm font-medium flex items-center gap-2">
+                          <span className="w-2 h-2 rounded-full bg-turf-neon animate-pulse"></span>
+                          {event.status}
+                        </div>
+                        <ArrowRight className="w-5 h-5 text-gray-500 group-hover:text-turf-neon group-hover:translate-x-2 transition-all" />
+                      </div>
+                    </div>
+                  </div>
                 </motion.div>
               </Link>
             ))}

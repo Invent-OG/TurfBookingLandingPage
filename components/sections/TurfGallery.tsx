@@ -116,63 +116,68 @@ export default function TurfImageGallery() {
         )}
 
         {turfs.map((turf) => (
-          <GlassCard
+          <div
             key={turf.id}
-            noPadding
             className={cn(
-              "overflow-hidden group hover:-translate-y-2 transition-all duration-500 hover:shadow-neon-blue",
+              "group relative bg-black/40 backdrop-blur-md border border-white/10 rounded-xl overflow-hidden hover:border-turf-neon hover:shadow-[0_0_30px_rgba(204,255,0,0.15)] transition-all duration-500 hover:-translate-y-2",
               turf.isDisabled ? "opacity-70 grayscale" : "cursor-pointer"
             )}
           >
             {/* Image Container */}
             <div className="relative h-64 overflow-hidden">
+              <div className="absolute inset-0 bg-turf-neon/20 mix-blend-overlay z-10 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
               <img
                 src={turf.imageUrl || ""}
                 alt={turf.name}
-                className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110 group-hover:rotate-1"
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-turf-dark via-transparent to-transparent opacity-80" />
+              <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-90" />
 
-              <div className="absolute top-4 right-4 bg-black/60 backdrop-blur-md px-3 py-1 rounded-full border border-white/10">
-                <span className="text-xs font-bold text-turf-neon uppercase tracking-wider">
+              <div className="absolute top-4 right-[-10px] transform skew-x-[-15deg] z-20">
+                <div
+                  className={cn(
+                    "px-6 py-1.5 font-black text-xs uppercase shadow-lg border-l-4 border-black",
+                    turf.isDisabled
+                      ? "bg-red-500 text-white"
+                      : "bg-turf-neon text-black"
+                  )}
+                >
                   {turf.isDisabled ? "Coming Soon" : "Available"}
-                </span>
+                </div>
               </div>
             </div>
 
             {/* Content */}
             <div className="p-6 relative">
-              <h3 className="text-2xl font-bold text-white mb-2 font-heading uppercase tracking-wide group-hover:text-turf-blue transition-colors">
+              {/* Decorative Line */}
+              <div className="absolute top-0 left-6 right-6 h-[1px] bg-gradient-to-r from-transparent via-turf-neon/50 to-transparent"></div>
+
+              <h3 className="text-2xl font-black text-white mb-2 font-heading italic uppercase tracking-wide group-hover:text-turf-neon transition-colors">
                 {turf.name}
               </h3>
-              <p className="text-gray-400 mb-6 flex items-center gap-2 text-sm">
-                <span className="w-1.5 h-1.5 rounded-full bg-turf-neon"></span>
+              <p className="text-gray-400 mb-6 flex items-center gap-2 text-sm font-medium">
+                <span className="w-1.5 h-1.5 rounded-full bg-turf-neon animate-pulse"></span>
                 Located at {turf.location}
               </p>
 
               {turf.isDisabled ? (
-                <div className="w-full text-center py-3 rounded-xl border border-red-500/20 bg-red-500/10 text-red-500 font-bold uppercase tracking-wider text-sm">
+                <div className="w-full text-center py-3 rounded-none border-l-2 border-red-500 bg-red-500/10 text-red-500 font-bold uppercase tracking-wider text-sm italic">
                   {turf.disabledReason}
                 </div>
               ) : (
                 <Button
                   disabled={!!turf.isDisabled}
                   onClick={() => {
-                    // setSelectedTurf(turf);
-                    // No need to set store, just pass ID via URL if needed.
-                    // But wait, does booking page read URL?
-                    // I will make it read URL param `turfId` if I can.
-                    // But for now let's just push to /booking?turfId=ID
                     toast.success("Turf selected: " + turf.name);
                     router.push(`/booking?turfId=${turf.id}`);
                   }}
-                  className="w-full bg-turf-neon hover:bg-turf-neon/80 text-turf-dark font-black py-6 rounded-xl transition-all shadow-lg shadow-neon-green/20 group-hover:shadow-neon-green/50 uppercase tracking-widest text-sm"
+                  className="w-full bg-turf-neon hover:bg-turf-neon/80 text-turf-dark font-black py-6 rounded-none skew-x-[-10deg] transition-all shadow-lg shadow-neon-green/20 group-hover:shadow-neon-green/50 uppercase tracking-widest text-sm"
                 >
-                  Book Now
+                  <span className="skew-x-[10deg]">Book Now</span>
                 </Button>
               )}
             </div>
-          </GlassCard>
+          </div>
         ))}
       </div>
     </div>

@@ -25,7 +25,7 @@ const InstagramEmbed = () => {
       </div>
 
       {/* Instagram Card */}
-      <Card className="relative z-10 max-w-xl w-full p-2 shadow-2xl shadow-black/50 border border-white/10 rounded-2xl bg-black/40 backdrop-blur-md mt-8">
+      <Card className="relative z-10 max-w-xl w-full p-2 shadow-2xl shadow-black/50 border border-white/10 rounded-2xl bg-black/40 backdrop-blur-md mt-8 hover:border-turf-neon hover:shadow-[0_0_30px_rgba(204,255,0,0.15)] transition-all duration-300 group">
         <CardContent className="p-0 rounded-xl overflow-hidden">
           <blockquote
             className="instagram-media"

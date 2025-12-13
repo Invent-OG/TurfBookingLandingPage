@@ -73,17 +73,22 @@ export default function Features() {
       >
         {siteConfig.features.map((feature, index) => (
           <div key={index}>
-            <GlassCard className="h-full group hover:bg-white/5 transition-all duration-300">
-              <div className="mb-6 p-4 rounded-2xl bg-white/5 w-fit group-hover:bg-turf-neon/10 transition-colors">
-                <feature.icon className="h-8 w-8 text-turf-neon group-hover:drop-shadow-[0_0_8px_rgba(204,255,0,0.8)] transition-all" />
+            <div className="h-full group relative bg-black/40 backdrop-blur-md border border-white/10 rounded-xl p-6 overflow-hidden hover:border-turf-neon hover:shadow-[0_0_30px_rgba(204,255,0,0.15)] transition-all duration-300 hover:-translate-y-1">
+              {/* Decorative Gradient Line at Top */}
+              <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-turf-neon/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+
+              <div className="mb-6 p-4 rounded-xl bg-white/5 w-fit group-hover:bg-turf-neon/20 transition-colors relative overflow-hidden">
+                <div className="absolute inset-0 bg-turf-neon/10 skew-x-[-15deg] scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left"></div>
+                <feature.icon className="relative z-10 h-8 w-8 text-turf-neon group-hover:drop-shadow-[0_0_8px_rgba(204,255,0,0.8)] transition-all" />
               </div>
-              <h3 className="text-xl font-bold text-white mb-3 font-heading uppercase tracking-wide">
+
+              <h3 className="text-xl font-black text-white mb-3 font-heading italic uppercase tracking-wide group-hover:text-turf-neon transition-colors">
                 {feature.title}
               </h3>
-              <p className="text-gray-400 text-sm leading-relaxed">
+              <p className="text-gray-400 text-sm leading-relaxed font-medium">
                 {feature.description}
               </p>
-            </GlassCard>
+            </div>
           </div>
         ))}
       </div>

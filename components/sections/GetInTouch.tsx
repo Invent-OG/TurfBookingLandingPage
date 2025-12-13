@@ -103,16 +103,20 @@ const GetInTouch = () => {
             help you get back in the game.
           </p>
 
-          <div className="hidden md:flex gap-4">
-            <div className="p-4 rounded-2xl bg-white/5 border border-white/10 flex-1 text-center group hover:bg-turf-neon/10 transition-colors">
-              <h3 className="text-turf-neon font-bold text-xl mb-1">24/7</h3>
-              <p className="text-gray-500 text-xs uppercase tracking-wider">
+          <div className="hidden md:flex gap-6 mt-8">
+            <div className="p-4 rounded-none border-l-4 border-turf-neon bg-white/5 flex-1 text-center group hover:bg-turf-neon/10 transition-all hover:skew-x-[-5deg] duration-300">
+              <h3 className="text-turf-neon font-black font-heading italic text-2xl mb-0">
+                24/7
+              </h3>
+              <p className="text-gray-400 text-[10px] uppercase font-bold tracking-[0.2em] mt-1">
                 Support
               </p>
             </div>
-            <div className="p-4 rounded-2xl bg-white/5 border border-white/10 flex-1 text-center group hover:bg-turf-blue/10 transition-colors">
-              <h3 className="text-turf-blue font-bold text-xl mb-1">Fast</h3>
-              <p className="text-gray-500 text-xs uppercase tracking-wider">
+            <div className="p-4 rounded-none border-r-4 border-turf-blue bg-white/5 flex-1 text-center group hover:bg-turf-blue/10 transition-all hover:skew-x-[5deg] duration-300">
+              <h3 className="text-turf-blue font-black font-heading italic text-2xl mb-0">
+                Fast
+              </h3>
+              <p className="text-gray-400 text-[10px] uppercase font-bold tracking-[0.2em] mt-1">
                 Response
               </p>
             </div>
@@ -121,61 +125,72 @@ const GetInTouch = () => {
 
         {/* Form Card */}
         <div ref={formRef}>
-          <Card className="w-full p-6 sm:p-8 shadow-2xl shadow-black/50 rounded-2xl bg-black/40 backdrop-blur-xl border border-white/10">
-            <CardHeader className="px-0 pt-0 pb-6">
-              <CardTitle className="text-2xl font-bold text-white uppercase tracking-wide">
-                Send a Message
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="px-0 pb-0">
-              <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-                <div className="space-y-2">
-                  <Input
-                    placeholder="Your Name"
-                    {...register("name")}
-                    className="bg-white/5 border-white/10 text-white placeholder-gray-500 focus:border-turf-neon/50 focus:ring-0 transition-all h-12 rounded-lg"
-                  />
-                  {errors.name && (
-                    <p className="text-red-500 text-xs font-medium pl-1">
-                      {errors.name?.message as string}
-                    </p>
-                  )}
+          <div className="w-full p-1 bg-gradient-to-br from-white/10 to-transparent rounded-xl">
+            <div className="w-full p-6 sm:p-8 shadow-[0_0_50px_rgba(0,0,0,0.5)] rounded-xl bg-black/80 backdrop-blur-xl border border-white/5 relative overflow-hidden group">
+              <div className="absolute top-0 right-0 p-3 opacity-20 group-hover:opacity-100 transition-opacity duration-500">
+                <div className="w-20 h-20 bg-turf-neon blur-[80px] rounded-full"></div>
+              </div>
+
+              <div className="space-y-6">
+                <div>
+                  <h3 className="text-2xl font-black text-white uppercase italic tracking-wide font-heading mb-1">
+                    Send a Message
+                  </h3>
+                  <div className="h-1 w-12 bg-turf-neon skew-x-[-20deg]"></div>
                 </div>
-                <div className="space-y-2">
-                  <Input
-                    type="email"
-                    placeholder="Your Email"
-                    {...register("email")}
-                    className="bg-white/5 border-white/10 text-white placeholder-gray-500 focus:border-turf-neon/50 focus:ring-0 transition-all h-12 rounded-lg"
-                  />
-                  {errors.email && (
-                    <p className="text-red-500 text-xs font-medium pl-1">
-                      {errors.email.message as string}
-                    </p>
-                  )}
-                </div>
-                <div className="space-y-2">
-                  <Textarea
-                    placeholder="Your Message..."
-                    {...register("message")}
-                    className="bg-white/5 border-white/10 text-white placeholder-gray-500 focus:border-turf-neon/50 focus:ring-0 transition-all min-h-[120px] rounded-lg resize-none"
-                  />
-                  {errors.message && (
-                    <p className="text-red-500 text-xs font-medium pl-1">
-                      {errors.message?.message as string}
-                    </p>
-                  )}
-                </div>
-                <Button
-                  type="submit"
-                  className="w-full h-12 bg-turf-neon hover:bg-turf-neon/80 text-turf-dark font-bold text-base rounded-lg shadow-lg shadow-neon-green/20 transition-all uppercase tracking-wider"
-                  disabled={isSubmitting}
-                >
-                  {isSubmitting ? "Sending..." : "Send Message"}
-                </Button>
-              </form>
-            </CardContent>
-          </Card>
+
+                <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+                  <div className="space-y-2">
+                    <Input
+                      placeholder="YOUR NAME"
+                      {...register("name")}
+                      className="bg-white/5 border-l-2 border-white/10 border-t-0 border-r-0 border-b-0 rounded-none text-white placeholder-gray-500 focus:border-l-turf-neon focus:bg-white/10 focus:ring-0 transition-all h-14 font-bold uppercase tracking-wider"
+                    />
+                    {errors.name && (
+                      <p className="text-red-500 text-xs font-bold uppercase italic pl-1">
+                        {errors.name?.message as string}
+                      </p>
+                    )}
+                  </div>
+                  <div className="space-y-2">
+                    <Input
+                      type="email"
+                      placeholder="YOUR EMAIL"
+                      {...register("email")}
+                      className="bg-white/5 border-l-2 border-white/10 border-t-0 border-r-0 border-b-0 rounded-none text-white placeholder-gray-500 focus:border-l-turf-neon focus:bg-white/10 focus:ring-0 transition-all h-14 font-bold uppercase tracking-wider"
+                    />
+                    {errors.email && (
+                      <p className="text-red-500 text-xs font-bold uppercase italic pl-1">
+                        {errors.email.message as string}
+                      </p>
+                    )}
+                  </div>
+                  <div className="space-y-2">
+                    <Textarea
+                      placeholder="YOUR MESSAGE..."
+                      {...register("message")}
+                      className="bg-white/5 border-l-2 border-white/10 border-t-0 border-r-0 border-b-0 rounded-none text-white placeholder-gray-500 focus:border-l-turf-neon focus:bg-white/10 focus:ring-0 transition-all min-h-[120px] resize-none font-bold uppercase tracking-wider"
+                    />
+                    {errors.message && (
+                      <p className="text-red-500 text-xs font-bold uppercase italic pl-1">
+                        {errors.message?.message as string}
+                      </p>
+                    )}
+                  </div>
+                  <Button
+                    type="submit"
+                    className="w-full h-14 bg-turf-neon hover:bg-turf-neon/80 text-turf-dark font-black text-lg rounded-none shadow-lg shadow-neon-green/20 transition-all uppercase tracking-widest skew-x-[-10deg] hover:skew-x-[-15deg] active:scale-95 duration-300 mt-4"
+                    disabled={isSubmitting}
+                  >
+                    <span className="skew-x-[10deg] flex items-center justify-center gap-2">
+                      {isSubmitting ? "SENDING..." : "SEND MESSAGE"}
+                      <span className="w-2 h-2 bg-black rounded-full animate-pulse"></span>
+                    </span>
+                  </Button>
+                </form>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </section>
