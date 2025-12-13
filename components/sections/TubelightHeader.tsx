@@ -10,7 +10,7 @@ import {
   Image,
   Sparkles,
 } from "lucide-react";
-import { NavBar } from "@/components/ui/tubelight-navbar"; // This import might become unused if NavBar is replaced by the new structure.
+import { NavBar } from "@/components/ui/tubelight-navbar";
 import { cn } from "@/lib/utils"; // Assuming cn utility is available from this path or similar.
 
 interface TubelightHeaderProps {
@@ -80,39 +80,10 @@ export default function TubelightHeader({
       </div>
 
       <div className="pointer-events-auto">
-        <div
-          className={cn(
-            "flex items-center gap-1 md:gap-3 bg-white/5 border border-white/10 backdrop-blur-xl py-2 px-2 rounded-full shadow-lg transition-all duration-300",
-            isScrolled ? "bg-black/50 border-white/5 py-1.5" : ""
-          )}
-        >
-          {navItems.map((item) => {
-            const isActive = activeTab === item.name;
-            const Icon = item.icon;
-
-            return (
-              <a
-                key={item.name}
-                href={item.url}
-                onClick={() => setActiveTab(item.name)}
-                className={cn(
-                  "relative cursor-pointer text-sm font-semibold px-4 md:px-6 py-2 rounded-full transition-all duration-300 flex items-center gap-2",
-                  isActive
-                    ? "text-turf-neon bg-white/10 shadow-[0_0_20px_rgba(204,255,0,0.15)]"
-                    : "text-gray-400 hover:text-white hover:bg-white/5"
-                )}
-              >
-                <span className="relative z-10 hidden md:inline">
-                  {item.name}
-                </span>
-                <Icon size={18} className="md:hidden" />
-                {isActive && (
-                  <span className="absolute inset-0 bg-turf-neon/5 rounded-full blur-md" />
-                )}
-              </a>
-            );
-          })}
-        </div>
+        <NavBar
+          items={navItems}
+          className="fixed bottom-4 left-1/2 -translate-x-1/2 z-50 sm:top-auto sm:bottom-4 md:relative md:transform-none md:left-auto md:translate-x-0 md:top-auto md:bottom-auto md:mb-0 md:pt-0"
+        />
       </div>
 
       {/* Spacer for Right side alignment if needed, or just let Space-Between handle it */}

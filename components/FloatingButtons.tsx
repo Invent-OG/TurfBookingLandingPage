@@ -2,7 +2,7 @@ import { FaPhone, FaWhatsapp } from "react-icons/fa";
 
 const FloatingButtons = () => {
   return (
-    <div className="fixed bottom-6 right-6 flex z-50 flex-col items-end space-y-3">
+    <div className="fixed bottom-24 md:bottom-6 right-6 flex z-50 flex-col items-end space-y-3">
       {/* Phone Button */}
       <a
         href="tel:+918883888025"

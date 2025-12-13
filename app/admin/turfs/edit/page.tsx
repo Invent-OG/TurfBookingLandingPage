@@ -12,7 +12,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { Switch } from "@/components/ui/switch";
+import { PremiumToggle } from "@/components/ui/bouncy-toggle";
 import { NumberInput } from "@/components/ui/number-input";
 import { ChevronLeft, X, UploadCloud, AlertTriangle } from "lucide-react";
 import React, { useEffect, useState } from "react";
@@ -511,12 +511,14 @@ const EditTurf = () => {
                 >
                   Enable Dynamic Pricing
                 </Label>
-                <Switch
-                  id="enable_weekday"
+                <PremiumToggle
+                  // id="enable_weekday" - PremiumToggle doesn't expose ID but it's fine for now, label handles click
                   checked={newTurf.isWeekdayPricingEnabled || false}
-                  onCheckedChange={(e) =>
+                  onChange={(checked) =>
                     setNewTurf((prev) =>
-                      prev ? { ...prev, isWeekdayPricingEnabled: e } : null
+                      prev
+                        ? { ...prev, isWeekdayPricingEnabled: checked }
+                        : null
                     )
                   }
                 />
@@ -663,12 +665,14 @@ const EditTurf = () => {
                 >
                   Enable Dynamic Pricing
                 </Label>
-                <Switch
-                  id="enable_weekend"
+                <PremiumToggle
+                  // id="enable_weekend"
                   checked={newTurf.isWeekendPricingEnabled || false}
-                  onCheckedChange={(e) =>
+                  onChange={(checked) =>
                     setNewTurf((prev) =>
-                      prev ? { ...prev, isWeekendPricingEnabled: e } : null
+                      prev
+                        ? { ...prev, isWeekendPricingEnabled: checked }
+                        : null
                     )
                   }
                 />
@@ -819,7 +823,7 @@ const EditTurf = () => {
               </p>
             </div>
           </div>
-          <Switch checked={enabled} onCheckedChange={handleToggle} />
+          <PremiumToggle checked={enabled} onChange={handleToggle} />
         </div>
 
         <div className="flex gap-4 pt-4">
