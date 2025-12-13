@@ -61,6 +61,17 @@ const EditTurf = () => {
   const [customReason, setCustomReason] = useState("");
   const [pendingState, setPendingState] = useState<null | boolean>(null);
 
+  const { getRootProps, getInputProps } = useDropzone({
+    accept: { "image/*": [] },
+    maxFiles: 1,
+    onDrop: (acceptedFiles: File[]) => {
+      const filesWithPreview = acceptedFiles.map((file) =>
+        Object.assign(file, { preview: URL.createObjectURL(file) })
+      );
+      setFiles(filesWithPreview);
+    },
+  });
+
   useEffect(() => {
     if (existingTurf) {
       setNewTurf(existingTurf);
@@ -132,17 +143,6 @@ const EditTurf = () => {
     setSelectedReason("");
     setCustomReason("");
   };
-
-  const { getRootProps, getInputProps } = useDropzone({
-    accept: { "image/*": [] },
-    maxFiles: 1,
-    onDrop: (acceptedFiles: File[]) => {
-      const filesWithPreview = acceptedFiles.map((file) =>
-        Object.assign(file, { preview: URL.createObjectURL(file) })
-      );
-      setFiles(filesWithPreview);
-    },
-  });
 
   const removeFile = (file: FileWithPreview) => {
     setFiles((prevFiles) => prevFiles.filter((f) => f !== file));

@@ -61,30 +61,21 @@ export default function ManualBookingForm() {
     const formattedDate = format(date, "yyyy-MM-dd");
     const today = format(new Date(), "yyyy-MM-dd");
 
-    return (
-      (isBefore(date, new Date()) && formattedDate !== today) ||
-      blockedDates.some((d: any) => {
-        // Handle camelCase from Drizzle or snake_case if mixed. Hook returns proper DB schema (camelCase likely if I did it right, wait useBlockedDates returns InferSelectModel which preserves snake_case from schema definition generally unless aliased)
-        // Check hooks/use-blocked-dates.ts: It imports `blockedDates` from schema.
-        // schema: `start_date` -> `startTime`? No.
-        // Let's assume schema uses snake_case for DB columns.
-        // Actually schema usually maps to camelCase properties in Drizzle IF defined that way.
-        // But let's look at `blockedDates` usage in other files. `start_date` was used.
-        // The previous code used `d.start_date`.
-        // Let's assume `d.startDate` if Drizzle `pgTable` define it as `startDate: date("start_date")` etc.
-        // I will check schema later or robustly handle both or look at `hooks/use-blocked-dates.ts`.
-        // `hooks/use-blocked-dates.ts`: `export type BlockedDate = InferSelectModel<typeof blockedDates>;`
-        // I'll stick to `d.startDate` if I remember schema correctly OR `d.start_date`.
-        // Ah, `db/schema.ts` likely has `startDate: date("start_date")`.
-        // Let's use `d.startDate || d.start_date`.
-        const startDate = d.startDate || d.start_date;
-        const endDate = d.endDate || d.end_date;
-        return (
-          formattedDate === startDate ||
-          (endDate && formattedDate >= startDate && formattedDate <= endDate)
-        );
-      })
-    );
+    // Disable past dates
+    if (formattedDate < today) {
+      return true;
+    }
+
+    // Check if date is in blockedDates
+    return blockedDates.some((d: any) => {
+      const startDate = d.startDate || d.start_date;
+      const endDate = d.endDate || d.end_date;
+
+      return (
+        formattedDate === startDate ||
+        (endDate && formattedDate >= startDate && formattedDate <= endDate)
+      );
+    });
   };
 
   const handleSubmit = async () => {
