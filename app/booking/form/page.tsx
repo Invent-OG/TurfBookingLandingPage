@@ -186,167 +186,193 @@ function BookingFormContent() {
   };
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-turf-dark px-4 py-12 relative overflow-hidden">
+    <div className="flex items-center justify-center min-h-screen bg-turf-dark px-4 py-12 relative overflow-hidden font-sans selection:bg-turf-neon/30">
       {/* Background Gradients */}
-      <div className="absolute top-0 left-0 w-96 h-96 bg-turf-neon/10 rounded-full blur-3xl -translate-x-1/2 -translate-y-1/2" />
-      <div className="absolute bottom-0 right-0 w-96 h-96 bg-turf-blue/10 rounded-full blur-3xl translate-x-1/2 translate-y-1/2" />
+      <div className="absolute top-0 left-0 w-96 h-96 bg-turf-neon/10 rounded-full blur-3xl -translate-x-1/2 -translate-y-1/2 pointer-events-none" />
+      <div className="absolute bottom-0 right-0 w-96 h-96 bg-white/5 rounded-full blur-3xl translate-x-1/2 translate-y-1/2 pointer-events-none" />
+      <div className="fixed inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-10 pointer-events-none"></div>
 
       <div className="w-full max-w-lg relative z-10">
-        <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-white mb-2 tracking-tight">
-            Complete Booking
-          </h1>
-          <p className="text-gray-400">
+        <div className="text-center mb-10">
+          <div className="inline-block transform -skew-x-6">
+            <h1 className="text-5xl font-black text-white mb-2 tracking-tighter uppercase font-heading italic">
+              Complete <span className="text-turf-neon">Booking</span>
+            </h1>
+          </div>
+          <p className="text-gray-400 font-medium">
             Almost there! Just need a few details to confirm.
           </p>
         </div>
 
-        <div className="rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl shadow-2xl p-6 md:p-8 space-y-8">
-          {/* Summary Card */}
-          <div className="p-5 bg-black/40 rounded-xl border border-white/5 space-y-4">
-            <h3 className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-3">
-              Booking Summary
-            </h3>
-            <div className="space-y-3 text-sm">
-              <div className="flex justify-between items-center text-gray-300">
-                <span className="flex items-center gap-2">
-                  <span className="w-1.5 h-1.5 rounded-full bg-turf-neon" />
-                  Date
-                </span>
-                <span className="text-white font-medium">{date}</span>
-              </div>
-              <div className="flex justify-between items-center text-gray-300">
-                <span className="flex items-center gap-2">
-                  <span className="w-1.5 h-1.5 rounded-full bg-turf-blue" />
-                  Time
-                </span>
-                <span className="text-white font-medium">
-                  {startTime ? formatSlotTime(startTime) : "Invalid Time"}
-                </span>
-              </div>
-              <div className="flex justify-between items-center text-gray-300">
-                <span className="flex items-center gap-2">
-                  <span className="w-1.5 h-1.5 rounded-full bg-purple-500" />
-                  Duration
-                </span>
-                <span className="text-white font-medium">{duration} hours</span>
-              </div>
-              <div className="flex justify-between items-center text-gray-300">
-                <span className="flex items-center gap-2">
-                  <span className="w-1.5 h-1.5 rounded-full bg-orange-500" />
-                  Arena
-                </span>
-                <span className="text-white font-medium">{court}</span>
-              </div>
+        <div className="relative">
+          {/* Decorative Border */}
+          <div className="absolute -inset-0.5 bg-gradient-to-r from-turf-neon/50 to-white/20 blur opacity-50 rounded-2xl"></div>
 
-              <div className="h-px bg-white/10 my-3" />
+          <div className="relative rounded-2xl border border-white/10 bg-black/80 backdrop-blur-xl shadow-2xl p-0 overflow-hidden">
+            {/* Ticket Top Section */}
+            <div className="p-8 pb-10 bg-white/5 relative border-b-2 border-dashed border-white/10">
+              {/* Cutout Circles */}
+              <div className="absolute -left-3 bottom-[-12px] w-6 h-6 rounded-full bg-turf-dark border border-white/10 z-10"></div>
+              <div className="absolute -right-3 bottom-[-12px] w-6 h-6 rounded-full bg-turf-dark border border-white/10 z-10"></div>
 
-              <div className="flex justify-between items-center">
-                <span className="text-gray-400 font-medium">Total Amount</span>
-                <span className="text-2xl font-bold text-turf-neon">
-                  ₹{amount}
-                </span>
+              <h3 className="text-xs font-black text-gray-500 uppercase tracking-[0.2em] mb-6 text-center">
+                Match Summary
+              </h3>
+
+              <div className="space-y-4">
+                <div className="flex justify-between items-end">
+                  <div>
+                    <p className="text-xs text-turf-neon uppercase font-bold tracking-wider mb-1">
+                      Date
+                    </p>
+                    <p className="text-white font-bold text-lg">{date}</p>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-xs text-turf-neon uppercase font-bold tracking-wider mb-1">
+                      Time
+                    </p>
+                    <p className="text-white font-bold text-lg">
+                      {startTime ? formatSlotTime(startTime) : "Invalid"}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex justify-between items-end">
+                  <div>
+                    <p className="text-xs text-turf-neon uppercase font-bold tracking-wider mb-1">
+                      Duration
+                    </p>
+                    <p className="text-white font-bold text-lg">
+                      {duration} Hr
+                    </p>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-xs text-turf-neon uppercase font-bold tracking-wider mb-1">
+                      Arena
+                    </p>
+                    <p className="text-white font-bold text-lg uppercase">
+                      {court}
+                    </p>
+                  </div>
+                </div>
               </div>
             </div>
+
+            {/* Total Section */}
+            <div className="px-8 py-6 bg-turf-neon/10 flex items-center justify-between border-b border-white/5">
+              <span className="text-gray-400 font-black uppercase tracking-wider text-sm">
+                Total Amount
+              </span>
+              <span className="text-3xl font-black text-white italic tracking-tighter">
+                ₹{amount}
+              </span>
+            </div>
+
+            {/* Form Section */}
+            <div className="p-8 pt-8">
+              <Form {...form}>
+                <form
+                  onSubmit={form.handleSubmit(handleBookingSubmit)}
+                  className="space-y-6"
+                  noValidate
+                >
+                  <FormField
+                    control={form.control}
+                    name="fullName"
+                    render={({ field }) => (
+                      <FormItem className="space-y-2">
+                        <FormLabel className="text-xs text-gray-400 font-bold uppercase tracking-wider ml-1">
+                          Full Name
+                        </FormLabel>
+                        <FormControl>
+                          <Input
+                            placeholder="JOHN DOE"
+                            {...field}
+                            disabled={loading}
+                            className="bg-black/50 border-2 border-white/10 text-white placeholder-gray-600 focus:border-turf-neon focus:ring-0 rounded-none h-12 font-bold uppercase"
+                          />
+                        </FormControl>
+                        <FormMessage className="text-red-400 font-medium" />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="email"
+                    render={({ field }) => (
+                      <FormItem className="space-y-2">
+                        <FormLabel className="text-xs text-gray-400 font-bold uppercase tracking-wider ml-1">
+                          Email Address
+                        </FormLabel>
+                        <FormControl>
+                          <Input
+                            placeholder="JOHN@EXAMPLE.COM"
+                            type="email"
+                            {...field}
+                            disabled={loading}
+                            className="bg-black/50 border-2 border-white/10 text-white placeholder-gray-600 focus:border-turf-neon focus:ring-0 rounded-none h-12 font-bold uppercase"
+                          />
+                        </FormControl>
+                        <FormMessage className="text-red-400 font-medium" />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="phone"
+                    render={({ field }) => (
+                      <FormItem className="space-y-2">
+                        <FormLabel className="text-xs text-gray-400 font-bold uppercase tracking-wider ml-1">
+                          Phone Number
+                        </FormLabel>
+                        <FormControl>
+                          <Input
+                            placeholder="9876543210"
+                            type="tel"
+                            {...field}
+                            disabled={loading}
+                            className="bg-black/50 border-2 border-white/10 text-white placeholder-gray-600 focus:border-turf-neon focus:ring-0 rounded-none h-12 font-bold uppercase text-lg tracking-widest"
+                          />
+                        </FormControl>
+                        <FormMessage className="text-red-400 font-medium" />
+                      </FormItem>
+                    )}
+                  />
+
+                  <div className="pt-6 space-y-3">
+                    <Button
+                      type="submit"
+                      className="w-full bg-turf-neon text-black font-black h-14 rounded-none skew-x-[-10deg] hover:bg-turf-neon/90 hover:scale-[1.02] active:scale-[0.98] transition-all uppercase tracking-widest text-lg shadow-lg shadow-neon-green/30"
+                      disabled={loading}
+                    >
+                      <span className="skew-x-[10deg] flex items-center gap-2">
+                        {loading ? (
+                          <>
+                            <span className="w-5 h-5 border-4 border-black/30 border-t-black rounded-full animate-spin" />
+                            Processing...
+                          </>
+                        ) : (
+                          "Proceed to Payment"
+                        )}
+                      </span>
+                    </Button>
+
+                    <Button
+                      variant="ghost"
+                      className="w-full text-gray-500 hover:text-white hover:bg-transparent font-bold uppercase tracking-widest text-xs"
+                      onClick={() => router.push("/")}
+                      disabled={loading}
+                      type="button"
+                    >
+                      Cancel Booking
+                    </Button>
+                  </div>
+                </form>
+              </Form>
+            </div>
           </div>
-
-          <Form {...form}>
-            <form
-              onSubmit={form.handleSubmit(handleBookingSubmit)}
-              className="space-y-5"
-              noValidate
-            >
-              <FormField
-                control={form.control}
-                name="fullName"
-                render={({ field }) => (
-                  <FormItem className="space-y-1.5">
-                    <FormLabel className="text-gray-300">Full Name</FormLabel>
-                    <FormControl>
-                      <Input
-                        placeholder="e.g. John Doe"
-                        {...field}
-                        disabled={loading}
-                        className="bg-white/5 border-white/10 text-white placeholder-gray-500 focus:border-turf-neon/50 focus:ring-1 focus:ring-turf-neon/20 rounded-xl h-11"
-                      />
-                    </FormControl>
-                    <FormMessage className="text-red-400" />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="email"
-                render={({ field }) => (
-                  <FormItem className="space-y-1.5">
-                    <FormLabel className="text-gray-300">
-                      Email Address
-                    </FormLabel>
-                    <FormControl>
-                      <Input
-                        placeholder="e.g. john@example.com"
-                        type="email"
-                        {...field}
-                        disabled={loading}
-                        className="bg-white/5 border-white/10 text-white placeholder-gray-500 focus:border-turf-neon/50 focus:ring-1 focus:ring-turf-neon/20 rounded-xl h-11"
-                      />
-                    </FormControl>
-                    <FormMessage className="text-red-400" />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="phone"
-                render={({ field }) => (
-                  <FormItem className="space-y-1.5">
-                    <FormLabel className="text-gray-300">
-                      Phone Number
-                    </FormLabel>
-                    <FormControl>
-                      <Input
-                        placeholder="e.g. 9876543210"
-                        type="tel"
-                        {...field}
-                        disabled={loading}
-                        className="bg-white/5 border-white/10 text-white placeholder-gray-500 focus:border-turf-neon/50 focus:ring-1 focus:ring-turf-neon/20 rounded-xl h-11"
-                      />
-                    </FormControl>
-                    <FormMessage className="text-red-400" />
-                  </FormItem>
-                )}
-              />
-
-              <div className="pt-4 space-y-3">
-                <Button
-                  type="submit"
-                  className="w-full bg-turf-neon text-black font-bold h-12 rounded-xl hover:bg-turf-neon/90 hover:scale-[1.02] active:scale-[0.98] transition-all"
-                  disabled={loading}
-                >
-                  {loading ? (
-                    <span className="flex items-center gap-2">
-                      <span className="w-4 h-4 border-2 border-black/30 border-t-black rounded-full animate-spin" />
-                      Processing Payment...
-                    </span>
-                  ) : (
-                    "Proceed to Payment"
-                  )}
-                </Button>
-
-                <Button
-                  variant="ghost"
-                  className="w-full text-gray-400 hover:text-white hover:bg-white/5"
-                  onClick={() => router.push("/")}
-                  disabled={loading}
-                  type="button"
-                >
-                  Cancel Booking
-                </Button>
-              </div>
-            </form>
-          </Form>
         </div>
       </div>
     </div>
