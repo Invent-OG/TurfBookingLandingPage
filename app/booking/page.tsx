@@ -153,7 +153,7 @@ function BookingContent() {
     <main className="min-h-screen bg-turf-dark text-white font-sans selection:bg-turf-neon/30">
       {/* Header */}
       <div className="sticky top-0 z-50 overflow-hidden border-b border-white/10 bg-black/50 backdrop-blur-xl">
-        <div className="absolute inset-0 bg-gradient-to-r from-turf-neon/5 via-turf-blue/5 to-purple-500/5 opacity-50" />
+        <div className="absolute inset-0 bg-gradient-to-r from-turf-neon/5 via-white/5 to-purple-500/5 opacity-50" />
         <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between relative z-10">
           <div
             className="flex items-center gap-3"
@@ -298,7 +298,7 @@ function BookingContent() {
           <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
             <div className="p-6 rounded-2xl border border-white/10 bg-white/5 backdrop-blur-sm shadow-xl">
               <h2 className="text-xl font-bold text-white mb-6 flex items-center gap-2">
-                <span className="flex items-center justify-center w-8 h-8 rounded-full bg-turf-blue/20 text-turf-blue text-sm border border-turf-blue/30">
+                <span className="flex items-center justify-center w-8 h-8 rounded-full bg-white/10 text-white text-sm border border-white/20">
                   2
                 </span>
                 Select Date

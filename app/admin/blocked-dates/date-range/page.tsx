@@ -175,7 +175,7 @@ export default function BlockDatePage() {
                         variant="secondary"
                         className={cn(
                           "w-full flex justify-between items-center font-normal px-4 py-2 border-white/10 bg-white/5 text-left",
-                          !dateRange && "text-gray-500"
+                          !dateRange?.from ? "text-gray-500" : "text-white"
                         )}
                       >
                         <div className="flex items-center space-x-2">

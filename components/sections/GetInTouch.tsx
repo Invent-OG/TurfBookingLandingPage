@@ -112,8 +112,8 @@ const GetInTouch = () => {
                 Support
               </p>
             </div>
-            <div className="p-4 rounded-none border-r-4 border-turf-blue bg-white/5 flex-1 text-center group hover:bg-turf-blue/10 transition-all hover:skew-x-[5deg] duration-300">
-              <h3 className="text-turf-blue font-black font-heading italic text-2xl mb-0">
+            <div className="p-4 rounded-none border-r-4 border-white/20 bg-white/5 flex-1 text-center group hover:bg-white/10 transition-all hover:skew-x-[5deg] duration-300">
+              <h3 className="text-white font-black font-heading italic text-2xl mb-0">
                 Fast
               </h3>
               <p className="text-gray-400 text-[10px] uppercase font-bold tracking-[0.2em] mt-1">

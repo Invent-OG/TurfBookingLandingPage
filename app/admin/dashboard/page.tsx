@@ -41,7 +41,7 @@ export default function Dashboard() {
       value: data?.stats.activeBookings || 0,
       icon: CalendarCheck,
       trend: { value: 0, isPositive: true },
-      color: "blue" as const,
+      color: "white" as const,
     },
     {
       title: "Total Customers",
@@ -81,7 +81,7 @@ export default function Dashboard() {
     {
       header: "Turf",
       accessor: (item: any) => (
-        <span className="text-turf-blue text-sm">{item.turf}</span>
+        <span className="text-white text-sm">{item.turf}</span>
       ),
     },
     { header: "Date", accessor: (item: any) => item.date },
@@ -204,7 +204,7 @@ export default function Dashboard() {
                     color: "#fff",
                   }}
                 />
-                <Bar dataKey="bookings" fill="#00f0ff" radius={[4, 4, 0, 0]} />
+                <Bar dataKey="bookings" fill="#ffffff" radius={[4, 4, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           </div>

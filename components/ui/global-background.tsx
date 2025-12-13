@@ -51,7 +51,7 @@ export function GlobalBackground() {
 
       {/* Animated Orbs */}
       <div className="orb-1 absolute top-1/4 left-1/4 w-[500px] h-[500px] bg-turf-neon/10 rounded-full blur-[120px]"></div>
-      <div className="orb-2 absolute bottom-1/4 right-1/4 w-[600px] h-[600px] bg-turf-blue/10 rounded-full blur-[140px]"></div>
+      <div className="orb-2 absolute bottom-1/4 right-1/4 w-[600px] h-[600px] bg-white/5 rounded-full blur-[140px]"></div>
       <div className="orb-3 absolute top-1/2 left-1/2 w-[400px] h-[400px] bg-purple-500/10 rounded-full blur-[100px]"></div>
 
       {/* Noise Overlay (Optional for texture) */}

@@ -51,13 +51,13 @@ export function StatCard({
 
   const colors = {
     neon: "text-turf-neon shadow-neon-green",
-    blue: "text-turf-blue shadow-neon-blue",
+    blue: "text-white shadow-glass", // Fallback for blue to white
     white: "text-white shadow-glass",
   };
 
   const iconColors = {
     neon: "bg-turf-neon/10 text-turf-neon",
-    blue: "bg-turf-blue/10 text-turf-blue",
+    blue: "bg-white/10 text-white", // Fallback for blue to white
     white: "bg-white/10 text-white",
   };
 

@@ -23,7 +23,7 @@ export const NeonButton = React.forwardRef<HTMLButtonElement, NeonButtonProps>(
       primary:
         "bg-turf-neon text-turf-dark hover:bg-turf-neon/90 hover:scale-105 active:scale-95",
       secondary:
-        "bg-turf-blue text-turf-dark hover:bg-turf-blue/90 hover:scale-105 active:scale-95",
+        "bg-white text-black hover:bg-white/90 hover:scale-105 active:scale-95",
       danger: "bg-red-500 text-white hover:bg-red-600",
       ghost:
         "bg-transparent text-gray-300 border border-white/10 hover:bg-white/5 hover:text-white",
@@ -40,7 +40,7 @@ export const NeonButton = React.forwardRef<HTMLButtonElement, NeonButtonProps>(
       primary:
         "shadow-[0_0_20px_rgba(204,255,0,0.3)] hover:shadow-[0_0_30px_rgba(204,255,0,0.5)]",
       secondary:
-        "shadow-[0_0_20px_rgba(0,240,255,0.3)] hover:shadow-[0_0_30px_rgba(0,240,255,0.5)]",
+        "shadow-[0_0_20px_rgba(255,255,255,0.3)] hover:shadow-[0_0_30px_rgba(255,255,255,0.5)]",
       danger: "shadow-[0_0_20px_rgba(239,68,68,0.3)]",
       ghost: "",
     };

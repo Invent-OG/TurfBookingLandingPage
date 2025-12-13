@@ -254,25 +254,58 @@ export default function TurfPeakHoursUI() {
               </DialogHeader>
               <div className="grid gap-6 py-4">
                 <div className="space-y-3">
-                  <Label className={labelClasses}>Configuration Type</Label>
-                  <RadioGroup
-                    value={type}
-                    onValueChange={(v) => setType(v as "day" | "date")}
-                    className="flex gap-4"
-                  >
-                    <div className="flex items-center space-x-2 border border-white/10 rounded-lg p-3 flex-1 justify-center cursor-pointer hover:bg-white/5 transition-colors">
-                      <RadioGroupItem value="day" id="day" />
-                      <Label htmlFor="day" className="cursor-pointer mb-0">
-                        Recurring (Day)
-                      </Label>
+                  <div className="space-y-3">
+                    <Label className={labelClasses}>Configuration Type</Label>
+                    <div className="flex gap-4">
+                      <div
+                        onClick={() => setType("day")}
+                        className={`flex items-center space-x-2 border rounded-lg p-3 flex-1 justify-center cursor-pointer transition-all ${
+                          type === "day"
+                            ? "bg-turf-neon/10 border-turf-neon text-white"
+                            : "border-white/10 hover:bg-white/5 text-gray-400"
+                        }`}
+                      >
+                        <RadioGroup
+                          value={type}
+                          onValueChange={(v) => setType(v as "day" | "date")}
+                          className="flex items-center"
+                        >
+                          <RadioGroupItem
+                            value="day"
+                            id="day"
+                            className="border-turf-neon text-turf-neon"
+                          />
+                        </RadioGroup>
+                        <Label htmlFor="day" className="cursor-pointer mb-0">
+                          Recurring (Day)
+                        </Label>
+                      </div>
+
+                      <div
+                        onClick={() => setType("date")}
+                        className={`flex items-center space-x-2 border rounded-lg p-3 flex-1 justify-center cursor-pointer transition-all ${
+                          type === "date"
+                            ? "bg-turf-neon/10 border-turf-neon text-white"
+                            : "border-white/10 hover:bg-white/5 text-gray-400"
+                        }`}
+                      >
+                        <RadioGroup
+                          value={type}
+                          onValueChange={(v) => setType(v as "day" | "date")}
+                          className="flex items-center"
+                        >
+                          <RadioGroupItem
+                            value="date"
+                            id="date"
+                            className="border-turf-neon text-turf-neon"
+                          />
+                        </RadioGroup>
+                        <Label htmlFor="date" className="cursor-pointer mb-0">
+                          Specific Date
+                        </Label>
+                      </div>
                     </div>
-                    <div className="flex items-center space-x-2 border border-white/10 rounded-lg p-3 flex-1 justify-center cursor-pointer hover:bg-white/5 transition-colors">
-                      <RadioGroupItem value="date" id="date" />
-                      <Label htmlFor="date" className="cursor-pointer mb-0">
-                        Specific Date
-                      </Label>
-                    </div>
-                  </RadioGroup>
+                  </div>
                 </div>
 
                 {type === "day" ? (
@@ -379,7 +412,7 @@ export default function TurfPeakHoursUI() {
                     <div className="absolute top-4 right-4 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                       <button
                         onClick={() => handleEdit(entry)}
-                        className="p-1.5 rounded-lg bg-turf-blue/20 text-turf-blue hover:bg-turf-blue/30"
+                        className="p-1.5 rounded-lg bg-white/10 text-white hover:bg-white/20 transition-colors"
                       >
                         <Edit2 className="w-4 h-4" />
                       </button>

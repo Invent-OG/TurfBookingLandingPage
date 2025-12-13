@@ -6,7 +6,7 @@ const FloatingButtons = () => {
       {/* Phone Button */}
       <a
         href="tel:+918883888025"
-        className="flex items-center justify-center w-12 h-12 bg-turf-blue text-black p-3 rounded-full shadow-lg shadow-neon-blue hover:scale-110 hover:bg-white transition-all duration-300"
+        className="flex items-center justify-center w-12 h-12 bg-turf-neon text-black p-3 rounded-full shadow-lg shadow-[0_0_20px_rgba(204,255,0,0.4)] hover:scale-110 hover:bg-white transition-all duration-300"
       >
         <FaPhone size={20} />
       </a>
