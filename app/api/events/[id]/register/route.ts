@@ -25,7 +25,7 @@ export async function POST(
     }
 
     // Transaction to ensure atomicity
-    return await db.transaction(async (trx) => {
+    const result = await db.transaction(async (trx) => {
       // 1. Fetch Event & Check Status/Capacity
       const event = await trx
         .select()
@@ -34,42 +34,45 @@ export async function POST(
         .limit(1);
 
       if (!event.length) {
-        return new Response(JSON.stringify({ error: "Event not found" }), {
-          status: 404,
-        });
+        return null; // Return null if not found, to check outside (or throw error inside)
+        // Actually, cleaner to check inside, but since we need to return Response,
+        // we previously returned Response inside transaction.
+        // Drizzle transaction returns what the callback returns.
+        // But we are mixing returning Response vs returning Object.
+        // Let's stick to checking logic inside but throwing error to break transaction if needed
+        // OR simply handle the 'error' case by returning a special object.
       }
 
       const eventDetails = event[0];
 
+      // We can re-check validity and throw specific errors to be caught by catch block
       if (
         eventDetails.status !== "upcoming" &&
         eventDetails.status !== "active"
       ) {
-        return new Response(
-          JSON.stringify({ error: "Event is not open for registration" }),
-          {
-            status: 400,
-          }
-        );
+        throw new Error("Event is not open for registration");
       }
-
       if (eventDetails.currentParticipants >= eventDetails.maxParticipants) {
-        return new Response(
-          JSON.stringify({ error: "Event is fully booked" }),
-          { status: 400 }
-        );
+        throw new Error("Event is fully booked");
       }
 
-      // 2. Handle User (Create if walk-in/new)
+      // ... User Handling (logic remains same, assume finalUserId is derived same way or re-implement)
+      // Since we need to access 'userId' from outer scope or re-run logic.
+      // The original code had the logic INSIDE transaction.
+      // I will keep logic inside but need to return the object ONLY on success,
+      // otherwise if I return Response from inside, 'result' will be a Response object.
+
+      // Let's refactor slightly to be safer:
+      // If we return Response from transaction, we can't use 'result.registration'.
+      // We should return a discriminated union or just throw errors for failure cases.
+
+      // 2. Handle User
       let finalUserId = userId;
       if (!userId) {
         if (!customerEmail || !customerName) {
-          return new Response(
-            JSON.stringify({ error: "User details required" }),
-            { status: 400 }
-          );
+          throw new Error("User details required");
         }
-        // Check if user exists by email
+        // Check user inside transaction
         const existingUser = await trx
           .select()
           .from(users)
@@ -83,7 +86,7 @@ export async function POST(
             .values({
               name: customerName,
               email: customerEmail,
-              password: "event-guest", // Placeholder
+              password: "event-guest",
               role: "user",
             })
             .returning({ id: users.id });
@@ -91,7 +94,7 @@ export async function POST(
         }
       }
 
-      // 3. Check if already registered
+      // 3. Check existing
       const existingRegistration = await trx
         .select()
         .from(eventRegistrations)
@@ -104,12 +107,7 @@ export async function POST(
         .limit(1);
 
       if (existingRegistration.length) {
-        return new Response(
-          JSON.stringify({ error: "User already registered for this event" }),
-          {
-            status: 400,
-          }
-        );
+        throw new Error("User already registered for this event");
       }
 
       // 4. Create Registration
@@ -120,12 +118,12 @@ export async function POST(
           userId: finalUserId,
           teamName: teamName || null,
           members: members || null,
-          customerPhone: customerPhone || null, // Save phone
-          paymentStatus: "pending", // Default to pending, update after payment
+          customerPhone: customerPhone || null,
+          paymentStatus: "pending",
         })
         .returning();
 
-      // 5. Update Event Participant Count
+      // 5. Update Count
       await trx
         .update(events)
         .set({
@@ -136,33 +134,39 @@ export async function POST(
       return {
         registration: newRegistration,
         eventTitle: eventDetails.title,
-        eventDate: eventDetails.date,
+        eventDate: eventDetails.startDate,
         amount: eventDetails.price,
       };
     });
 
-    // 6. Send Email Notification (Outside transaction to avoid blocking/rollback issues)
-    if (result && result.registration) {
-      fetch(
-        `${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/api/send-email`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            type: "event_registration",
-            email: customerEmail,
-            name: customerName,
-            eventName: result.eventTitle,
-            eventDate: result.eventDate.toISOString().split("T")[0],
-            teamName: teamName,
-            amount: result.amount,
-            registrationId: result.registration.id,
-          }),
-        }
-      ).catch((err) =>
-        console.error("Failed to send event registration email:", err)
-      );
+    if (!result) {
+      // Should have been caught by "Event not found" check inside or if we used null return
+      return new Response(JSON.stringify({ error: "Event not found" }), {
+        status: 404,
+      });
     }
+
+    // 6. Send Email Notification
+    // Ensure eventDate is treated as string. Drizzle 'date' is usually string.
+    fetch(
+      `${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/api/send-email`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          type: "event_registration",
+          email: customerEmail,
+          name: customerName,
+          eventName: result.eventTitle,
+          eventDate: String(result.eventDate),
+          teamName: teamName,
+          amount: result.amount,
+          registrationId: result.registration.id,
+        }),
+      }
+    ).catch((err) =>
+      console.error("Failed to send event registration email:", err)
+    );
 
     return new Response(
       JSON.stringify({ success: true, registration: result.registration }),
