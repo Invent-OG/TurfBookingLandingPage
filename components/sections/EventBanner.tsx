@@ -1,22 +1,17 @@
-import { db } from "@/db/db";
-import { events } from "@/db/schema";
-import { desc, eq } from "drizzle-orm";
+"use client";
+
+import { useUpcomingEvent } from "@/hooks/use-events";
 import { NeonButton } from "@/components/ui/neon-button";
 import { Calendar, ArrowRight } from "lucide-react";
 import Link from "next/link";
 import { format } from "date-fns";
+import * as React from "react";
 
-export async function EventBanner() {
-  const upcomingEvents = await db
-    .select()
-    .from(events)
-    .where(eq(events.status, "upcoming"))
-    .orderBy(desc(events.startDate))
-    .limit(1);
+export function EventBanner() {
+  const { data: event, isLoading } = useUpcomingEvent();
 
-  if (!upcomingEvents.length) return null;
-
-  const event = upcomingEvents[0];
+  // If loading or no event found, don't show the banner
+  if (isLoading || !event) return null;
 
   return (
     <div className="relative w-full bg-black/80 backdrop-blur-md border-b border-turf-neon/30 overflow-hidden z-[60]">
@@ -34,11 +29,12 @@ export async function EventBanner() {
             <span className="hidden sm:inline w-1 h-1 rounded-full bg-white/30"></span>
             <span className="text-gray-300 flex items-center gap-1.5 opacity-80 text-xs sm:text-sm">
               <Calendar className="w-3.5 h-3.5 text-turf-neon/80" />
+              {/* Ensure date is parsed correctly from string if needed */}
               {format(new Date(event.startDate), "MMMM d, yyyy")}
             </span>
             <span className="hidden sm:inline w-1 h-1 rounded-full bg-white/30"></span>
             <span className="text-gray-300 flex items-center gap-1.5 opacity-80 text-xs sm:text-sm">
-              Starts at{" "}
+              Starts at {/* Parse time string "HH:mm:ss" */}
               {format(new Date(`2000-01-01T${event.startTime}`), "h:mm a")}
             </span>
           </div>

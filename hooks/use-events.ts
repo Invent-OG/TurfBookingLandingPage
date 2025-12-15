@@ -84,3 +84,10 @@ export const useEventRegistrations = (eventId: string) => {
     enabled: !!eventId,
   });
 };
+
+export const useUpcomingEvent = () => {
+  return useQuery({
+    queryKey: ["events", "upcoming"],
+    queryFn: () => apiClient.get<Event | null>("/api/events/upcoming"),
+  });
+};

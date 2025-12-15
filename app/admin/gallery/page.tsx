@@ -4,6 +4,8 @@ import { useState, useEffect } from "react";
 import Image from "next/image";
 import { Upload, Trash2, Loader2, Image as ImageIcon } from "lucide-react";
 import { toast } from "sonner";
+import imageCompression from "browser-image-compression";
+import { ConfirmationModal } from "@/components/ui/confirmation-modal";
 
 interface GalleryImage {
   id: string;
@@ -42,10 +44,25 @@ export default function GalleryPage() {
     setUploading(true);
     const formData = new FormData();
 
-    // Append all files with the same key "images"
-    Array.from(files).forEach((file) => {
-      formData.append("images", file);
+    // Compress and append files
+    const filePromises = Array.from(files).map(async (file) => {
+      let uploadFile = file;
+      if (file.type.startsWith("image/")) {
+        try {
+          const options = {
+            maxSizeMB: 1,
+            maxWidthOrHeight: 1920,
+            useWebWorker: true,
+          };
+          uploadFile = await imageCompression(file, options);
+        } catch (error) {
+          console.warn("Image compression failed, using original:", error);
+        }
+      }
+      formData.append("images", uploadFile);
     });
+
+    await Promise.all(filePromises);
 
     try {
       const res = await fetch("/api/admin/gallery", {
@@ -70,12 +87,26 @@ export default function GalleryPage() {
     }
   };
 
-  const handleDelete = async (id: string, url: string) => {
-    if (!confirm("Are you sure you want to delete this image?")) return;
+  // ... inside component ...
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [itemToDelete, setItemToDelete] = useState<{
+    id: string;
+    url: string;
+  } | null>(null);
+  const [deleting, setDeleting] = useState(false);
+
+  const handleDeleteClick = (id: string, url: string) => {
+    setItemToDelete({ id, url });
+    setDeleteModalOpen(true);
+  };
+
+  const confirmDelete = async () => {
+    if (!itemToDelete) return;
+    setDeleting(true);
 
     try {
       const res = await fetch(
-        `/api/admin/gallery?id=${id}&url=${encodeURIComponent(url)}`,
+        `/api/admin/gallery?id=${itemToDelete.id}&url=${encodeURIComponent(itemToDelete.url)}`,
         {
           method: "DELETE",
         }
@@ -83,12 +114,16 @@ export default function GalleryPage() {
 
       if (res.ok) {
         toast.success("Image deleted");
-        setImages((prev) => prev.filter((img) => img.id !== id));
+        setImages((prev) => prev.filter((img) => img.id !== itemToDelete.id));
       } else {
         toast.error("Failed to delete image");
       }
     } catch (error) {
       toast.error("Error deleting image");
+    } finally {
+      setDeleting(false);
+      setDeleteModalOpen(false);
+      setItemToDelete(null);
     }
   };
 
@@ -158,7 +193,7 @@ export default function GalleryPage() {
                 />
                 <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-4">
                   <button
-                    onClick={() => handleDelete(img.id, img.imageUrl)}
+                    onClick={() => handleDeleteClick(img.id, img.imageUrl)}
                     className="p-3 bg-red-500/20 hover:bg-red-500 text-red-500 hover:text-white rounded-lg border border-red-500/50 transition-all transform hover:scale-110"
                     title="Delete Image"
                   >
@@ -170,6 +205,15 @@ export default function GalleryPage() {
           )}
         </div>
       )}
+
+      <ConfirmationModal
+        isOpen={deleteModalOpen}
+        onClose={() => setDeleteModalOpen(false)}
+        onConfirm={confirmDelete}
+        title="Delete Image"
+        description="Are you sure you want to delete this image? This action cannot be undone."
+        loading={deleting}
+      />
     </div>
   );
 }

@@ -10,12 +10,16 @@ import { Plus, Users, Calendar, Trophy, AlertCircle } from "lucide-react";
 import Link from "next/link";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
-import { useEvents, useDeleteEvent, Event } from "@/hooks/use-events";
+import { ConfirmationModal } from "@/components/ui/confirmation-modal";
 
 const AdminEventsPage = () => {
   const { data: events = [], isLoading: loading } = useEvents();
   const deleteEventMutation = useDeleteEvent();
   const router = useRouter();
+
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [eventToDelete, setEventToDelete] = useState<string | null>(null);
+  const [deleting, setDeleting] = useState(false);
 
   const columns = [
     {
@@ -101,20 +105,9 @@ const AdminEventsPage = () => {
           <NeonButton
             variant="ghost"
             className="text-red-400 hover:text-red-300 hover:bg-red-500/10"
-            onClick={async () => {
-              if (
-                !confirm(
-                  "Are you sure you want to delete this event? This action cannot be undone."
-                )
-              )
-                return;
-
-              try {
-                await deleteEventMutation.mutateAsync(event.id);
-                toast.success("Event deleted successfully");
-              } catch (e) {
-                toast.error("Error deleting event");
-              }
+            onClick={() => {
+              setEventToDelete(event.id);
+              setDeleteModalOpen(true);
             }}
           >
             Delete
@@ -165,6 +158,28 @@ const AdminEventsPage = () => {
           <GlassTable data={events} columns={columns} />
         )}
       </GlassCard>
+
+      <ConfirmationModal
+        isOpen={deleteModalOpen}
+        onClose={() => setDeleteModalOpen(false)}
+        onConfirm={async () => {
+          if (!eventToDelete) return;
+          setDeleting(true);
+          try {
+            await deleteEventMutation.mutateAsync(eventToDelete);
+            toast.success("Event deleted successfully");
+          } catch (e) {
+            toast.error("Error deleting event");
+          } finally {
+            setDeleting(false);
+            setDeleteModalOpen(false);
+            setEventToDelete(null);
+          }
+        }}
+        title="Delete Event"
+        description="Are you sure you want to delete this event? This action cannot be undone."
+        loading={deleting}
+      />
     </div>
   );
 };

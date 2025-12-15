@@ -160,20 +160,34 @@ const CreateNewTurf = () => {
             file: files[0],
           });
           imageUrl = url;
-        } catch (err) {
-          throw new Error("Failed to upload image");
+        } catch (err: any) {
+          throw new Error(err.message || "Failed to upload image");
         }
+      }
+
+      if (!newTurf.openingTime || !newTurf.closingTime) {
+        toast.error("Opening and closing times are required");
+        setLoading(false);
+        return;
       }
 
       const formattedTurf = {
         ...newTurf,
-        openingTime: newTurf.openingTime
-          ? `${newTurf.openingTime}` // Just time string, schema handles type
-          : "",
-        closingTime: newTurf.closingTime ? `${newTurf.closingTime}` : "",
+        openingTime: newTurf.openingTime,
+        closingTime: newTurf.closingTime,
         imageUrl: imageUrl,
         pricePerHour: newTurf.pricePerHour || "0",
-        // Ensure other fields are correct types if needed
+
+        // Sanitize optional time fields to undefined if empty
+        weekdayMorningStart: newTurf.weekdayMorningStart || undefined,
+        weekdayEveningStart: newTurf.weekdayEveningStart || undefined,
+        weekendMorningStart: newTurf.weekendMorningStart || undefined,
+        weekendEveningStart: newTurf.weekendEveningStart || undefined,
+
+        weekdayMorningPrice: newTurf.weekdayMorningPrice || null,
+        weekdayEveningPrice: newTurf.weekdayEveningPrice || null,
+        weekendMorningPrice: newTurf.weekendMorningPrice || null,
+        weekendEveningPrice: newTurf.weekendEveningPrice || null,
       };
 
       await createTurfMutation.mutateAsync(formattedTurf as any); // Cast for safety if partial

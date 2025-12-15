@@ -30,6 +30,7 @@ import {
 } from "@/components/ui/popover";
 import { CalendarIcon, Trash2, Ban } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { ConfirmationModal } from "@/components/ui/confirmation-modal";
 import { useTurfs } from "@/hooks/use-turfs";
 import {
   useBlockedDates,
@@ -57,6 +58,7 @@ export default function BlockDatePage() {
   }>({ from: undefined, to: undefined });
   const [reason, setReason] = useState("");
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
 
   const isDateDisabled = (date: Date) => {
     const formattedDate = format(date, "yyyy-MM-dd");
@@ -105,12 +107,15 @@ export default function BlockDatePage() {
     }
   };
 
-  const deleteBlockedDateRange = async (id: string) => {
+  const confirmDelete = async () => {
+    if (!confirmDeleteId) return;
     try {
-      await deleteBlockedDateMutation.mutateAsync(id);
+      await deleteBlockedDateMutation.mutateAsync(confirmDeleteId);
       toast.success("Blocked date range removed successfully.");
     } catch (error) {
       toast.error("Failed to delete blocked date range.");
+    } finally {
+      setConfirmDeleteId(null);
     }
   };
 
@@ -278,7 +283,7 @@ export default function BlockDatePage() {
                         <NeonButton
                           size="sm"
                           variant="danger"
-                          onClick={() => deleteBlockedDateRange(blockedDate.id)}
+                          onClick={() => setConfirmDeleteId(blockedDate.id)}
                           className="h-8 px-3"
                         >
                           <Trash2 className="w-4 h-4" />
@@ -300,6 +305,15 @@ export default function BlockDatePage() {
           </table>
         </div>
       </GlassCard>
+
+      <ConfirmationModal
+        isOpen={!!confirmDeleteId}
+        onClose={() => setConfirmDeleteId(null)}
+        onConfirm={confirmDelete}
+        title="Delete Blocked Range"
+        description="Are you sure you want to unblock this date range? This action cannot be undone."
+        loading={deleteBlockedDateMutation.isPending}
+      />
     </div>
   );
 }

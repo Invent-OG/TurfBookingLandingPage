@@ -7,10 +7,30 @@ import { NextResponse } from "next/server";
 // access to process.env is required. Ensure these env vars are set.
 const getSupabaseAdmin = () => {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  /*
+    Support for both legacy 'service_role' keys and new 'sb_secret_...' keys.
+    See: https://github.com/orgs/supabase/discussions/29260
+  */
+  const supabaseServiceKey =
+    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY ||
+    process.env.SUPABASE_SECRET_KEY;
+
+  console.log("Debug: Checking Supabase Keys");
+  console.log("NEXT_PUBLIC_SUPABASE_URL present:", !!supabaseUrl);
+  console.log(
+    "NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY present:",
+    !!process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY
+  );
+  console.log(
+    "SUPABASE_SECRET_KEY present:",
+    !!process.env.SUPABASE_SECRET_KEY
+  );
+  console.log("Final Service Key present:", !!supabaseServiceKey);
 
   if (!supabaseUrl || !supabaseServiceKey) {
-    throw new Error("Missing Supabase credentials");
+    throw new Error(
+      "Missing Supabase credentials (NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY or SUPABASE_SECRET_KEY)"
+    );
   }
 
   return createClient(supabaseUrl, supabaseServiceKey);

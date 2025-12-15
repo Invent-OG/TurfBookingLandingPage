@@ -1,29 +1,17 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import {
-  Home,
-  Star,
-  Phone,
-  ShieldCheck,
-  User,
-  Image,
-  Sparkles,
-} from "lucide-react";
+import { Home, Star, Phone, Image, Sparkles } from "lucide-react";
 import { NavBar } from "@/components/ui/tubelight-navbar";
-import { cn } from "@/lib/utils"; // Assuming cn utility is available from this path or similar.
+import { cn } from "@/lib/utils";
+import { useSiteSettings } from "@/hooks/use-settings";
 
-interface TubelightHeaderProps {
-  companyName: string;
-  logoUrl?: string | null;
-}
-
-export default function TubelightHeader({
-  companyName,
-  logoUrl,
-}: TubelightHeaderProps) {
-  const [activeTab, setActiveTab] = useState("Home");
+export default function TubelightHeader() {
   const [isScrolled, setIsScrolled] = useState(false);
+  const { data: settings } = useSiteSettings();
+
+  const companyName = settings?.companyName || "TurfBook";
+  const logoUrl = settings?.logoUrl;
 
   useEffect(() => {
     const handleScroll = () => {
@@ -36,7 +24,7 @@ export default function TubelightHeader({
   const navItems = [
     { name: "Home", url: "#home", icon: Home },
     { name: "Events", url: "/events", icon: Star },
-    { name: "Gallery", url: "#photos", icon: Image }, // Updated to Gallery
+    { name: "Gallery", url: "#photos", icon: Image },
     { name: "Features", url: "#features", icon: Sparkles },
     { name: "Contact", url: "#contact", icon: Phone },
   ];
@@ -47,18 +35,14 @@ export default function TubelightHeader({
         "sticky top-0 left-0 right-0 z-50 transition-all duration-300 pointer-events-none flex items-center justify-between px-6 pt-6"
       )}
     >
-      {/* Branding - Pointer events auto to allow clicking */}
       <div
         className={cn(
           "pointer-events-auto flex items-center gap-3 transition-opacity duration-300",
-          isScrolled ? "opacity-0 -translate-y-10" : "opacity-100" // Hide on scroll if desired, or keep sticky.
-          // User requested "top of the hero section", usually implies visible initially.
-          // I will make it fade out on scroll to keep the view clean, or keep it.
-          // Let's keep it clean: fade out when scrolled down, as the pill nav stays.
+          isScrolled ? "opacity-0 -translate-y-10" : "opacity-100"
         )}
       >
         {logoUrl ? (
-          <div className="relative w-10 h-10 md:w-12 md:h-12   backdrop-blur-sm">
+          <div className="relative w-10 h-10 md:w-12 md:h-12 backdrop-blur-sm">
             <img
               src={logoUrl}
               alt={companyName}
@@ -86,7 +70,6 @@ export default function TubelightHeader({
         />
       </div>
 
-      {/* Spacer for Right side alignment if needed, or just let Space-Between handle it */}
       <div className="w-[120px] hidden md:block"></div>
     </div>
   );

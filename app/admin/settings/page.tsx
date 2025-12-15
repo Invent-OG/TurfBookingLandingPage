@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import Image from "next/image";
 import { Upload, Loader2, Save, User, Globe, Shield } from "lucide-react";
 import { toast } from "sonner"; // Assuming sonner is installed/used
+import imageCompression from "browser-image-compression";
 
 export default function SettingsPage() {
   const [loading, setLoading] = useState(true);
@@ -76,7 +77,21 @@ export default function SettingsPage() {
       formData.append("companyName", companyName);
       formData.append("supportEmail", supportEmail);
       if (selectedFile) {
-        formData.append("logo", selectedFile);
+        let uploadFile = selectedFile;
+        // Compress if image
+        if (selectedFile.type.startsWith("image/")) {
+          try {
+            const options = {
+              maxSizeMB: 1,
+              maxWidthOrHeight: 1920,
+              useWebWorker: true,
+            };
+            uploadFile = await imageCompression(selectedFile, options);
+          } catch (error) {
+            console.warn("Logo compression failed:", error);
+          }
+        }
+        formData.append("logo", uploadFile);
       }
 
       const res = await fetch("/api/admin/settings", {

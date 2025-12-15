@@ -179,8 +179,8 @@ const EditTurf = () => {
             file: files[0],
           });
           imageUrl = url;
-        } catch (err) {
-          toast.error("Failed to upload image");
+        } catch (err: any) {
+          toast.error(err.message || "Failed to upload image");
           setLoading(false);
           return;
         }
@@ -190,6 +190,12 @@ const EditTurf = () => {
         ...newTurf,
         imageUrl: imageUrl,
         pricePerHour: String(newTurf.pricePerHour || "0"),
+
+        // Sanitize optional time fields
+        weekdayMorningStart: newTurf.weekdayMorningStart || undefined,
+        weekdayEveningStart: newTurf.weekdayEveningStart || undefined,
+        weekendMorningStart: newTurf.weekendMorningStart || undefined,
+        weekendEveningStart: newTurf.weekendEveningStart || undefined,
       };
 
       // Strip immutable fields

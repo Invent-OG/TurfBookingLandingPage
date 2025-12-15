@@ -24,11 +24,15 @@ import {
   useBlockTimeMutation,
   useUnblockTimeMutation,
 } from "@/hooks/use-slots";
+import { ConfirmationModal } from "@/components/ui/confirmation-modal";
 
 const AdminBlockTime = () => {
   const [turfId, setTurfId] = useState<string>("");
   const [date, setDate] = useState<Date | null>(null);
   const [pendingBlockedSlots, setPendingBlockedSlots] = useState<string[]>([]);
+  const [confirmDeleteTime, setConfirmDeleteTime] = useState<string | null>(
+    null
+  );
 
   const { data: turfs = [] } = useTurfs();
   const { data: availableSlots = [], isLoading: isLoadingSlots } = useSlots(
@@ -85,18 +89,20 @@ const AdminBlockTime = () => {
     }
   };
 
-  const handleDelete = async (time: string) => {
-    if (!turfId || !date) return;
+  const confirmUnblock = async () => {
+    if (!turfId || !date || !confirmDeleteTime) return;
     const formattedDate = format(date, "yyyy-MM-dd");
     try {
       await unblockTimeMutation.mutateAsync({
         turfId,
         date: formattedDate,
-        time,
+        time: confirmDeleteTime,
       });
       toast.success("Blocked time removed successfully");
     } catch (error) {
       toast.error("Failed to remove blocked time");
+    } finally {
+      setConfirmDeleteTime(null);
     }
   };
 
@@ -231,7 +237,7 @@ const AdminBlockTime = () => {
                   >
                     {formatSlotTime(time)}
                     <button
-                      onClick={() => handleDelete(time)}
+                      onClick={() => setConfirmDeleteTime(time)}
                       className="p-1 hover:bg-red-500/20 hover:text-red-500 rounded-md transition-colors"
                     >
                       <Trash className="w-3 h-3" />
@@ -243,6 +249,15 @@ const AdminBlockTime = () => {
           )}
         </div>
       </div>
+
+      <ConfirmationModal
+        isOpen={!!confirmDeleteTime}
+        onClose={() => setConfirmDeleteTime(null)}
+        onConfirm={confirmUnblock}
+        title="Unblock Time Slot"
+        description="Are you sure you want to unblock this time slot? It will become available for booking."
+        loading={unblockTimeMutation.isPending}
+      />
     </div>
   );
 };

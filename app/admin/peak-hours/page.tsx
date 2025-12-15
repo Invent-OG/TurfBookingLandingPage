@@ -37,6 +37,7 @@ import {
 import { useTurfs } from "@/hooks/use-turfs";
 import { CalendarIcon, Clock, Edit2, Plus, Trash2 } from "lucide-react";
 import { formatToAMPM } from "@/lib/convertTime";
+import { ConfirmationModal } from "@/components/ui/confirmation-modal";
 
 const weekDays = [
   "Monday",
@@ -471,31 +472,14 @@ export default function TurfPeakHoursUI() {
         </div>
       </GlassCard>
 
-      <Dialog
-        open={!!confirmDeleteId}
-        onOpenChange={(open) => !open && setConfirmDeleteId(null)}
-      >
-        <DialogContent className="bg-turf-dark border border-white/10 text-white">
-          <DialogHeader>
-            <DialogTitle>Delete Configuration?</DialogTitle>
-          </DialogHeader>
-          <p className="text-gray-400">
-            This action cannot be undone. This pricing rule will be permanently
-            removed.
-          </p>
-          <DialogFooter className="mt-4">
-            <NeonButton
-              variant="ghost"
-              onClick={() => setConfirmDeleteId(null)}
-            >
-              Cancel
-            </NeonButton>
-            <NeonButton variant="danger" onClick={handleDelete}>
-              Delete
-            </NeonButton>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <ConfirmationModal
+        isOpen={!!confirmDeleteId}
+        onClose={() => setConfirmDeleteId(null)}
+        onConfirm={handleDelete}
+        title="Delete Configuration?"
+        description="This action cannot be undone. This pricing rule will be permanently removed."
+        loading={deleteMutation.isPending}
+      />
     </div>
   );
 }

@@ -48,6 +48,8 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
+import { ConfirmationModal } from "@/components/ui/confirmation-modal";
+
 export default function UsersPage() {
   const { data: users = [], isLoading, error, refetch } = useUsers();
   const updateUserMutation = useUpdateUser();
@@ -224,6 +226,15 @@ export default function UsersPage() {
           isLoading={isLoading}
         />
       </GlassCard>
+
+      <ConfirmationModal
+        isOpen={deleteDialogOpen}
+        onClose={() => setDeleteDialogOpen(false)}
+        onConfirm={handleDeleteUser}
+        title="Delete User"
+        description={`Are you sure you want to delete user "${selectedUser?.email}"? This action cannot be undone.`}
+        loading={deleteUserMutation.isPending}
+      />
     </div>
   );
 }

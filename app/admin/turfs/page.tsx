@@ -26,6 +26,7 @@ import { useUploadFile, useDeleteFile } from "@/hooks/use-storage"; // useUpload
 import { GlassCard } from "@/components/ui/glass-card";
 import { NeonButton } from "@/components/ui/neon-button";
 import { cn } from "@/lib/utils";
+import { ConfirmationModal } from "@/components/ui/confirmation-modal";
 
 function ManageTurfs() {
   const { data: turfs = [], isLoading } = useTurfs();
@@ -217,27 +218,15 @@ function ManageTurfs() {
         </div>
       )}
 
-      {/* Delete Modal */}
-      <Dialog open={!!selectedTurf} onOpenChange={() => setSelectedTurf(null)}>
-        <DialogContent className="bg-turf-dark border border-white/10 text-white">
-          <DialogHeader>
-            <DialogTitle>Confirm Deletion</DialogTitle>
-            <DialogDescription className="text-gray-400">
-              Are you sure you want to delete{" "}
-              <span className="text-white font-bold">{selectedTurf?.name}</span>
-              ? This will also remove all associated bookings.
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter>
-            <NeonButton variant="ghost" onClick={() => setSelectedTurf(null)}>
-              Cancel
-            </NeonButton>
-            <NeonButton variant="danger" onClick={handleConfirmDelete}>
-              Delete
-            </NeonButton>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <ConfirmationModal
+        isOpen={!!selectedTurf}
+        onClose={() => setSelectedTurf(null)}
+        onConfirm={handleConfirmDelete}
+        title="Delete Arena"
+        description={`Are you sure you want to delete ${selectedTurf?.name}? This will also remove all associated bookings and cannot be undone.`}
+        loading={deleteTurfMutation.isPending}
+        confirmLabel="Delete Arena"
+      />
     </div>
   );
 }

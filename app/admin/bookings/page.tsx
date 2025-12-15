@@ -40,6 +40,7 @@ import { GlassCard } from "@/components/ui/glass-card";
 import { NeonButton } from "@/components/ui/neon-button";
 import { cn } from "@/lib/utils";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { ConfirmationModal } from "@/components/ui/confirmation-modal";
 
 const ITEMS_PER_PAGE_OPTIONS = [5, 10, 20, 50];
 
@@ -393,31 +394,14 @@ export default function Bookings() {
         </div>
       </GlassCard>
 
-      <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
-        <DialogContent className="bg-turf-dark border border-white/10 text-white">
-          <DialogHeader>
-            <DialogTitle>Confirm Deletion</DialogTitle>
-            <DialogDescription className="text-gray-400">
-              Are you sure you want to delete {selectedBookings.length} selected
-              booking(s)? This action cannot be undone.
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter>
-            <NeonButton
-              variant="ghost"
-              onClick={() => setShowDeleteDialog(false)}
-            >
-              Cancel
-            </NeonButton>
-            <NeonButton
-              variant="danger"
-              onClick={() => deleteMutation.mutate()}
-            >
-              {deleteMutation.isPending ? "Deleting..." : "Confirm Delete"}
-            </NeonButton>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <ConfirmationModal
+        isOpen={showDeleteDialog}
+        onClose={() => setShowDeleteDialog(false)}
+        onConfirm={() => deleteMutation.mutate()}
+        title="Delete Bookings"
+        description={`Are you sure you want to delete ${selectedBookings.length} selected booking(s)? This action cannot be undone.`}
+        loading={deleteMutation.isPending}
+      />
 
       {/* Cancellation Dialog */}
       <Dialog

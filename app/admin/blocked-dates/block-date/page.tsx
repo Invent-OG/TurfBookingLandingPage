@@ -20,6 +20,7 @@ import {
   DialogTrigger,
   DialogFooter,
 } from "@/components/ui/dialog";
+import { ConfirmationModal } from "@/components/ui/confirmation-modal";
 import { toast } from "sonner";
 import { format, isBefore } from "date-fns";
 import { Ban, Trash2, Calendar as CalendarIcon } from "lucide-react";
@@ -47,6 +48,21 @@ export default function BlockDatePage() {
   const [date, setDate] = useState<Date | undefined>(undefined);
   const [reason, setReason] = useState("");
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
+
+  // ... (isDateDisabled) ...
+
+  const deleteBlockedDate = async () => {
+    if (!confirmDeleteId) return;
+    try {
+      await deleteBlockedDateMutation.mutateAsync(confirmDeleteId);
+      toast.success("Blocked date removed successfully.");
+    } catch (error) {
+      toast.error("Failed to delete blocked date.");
+    } finally {
+      setConfirmDeleteId(null);
+    }
+  };
 
   const isDateDisabled = (date: Date) => {
     const formattedDate = format(date, "yyyy-MM-dd");
@@ -92,12 +108,15 @@ export default function BlockDatePage() {
     }
   };
 
-  const deleteBlockedDate = async (id: string) => {
+  const confirmDelete = async () => {
+    if (!confirmDeleteId) return;
     try {
-      await deleteBlockedDateMutation.mutateAsync(id);
+      await deleteBlockedDateMutation.mutateAsync(confirmDeleteId);
       toast.success("Blocked date removed successfully.");
     } catch (error) {
       toast.error("Failed to delete blocked date.");
+    } finally {
+      setConfirmDeleteId(null);
     }
   };
 
@@ -220,7 +239,7 @@ export default function BlockDatePage() {
                         <NeonButton
                           size="sm"
                           variant="danger"
-                          onClick={() => deleteBlockedDate(blockedDate.id)}
+                          onClick={() => setConfirmDeleteId(blockedDate.id)}
                           className="h-8 px-3"
                         >
                           <Trash2 className="w-4 h-4" />
@@ -242,6 +261,15 @@ export default function BlockDatePage() {
           </table>
         </div>
       </GlassCard>
+
+      <ConfirmationModal
+        isOpen={!!confirmDeleteId}
+        onClose={() => setConfirmDeleteId(null)}
+        onConfirm={confirmDelete}
+        title="Delete Blocked Date"
+        description="Are you sure you want to unblock this date? This action cannot be undone."
+        loading={deleteBlockedDateMutation.isPending}
+      />
     </div>
   );
 }
