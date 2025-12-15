@@ -141,6 +141,13 @@
       "when": 1765427147220,
       "tag": "0019_sad_strong_guy",
       "breakpoints": true
+    },
+    {
+      "idx": 20,
+      "version": "7",
+      "when": 1765795140157,
+      "tag": "0020_nostalgic_sleeper",
+      "breakpoints": true
     }
   ]
 }

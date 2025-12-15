@@ -1,0 +1,1 @@
+ALTER TABLE "event_registrations" ADD COLUMN "customer_phone" text;
