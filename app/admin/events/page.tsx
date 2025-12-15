@@ -11,6 +11,11 @@ import Link from "next/link";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import { ConfirmationModal } from "@/components/ui/confirmation-modal";
+import {
+  useEvents,
+  useDeleteEvent,
+  type Event as EventType,
+} from "@/hooks/use-events";
 
 const AdminEventsPage = () => {
   const { data: events = [], isLoading: loading } = useEvents();
@@ -24,7 +29,7 @@ const AdminEventsPage = () => {
   const columns = [
     {
       header: "Event",
-      accessor: (event: Event) => (
+      accessor: (event: EventType) => (
         <div>
           <div className="font-medium text-white">{event.title}</div>
           <div className="text-xs text-gray-400">{event.eventType}</div>
@@ -33,7 +38,7 @@ const AdminEventsPage = () => {
     },
     {
       header: "Date",
-      accessor: (event: Event) => (
+      accessor: (event: EventType) => (
         <div className="text-sm text-gray-300">
           {format(new Date(event.startDate), "MMM d")} -{" "}
           {format(new Date(event.endDate), "MMM d, yyyy")}
@@ -42,7 +47,7 @@ const AdminEventsPage = () => {
     },
     {
       header: "Participants",
-      accessor: (event: Event) => (
+      accessor: (event: EventType) => (
         <div className="flex items-center gap-2">
           <Users className="w-4 h-4 text-turf-neon opacity-70" />
           <span className="text-white">
@@ -81,7 +86,7 @@ const AdminEventsPage = () => {
     },
     {
       header: "Actions",
-      accessor: (event: Event) => (
+      accessor: (event: EventType) => (
         <div className="flex gap-2">
           {/* Manage Registrations */}
           <NeonButton
