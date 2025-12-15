@@ -55,10 +55,11 @@ function BookingContent() {
   // Sync state with selectedTurfId
   // const [turfId, setTurfId] = useState(selectedTurf?.id); // Removed redundant state
 
-  const { data: availableSlots = [] } = useSlots(
-    selectedTurfId || undefined,
-    date ? new Date(date) : null
-  );
+  const {
+    data: availableSlots = [],
+    isLoading: slotsLoading,
+    isFetching: slotsFetching,
+  } = useSlots(selectedTurfId || undefined, date ? new Date(date) : null);
   const { data: blockedSlots = [] } = useBlockedTimes(
     selectedTurfId || undefined,
     date ? new Date(date) : null
@@ -69,7 +70,7 @@ function BookingContent() {
 
   const [startTime, setStartTime] = useState("");
 
-  const [loading, setLoading] = useState(false); // Can use hook isLoading if needed, but for now kept for compatibility or transition
+  const loading = slotsLoading || slotsFetching; // Use hook loading state
 
   // const [turfLoading, setTurfLoading] = useState(false); // Handled by hook
 

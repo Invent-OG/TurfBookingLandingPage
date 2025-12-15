@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { db } from "@/db/db";
-import { bookings } from "@/db/schema";
+import { bookings, users } from "@/db/schema";
 import { eq } from "drizzle-orm";
 
 export async function POST(req: Request) {
@@ -73,10 +73,66 @@ export async function POST(req: Request) {
       console.log(`✅ Payment Verified for ${bookingId}. Updating DB...`);
 
       // Update status to 'booked'
-      await db
-        .update(bookings)
-        .set({ status: "booked" })
-        .where(eq(bookings.id, bookingId));
+      // Fetch fresh booking details with user info for email
+      const result = await db.transaction(async (trx) => {
+        await trx
+          .update(bookings)
+          .set({ status: "booked" })
+          .where(eq(bookings.id, bookingId));
+
+        return await trx
+          .select({
+            id: bookings.id,
+            date: bookings.date,
+            startTime: bookings.startTime,
+            duration: bookings.duration,
+            totalPrice: bookings.totalPrice,
+            turfName: bookings.turfName,
+            customerName: bookings.customerName, // For walk-ins
+            customerEmail: bookings.customerEmail, // For walk-ins
+            customerPhone: bookings.customerPhone,
+            userName: users.name, // For registered users
+            userEmail: users.email, // For registered users
+          })
+          .from(bookings)
+          .leftJoin(users, eq(bookings.userId, users.id))
+          .where(eq(bookings.id, bookingId))
+          .limit(1);
+      });
+
+      const updatedBooking = result[0];
+
+      // Send Email Background Task
+      if (updatedBooking) {
+        const email = updatedBooking.customerEmail || updatedBooking.userEmail;
+        const name = updatedBooking.customerName || updatedBooking.userName;
+
+        if (email) {
+          fetch(
+            `${
+              process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"
+            }/api/send-email`,
+            {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                type: "booking_confirmation",
+                email,
+                name,
+                bookingId: updatedBooking.id,
+                date: updatedBooking.date,
+                time: updatedBooking.startTime,
+                duration: updatedBooking.duration,
+                amount: updatedBooking.totalPrice,
+                turf: updatedBooking.turfName,
+                phone: updatedBooking.customerPhone,
+              }),
+            }
+          ).catch((err) =>
+            console.error("Failed to send booking confirmation email:", err)
+          );
+        }
+      }
 
       return NextResponse.json({ status: "booked" });
     } else {

@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { db } from "@/db/db";
-import { bookings } from "@/db/schema";
+import { bookings, users } from "@/db/schema";
 import { eq, and, notInArray } from "drizzle-orm";
 
 export async function POST(
@@ -17,10 +17,20 @@ export async function POST(
       );
     }
 
-    // 1. Fetch the booking to verify existence and status
+    // 1. Fetch the booking to verify existence and status, joining with users for email/name
     const booking = await db
-      .select()
+      .select({
+        id: bookings.id,
+        status: bookings.status,
+        customerEmail: bookings.customerEmail,
+        customerName: bookings.customerName,
+        turfName: bookings.turfName,
+        date: bookings.date,
+        userEmail: users.email,
+        userName: users.name,
+      })
       .from(bookings)
+      .leftJoin(users, eq(bookings.userId, users.id))
       .where(eq(bookings.id, id))
       .limit(1);
 
@@ -63,8 +73,8 @@ export async function POST(
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             type: "booking_cancellation",
-            email: booking[0].customerEmail, // Use original booking data since update might not return all fields in some configs
-            name: booking[0].customerName,
+            email: booking[0].customerEmail || booking[0].userEmail,
+            name: booking[0].customerName || booking[0].userName,
             bookingId: booking[0].id,
             turf: booking[0].turfName,
             date: booking[0].date,

@@ -159,6 +159,36 @@ export async function POST(req: Request) {
         })
         .returning({ id: bookings.id });
 
+      // Send Email Background Task
+      if (customerEmail) {
+        fetch(
+          `${
+            process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"
+          }/api/send-email`,
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              type: "booking_confirmation",
+              email: customerEmail,
+              name: customerName,
+              bookingId: newBooking.id,
+              date: date,
+              time: startTime,
+              duration: parsedDuration,
+              amount: parsedTotalPrice,
+              turf: turf_name,
+              phone: customerPhone,
+            }),
+          }
+        ).catch((err) =>
+          console.error(
+            "Failed to send manual booking confirmation email:",
+            err
+          )
+        );
+      }
+
       return new Response(
         JSON.stringify({ success: true, booking: newBooking }),
         { status: 201 }
