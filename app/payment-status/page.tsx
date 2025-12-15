@@ -4,6 +4,7 @@ import { Suspense, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import Success from "./components/Success";
 import Failure from "./components/Failure";
+import { useQueryClient } from "@tanstack/react-query";
 import { useBooking, useVerifyPayment } from "@/hooks/use-bookings";
 
 // BookingData type is now inferred from useBooking/Booking type, or we can use the hook's return type directly.
@@ -31,6 +32,7 @@ type BookingData = {
 };
 
 function BookingStatusContent({ bookingId }: { bookingId: string | null }) {
+  const queryClient = useQueryClient();
   const { data: booking, isLoading, isError } = useBooking(bookingId);
   const verifyPayment = useVerifyPayment();
   const [isVerifying, setIsVerifying] = useState(false);
@@ -39,11 +41,7 @@ function BookingStatusContent({ bookingId }: { bookingId: string | null }) {
     if (booking && booking.status !== "booked" && bookingId && !isVerifying) {
       verifyPayment.mutate(bookingId, {
         onSuccess: (data: any) => {
-          // Invalidate query or rely on mutation response?
-          // Ideally we should invalidate useBooking so it refetches updated status.
-          // But useVerifyPayment doesn't automatically invalidate specific booking (I didn't add it in hook).
-          // Assuming optimistic update or just simple success message.
-          // But checking data.status is better.
+          queryClient.invalidateQueries({ queryKey: ["booking", bookingId] });
         },
       });
       setIsVerifying(true); // Prevent repeated calls
