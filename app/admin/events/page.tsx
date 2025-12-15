@@ -58,7 +58,7 @@ const AdminEventsPage = () => {
     },
     {
       header: "Status",
-      accessor: (event: Event) => {
+      accessor: (event: EventType) => {
         const status = event.status;
         let className = "";
 
