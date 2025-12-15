@@ -35,23 +35,39 @@ function BookingStatusContent({ bookingId }: { bookingId: string | null }) {
   const queryClient = useQueryClient();
   const { data: booking, isLoading, isError } = useBooking(bookingId);
   const verifyPayment = useVerifyPayment();
-  const [isVerifying, setIsVerifying] = useState(false);
+  const [hasAttemptedVerify, setHasAttemptedVerify] = useState(false);
 
   useEffect(() => {
-    if (booking && booking.status !== "booked" && bookingId && !isVerifying) {
-      verifyPayment.mutate(bookingId, {
-        onSuccess: (data: any) => {
-          queryClient.invalidateQueries({ queryKey: ["booking", bookingId] });
-        },
-      });
-      setIsVerifying(true); // Prevent repeated calls
-    }
-  }, [booking, bookingId]); // Only check when booking loads
+    if (booking) {
+      if (booking.status === "booked") {
+        setHasAttemptedVerify(true);
+        return;
+      }
 
-  // BookingData mapping if needed? `booking` matches schema.
-  // Success/Failure components expect `BookingData` prop.
-  // I likely need to update Success/Failure components too if they rely on snake_case?
-  // Let's assume I fix props passed to them.
+      if (
+        !hasAttemptedVerify &&
+        bookingId &&
+        !verifyPayment.isPending &&
+        booking.status !== "booked"
+      ) {
+        verifyPayment.mutate(bookingId, {
+          onSuccess: (data: any) => {
+            if (data.status === "booked") {
+              queryClient.setQueryData(["booking", bookingId], (old: any) => ({
+                ...old,
+                status: "booked",
+              }));
+            }
+            queryClient.invalidateQueries({ queryKey: ["booking", bookingId] });
+            setHasAttemptedVerify(true);
+          },
+          onError: () => {
+            setHasAttemptedVerify(true);
+          },
+        });
+      }
+    }
+  }, [booking, bookingId]);
 
   if (isLoading) {
     return (
@@ -71,45 +87,41 @@ function BookingStatusContent({ bookingId }: { bookingId: string | null }) {
     );
   }
 
-  // Map booking to BookingData if components expect snake_case (legacy check)
-  // Or update components calls.
-  // Success component likely expects `bookingData`.
-  // Let's map it to match existing `BookingData` type BUT with my update above I changed `BookingData` to camelCase?
-  // Wait, I updated the TYPE definition in chunk 1.
-  // So I should pass camelCase object.
-  // BUT `Success` and `Failure` components are imported from `./components/Success`.
-  // Do THEY expect camelCase?
-  // I haven't checked them.
-  // This is risky.
-  // It's safer to map to snake_case IF `Success` uses snake_case props.
-  // OR check `Success`/`Failure` components.
-  // Given I cannot see them now, passing camelCase might break them.
-  // I will assume they use `bookingData` prop.
-  // I will check `Success` component first?
-  // No, I'll update usage to be compatible or safe.
+  // Show Success if booked
+  if (booking.status === "booked") {
+    return (
+      <div className="min-h-screen bg-turf-dark flex items-center justify-center p-4 relative overflow-hidden">
+        <div className="absolute inset-0 bg-[url('/noise.png')] opacity-5 pointer-events-none" />
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[400px] bg-turf-neon/10 blur-[100px] rounded-full pointer-events-none" />
+        <div className="w-full max-w-md z-10">
+          <Success bookingData={booking} />
+        </div>
+      </div>
+    );
+  }
 
-  // Re-mapping to snake_case for safety IF Success expects it.
-  // Actually, I can just peek at Success.
+  // Show Loading while verifying
+  if (!hasAttemptedVerify || verifyPayment.isPending) {
+    return (
+      <div className="min-h-screen bg-turf-dark flex items-center justify-center p-4 relative overflow-hidden">
+        <div className="flex flex-col items-center gap-4">
+          <div className="w-12 h-12 border-4 border-turf-neon/30 border-t-turf-neon rounded-full animate-spin" />
+          <p className="text-gray-400 animate-pulse">
+            Verifying secure payment...
+          </p>
+        </div>
+      </div>
+    );
+  }
 
-  // If I don't peek, I'll replace the JSX passing to use the `booking` object (camelCase).
-  // And if types complain, I'll know.
-
+  // Show Failure if verified and still not booked
   return (
     <div className="min-h-screen bg-turf-dark flex items-center justify-center p-4 relative overflow-hidden">
       <div className="absolute inset-0 bg-[url('/noise.png')] opacity-5 pointer-events-none" />
       <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[400px] bg-turf-neon/10 blur-[100px] rounded-full pointer-events-none" />
-
-      {booking ? (
-        booking.status === "booked" ? (
-          <div className="w-full max-w-md z-10">
-            <Success bookingData={booking} />
-          </div>
-        ) : (
-          <div className="w-full max-w-md z-10">
-            <Failure bookingData={booking} />
-          </div>
-        )
-      ) : null}
+      <div className="w-full max-w-md z-10">
+        <Failure bookingData={booking} />
+      </div>
     </div>
   );
 }
