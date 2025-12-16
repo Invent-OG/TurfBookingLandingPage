@@ -89,16 +89,16 @@ const GetInTouch = () => {
       id="contact"
       className="relative w-full py-24 flex items-center justify-center px-4 sm:px-6 md:px-8"
     >
-      {/* Background Elements Removed */}
+      {/* Background Elements Removed for Global Background */}
 
       {/* Content Container */}
       <div className="w-full max-w-4xl grid grid-cols-1 md:grid-cols-2 gap-10 items-center relative z-10">
         <div ref={leftRef} className="space-y-6 text-center md:text-left">
           <h2 className="text-4xl md:text-6xl font-black text-white font-heading uppercase italic tracking-tighter leading-none">
             Get In <br />
-            <span className="text-turf-neon text-stroke-neon">Touch</span>
+            <span className="text-stroke-neon text-transparent">Touch</span>
           </h2>
-          <p className="text-gray-400 text-lg leading-relaxed max-w-md mx-auto md:mx-0">
+          <p className="text-lg md:text-xl text-gray-400 max-w-2xl mx-auto md:mx-0">
             Have questions or need assistance? Reach out to our team and we'll
             help you get back in the game.
           </p>

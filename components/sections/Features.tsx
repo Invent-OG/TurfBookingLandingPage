@@ -51,15 +51,16 @@ export default function Features() {
       ref={containerRef}
       className="relative py-24 px-6 overflow-hidden"
     >
-      {/* Background Gradient & Glows Removed for seamless look */}
+      {/* Background Elements Removed for Global Background */}
       <div className="absolute inset-0 pointer-events-none"></div>
 
       {/* Heading */}
-      <div className="feature-heading text-center max-w-3xl mx-auto relative z-10 mb-20 space-y-4">
-        <h2 className="text-4xl md:text-5xl font-black text-white font-heading uppercase italic tracking-tight">
-          Why <span className="text-turf-neon">Choose Us?</span>
+      <div className="feature-heading text-center max-w-4xl mx-auto relative z-10 mb-16 space-y-6">
+        <h2 className="text-4xl md:text-6xl font-black text-white font-heading uppercase italic tracking-tighter">
+          Why{" "}
+          <span className="text-stroke-neon text-transparent">Choose Us?</span>
         </h2>
-        <p className="text-lg text-gray-400">
+        <p className="text-lg md:text-xl text-gray-400 max-w-2xl mx-auto">
           Experience top-tier turf booking with our premium features designed
           for athletes.
         </p>
@@ -69,25 +70,27 @@ export default function Features() {
       {/* Features Grid */}
       <div
         ref={cardsRef}
-        className="max-w-7xl mx-auto grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 relative z-10"
+        className="max-w-7xl mx-auto grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 relative z-10 px-4"
       >
         {siteConfig.features.map((feature, index) => (
-          <div key={index}>
-            <div className="h-full group relative bg-black/40 backdrop-blur-md border border-white/10 rounded-xl p-6 overflow-hidden hover:border-turf-neon hover:shadow-[0_0_30px_rgba(204,255,0,0.15)] transition-all duration-300 hover:-translate-y-1">
-              {/* Decorative Gradient Line at Top */}
-              <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-turf-neon/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+          <div key={index} className="group relative">
+            <div className="h-full bg-turf-dark/40 border border-white/10 p-8 transform skew-x-[-10deg] hover:border-turf-neon hover:bg-white/5 transition-all duration-300 hover:-translate-y-2 group-hover:shadow-[0_0_20px_rgba(204,255,0,0.15)] relative overflow-hidden">
+              {/* Decorative Neon Bars */}
+              <div className="absolute top-0 right-0 w-2 h-2 bg-turf-neon opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+              <div className="absolute bottom-0 left-0 w-2 h-2 bg-turf-neon opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
 
-              <div className="mb-6 p-4 rounded-xl bg-white/5 w-fit group-hover:bg-turf-neon/20 transition-colors relative overflow-hidden">
-                <div className="absolute inset-0 bg-turf-neon/10 skew-x-[-15deg] scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left"></div>
-                <feature.icon className="relative z-10 h-8 w-8 text-turf-neon group-hover:drop-shadow-[0_0_8px_rgba(204,255,0,0.8)] transition-all" />
+              <div className="transform skew-x-[10deg]">
+                <div className="mb-6 inline-flex items-center justify-center p-4 bg-black/50 border border-turf-neon/30 group-hover:border-turf-neon group-hover:shadow-[0_0_15px_rgba(204,255,0,0.3)] transition-all duration-300 transform -skew-x-12">
+                  <feature.icon className="h-8 w-8 text-turf-neon transform skew-x-12" />
+                </div>
+
+                <h3 className="text-2xl font-black text-white mb-4 font-heading italic uppercase tracking-wide group-hover:text-turf-neon transition-colors">
+                  {feature.title}
+                </h3>
+                <p className="text-gray-400 text-sm leading-relaxed font-bold tracking-wide">
+                  {feature.description}
+                </p>
               </div>
-
-              <h3 className="text-xl font-black text-white mb-3 font-heading italic uppercase tracking-wide group-hover:text-turf-neon transition-colors">
-                {feature.title}
-              </h3>
-              <p className="text-gray-400 text-sm leading-relaxed font-medium">
-                {feature.description}
-              </p>
             </div>
           </div>
         ))}

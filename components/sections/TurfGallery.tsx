@@ -72,7 +72,7 @@ export default function TurfImageGallery() {
       ref={containerRef}
       className="relative flex flex-col items-center justify-center px-6 py-24 min-h-screen overflow-hidden"
     >
-      {/* Background Elements Removed */}
+      {/* Background Elements Removed for Global Background */}
 
       {/* Heading */}
       <div className="turf-title-anim text-center max-w-4xl mx-auto relative z-10 mb-16 space-y-6">

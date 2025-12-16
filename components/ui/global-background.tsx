@@ -44,18 +44,43 @@ export function GlobalBackground() {
   return (
     <div
       ref={containerRef}
-      className="fixed inset-0 w-full h-full pointer-events-none z-0 overflow-hidden bg-turf-dark"
+      className="fixed inset-0 w-full h-full pointer-events-none z-[-1] overflow-hidden bg-[#0A0A0A]"
     >
-      {/* Mesh Grid Pattern */}
-      <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.03)_1px,transparent_1px)] bg-[size:100px_100px] [mask-image:radial-gradient(ellipse_at_center,black_40%,transparent_100%)]"></div>
+      {/* 1. Base Gradient - Richer Dark Sporty Theme */}
+      <div className="absolute inset-0 bg-gradient-to-br from-black via-zinc-900 to-black"></div>
 
-      {/* Animated Orbs */}
-      <div className="orb-1 absolute top-1/4 left-1/4 w-[500px] h-[500px] bg-turf-neon/10 rounded-full blur-[120px]"></div>
-      <div className="orb-2 absolute bottom-1/4 right-1/4 w-[600px] h-[600px] bg-white/5 rounded-full blur-[140px]"></div>
-      <div className="orb-3 absolute top-1/2 left-1/2 w-[400px] h-[400px] bg-purple-500/10 rounded-full blur-[100px]"></div>
+      {/* 2. Strong Techn/Sport Grid Pattern */}
+      <div
+        className="absolute inset-0 opacity-[0.15]"
+        style={{
+          backgroundImage: `
+            linear-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(255, 255, 255, 0.05) 1px, transparent 1px)
+          `,
+          backgroundSize: "40px 40px",
+        }}
+      ></div>
 
-      {/* Noise Overlay (Optional for texture) */}
-      <div className="absolute inset-0 opacity-[0.03] mix-blend-overlay bg-[url('https://grainy-gradients.vercel.app/noise.svg')]"></div>
+      {/* 3. Dynamic Mesh Gradient / Aurora Effect */}
+      <div className="absolute inset-0 opacity-30 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-turf-neon/20 via-transparent to-transparent"></div>
+      <div className="absolute inset-0 opacity-20 bg-[radial-gradient(ellipse_at_bottom_left,_var(--tw-gradient-stops))] from-blue-500/20 via-transparent to-transparent"></div>
+
+      {/* 4. Animated Sporty Orbs (Intensified) */}
+      <div className="orb-1 absolute top-[-20%] left-[-10%] w-[1000px] h-[1000px] bg-turf-neon/10 rounded-full blur-[120px] mix-blend-screen animate-pulse"></div>
+      <div className="orb-2 absolute bottom-[-20%] right-[-10%] w-[1000px] h-[1000px] bg-turf-neon/5 rounded-full blur-[150px] mix-blend-screen"></div>
+
+      {/* 5. Overlay Texture - Diagonal Carbon Fiber-ish look */}
+      <div
+        className="absolute inset-0 opacity-[0.05]"
+        style={{
+          backgroundImage:
+            "repeating-linear-gradient(-45deg, #000 0, #000 2px, transparent 0, transparent 10px)",
+          backgroundSize: "20px 20px",
+        }}
+      ></div>
+
+      {/* Vignette for cinematic focus */}
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,transparent_20%,black_100%)]"></div>
     </div>
   );
 }

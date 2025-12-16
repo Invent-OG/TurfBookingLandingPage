@@ -196,11 +196,11 @@ const DateSelector: React.FC<DateSelectorProps> = ({
               <div
                 key={i}
                 data-date={date.toISOString()}
-                className={`flex flex-col items-center justify-center select-none min-w-[72px] h-24 rounded-2xl transition-all duration-300
+                className={`flex flex-col items-center justify-center select-none min-w-[72px] h-24 rounded-sm skew-x-[-10deg] transition-all duration-300 border
                   ${
                     isSelected
-                      ? "bg-turf-neon text-black shadow-[0_0_15px_-3px_rgba(204,255,0,0.5)] scale-105 z-10 font-bold"
-                      : "bg-white/5 border border-white/10 text-gray-400 hover:border-white/30 hover:bg-white/10"
+                      ? "bg-turf-neon border-turf-neon text-black shadow-[0_0_15px_-3px_rgba(204,255,0,0.5)] scale-105 z-10"
+                      : "bg-black/60 border-white/10 text-gray-400 hover:border-turf-neon/50 hover:bg-white/5 hover:text-white"
                   }
                   ${
                     isDisabled
@@ -219,22 +219,24 @@ const DateSelector: React.FC<DateSelectorProps> = ({
                   }
                 }}
               >
-                <span
-                  className={cn(
-                    "text-xs mb-1 uppercase tracking-wider font-medium",
-                    isSelected ? "text-black/70" : "text-gray-500"
-                  )}
-                >
-                  {weekdays[date.getDay()]}
-                </span>
-                <span
-                  className={cn(
-                    "text-2xl",
-                    isSelected ? "font-black" : "font-normal"
-                  )}
-                >
-                  {date.getDate()}
-                </span>
+                <div className="skew-x-[10deg] flex flex-col items-center">
+                  <span
+                    className={cn(
+                      "text-[10px] mb-1 uppercase tracking-widest font-bold",
+                      isSelected ? "text-black" : "text-gray-500"
+                    )}
+                  >
+                    {weekdays[date.getDay()]}
+                  </span>
+                  <span
+                    className={cn(
+                      "text-2xl font-black font-heading italic",
+                      isSelected ? "text-black" : "text-white"
+                    )}
+                  >
+                    {date.getDate()}
+                  </span>
+                </div>
               </div>
             );
           })}

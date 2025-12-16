@@ -380,7 +380,7 @@ function BookingContent() {
                             String(selectedTurf?.maxHours ?? "0")
                           )}
                           slotClassName={clsx(
-                            "w-full py-4 px-2 text-sm font-bold border-2 transition-all duration-200 uppercase tracking-wide",
+                            "w-full py-4 px-2 text-sm font-bold border transition-all duration-200 uppercase tracking-wide skew-x-[-10deg] rounded-none",
                             isBooked
                               ? "bg-red-900/10 border-red-500/20 text-red-500 cursor-not-allowed opacity-50"
                               : isBlocked

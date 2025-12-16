@@ -38,7 +38,7 @@ export function NavBar({ items, className }: NavBarProps) {
         className
       )}
     >
-      <div className="flex items-center gap-3 bg-white/5 border border-white/10 backdrop-blur-lg py-1 px-1 rounded-full shadow-lg">
+      <div className="flex items-center gap-1 bg-black/80 border border-white/10 backdrop-blur-md py-1 px-1 transform -skew-x-12 shadow-[0_0_20px_rgba(204,255,0,0.15)] hover:border-turf-neon/50 transition-colors duration-300">
         {items.map((item) => {
           const Icon = item.icon;
           const isActive = activeTab === item.name;
@@ -49,31 +49,29 @@ export function NavBar({ items, className }: NavBarProps) {
               href={item.url}
               onClick={() => setActiveTab(item.name)}
               className={cn(
-                "relative cursor-pointer text-sm font-semibold px-6 py-2 rounded-full transition-colors",
-                "text-gray-400 hover:text-turf-neon",
-                isActive && "bg-white/10 text-turf-neon"
+                "relative cursor-pointer text-sm font-black italic uppercase tracking-wider px-6 py-2.5 transition-colors overflow-hidden",
+                isActive ? "text-black" : "text-gray-400 hover:text-white"
               )}
             >
-              <span className="hidden md:inline">{item.name}</span>
-              <span className="md:hidden">
-                <Icon size={18} strokeWidth={2.5} />
+              <span className="relative z-10 block transform skew-x-12 hidden md:inline">
+                {item.name}
+              </span>
+              <span className="relative z-10 block transform skew-x-12 md:hidden">
+                <Icon size={20} strokeWidth={2.5} />
               </span>
               {isActive && (
                 <motion.div
-                  layoutId="lamp"
-                  className="absolute inset-0 w-full bg-turf-neon/5 rounded-full -z-10"
+                  layoutId="sport-active"
+                  className="absolute inset-0 bg-turf-neon shadow-[0_0_15px_rgba(204,255,0,0.5)] -z-0"
                   initial={false}
                   transition={{
                     type: "spring",
-                    stiffness: 300,
+                    stiffness: 400,
                     damping: 30,
                   }}
                 >
-                  <div className="absolute -top-2 left-1/2 -translate-x-1/2 w-8 h-1 bg-turf-neon rounded-t-full">
-                    <div className="absolute w-12 h-6 bg-turf-neon/20 rounded-full blur-md -top-2 -left-2" />
-                    <div className="absolute w-8 h-6 bg-turf-neon/20 rounded-full blur-md -top-1" />
-                    <div className="absolute w-4 h-4 bg-turf-neon/20 rounded-full blur-sm top-0 left-2" />
-                  </div>
+                  {/* Decorative shine line */}
+                  <div className="absolute top-0 right-0 w-[1px] h-full bg-white/50 opacity-50"></div>
                 </motion.div>
               )}
             </Link>

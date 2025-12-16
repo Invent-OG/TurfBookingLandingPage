@@ -49,19 +49,15 @@ export const HomeEvents = () => {
   return (
     <section className="relative py-20 overflow-hidden">
       <div className="max-w-7xl mx-auto px-4 space-y-12 relative z-10">
-        <div className="text-center space-y-4">
-          <Badge
-            variant="outline"
-            className="border-turf-neon text-turf-neon mb-2"
-          >
-            <Trophy className="w-3 h-3 mr-2" /> Tournaments & Leagues
-          </Badge>
-          <h2 className="text-3xl md:text-5xl font-bold text-white font-heading tracking-tight">
-            Upcoming <span className="text-turf-neon">Events</span>
+        <div className="text-center max-w-4xl mx-auto relative z-10 mb-16 space-y-6">
+          <h2 className="text-4xl md:text-6xl font-black text-white font-heading uppercase italic tracking-tighter">
+            Upcoming{" "}
+            <span className="text-stroke-neon text-transparent">Events</span>
           </h2>
-          <p className="text-gray-400 max-w-2xl mx-auto text-lg">
+          <p className="text-lg md:text-xl text-gray-400 max-w-2xl mx-auto">
             Compete in our exclusive tournaments and leagues.
           </p>
+          <div className="w-24 h-1 bg-gradient-to-r from-transparent via-turf-neon to-transparent mx-auto rounded-full"></div>
         </div>
 
         {loading ? (
@@ -79,7 +75,7 @@ export const HomeEvents = () => {
                   transition={{ delay: index * 0.1 }}
                   className="h-full"
                 >
-                  <div className="h-full group relative bg-black/40 backdrop-blur-md border border-white/10 rounded-xl overflow-hidden hover:border-turf-neon hover:shadow-[0_0_30px_rgba(204,255,0,0.15)] transition-all duration-300">
+                  <div className="h-full group relative backdrop-blur-md border border-white/10 rounded-xl overflow-hidden hover:border-turf-neon hover:shadow-[0_0_30px_rgba(204,255,0,0.15)] transition-all duration-300">
                     {/* Image Section */}
                     <div className="relative h-56 w-full overflow-hidden">
                       <div className="absolute inset-0 bg-turf-neon/20 mix-blend-overlay z-10 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>

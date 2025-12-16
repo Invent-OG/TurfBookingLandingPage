@@ -26,34 +26,50 @@ export const ImagesSlider = ({
 
   const handleNext = () => {
     setCurrentIndex((prevIndex) =>
-      prevIndex + 1 === images.length ? 0 : prevIndex + 1
+      prevIndex + 1 === loadedImages.length ? 0 : prevIndex + 1
     );
   };
 
   const handlePrevious = () => {
     setCurrentIndex((prevIndex) =>
-      prevIndex - 1 < 0 ? images.length - 1 : prevIndex - 1
+      prevIndex - 1 < 0 ? loadedImages.length - 1 : prevIndex - 1
     );
   };
 
   useEffect(() => {
     loadImages();
-  }, []);
+    setCurrentIndex(0); // Reset to 0 when images change/load
+  }, [images]);
 
   const loadImages = () => {
     setLoading(true);
+    console.log("Loading images:", images);
     const loadPromises = images.map((image) => {
       return new Promise((resolve, reject) => {
         const img = new Image();
         img.src = image;
-        img.onload = () => resolve(image);
-        img.onerror = reject;
+        img.onload = () => {
+          console.log("Image loaded:", image);
+          resolve(image);
+        };
+        img.onerror = (e) => {
+          console.error("Image failed to load:", image, e);
+          reject(e);
+        };
       });
     });
 
-    Promise.all(loadPromises)
-      .then((loadedImages) => {
-        setLoadedImages(loadedImages as string[]);
+    Promise.allSettled(loadPromises)
+      .then((results) => {
+        const successfulImages = results
+          .filter(
+            (result): result is PromiseFulfilledResult<string> =>
+              result.status === "fulfilled"
+          )
+          .map((result) => result.value);
+
+        console.log("Successfully loaded images:", successfulImages);
+        setLoadedImages(successfulImages);
         setLoading(false);
       })
       .catch((error) => console.error("Failed to load images", error));
@@ -81,7 +97,7 @@ export const ImagesSlider = ({
       window.removeEventListener("keydown", handleKeyDown);
       clearInterval(interval);
     };
-  }, []);
+  }, [images, loadedImages, autoplay]);
 
   const slideVariants = {
     initial: {
@@ -95,7 +111,7 @@ export const ImagesSlider = ({
       opacity: 1,
       transition: {
         duration: 0.5,
-        ease: [0.645, 0.045, 0.355, 1.0],
+        ease: [0.645, 0.045, 0.355, 1.0] as any,
       },
     },
     upExit: {
@@ -126,10 +142,10 @@ export const ImagesSlider = ({
         perspective: "1000px",
       }}
     >
-      {areImagesLoaded && children}
+      {children}
       {areImagesLoaded && overlay && (
         <div
-          className={cn("absolute inset-0 bg-black/60 z-40", overlayClassName)}
+          className={cn("absolute inset-0 bg-black/20 z-40", overlayClassName)}
         />
       )}
 

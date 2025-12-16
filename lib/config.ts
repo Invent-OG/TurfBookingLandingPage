@@ -8,9 +8,9 @@ export const siteConfig = {
     subtitle:
       "Experience seamless booking for your next game. Premium turfs, instant confirmation, and hassle-free scheduling.",
     images: [
-      "/images/Carousel/Comp 1_00002.webp",
-      "/images/Carousel/Comp 1_00006.webp",
-      "/images/Carousel/Comp 1_00008.webp",
+      "https://images.unsplash.com/photo-1579952363873-1b91316b472e?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80",
+      "https://images.unsplash.com/photo-1529900748604-07564a03e7a6?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80",
+      "https://images.unsplash.com/photo-1551958219-acbc608c6377?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80",
     ],
   },
   morningTimes: ["6:00 AM", "7:00 AM", "8:00 AM", "9:00 AM", "10:00 AM"],

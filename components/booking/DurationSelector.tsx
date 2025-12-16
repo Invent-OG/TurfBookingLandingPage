@@ -252,32 +252,38 @@ export function DurationSelector({
         disabled={isDisabled}
         variant={buttonVariant}
       >
-        {formatSlotTime(startTime)}
+        <span className="skew-x-[10deg] inline-block">
+          {formatSlotTime(startTime)}
+        </span>
       </Button>
 
       <Drawer open={isOpen} onOpenChange={setIsOpen}>
-        <DrawerContent className="bg-turf-dark border-white/10 text-white">
+        <DrawerContent className="bg-black/90 border-t border-white/10 text-white backdrop-blur-xl">
           <DrawerHeader>
-            <DrawerTitle>Select Duration</DrawerTitle>
-            <DrawerDescription className="text-gray-400">
+            <DrawerTitle className="text-3xl font-black italic uppercase font-heading text-white">
+              Select Duration
+            </DrawerTitle>
+            <DrawerDescription className="text-gray-400 font-medium uppercase tracking-wider text-xs">
               Starting from {formatSlotTime(startTime)}
             </DrawerDescription>
           </DrawerHeader>
-          <div className="p-4">
-            <div className="space-y-6">
-              <div className="flex items-center justify-center space-x-4">
+          <div className="p-6 max-w-md mx-auto w-full">
+            <div className="space-y-8">
+              <div className="flex items-center justify-center space-x-6">
                 <Button
                   variant="outline"
                   size="icon"
                   onClick={() => handleDurationChange(-1)}
                   disabled={duration <= minDuration}
-                  className="bg-white/5 border-white/10 text-white hover:bg-white/10 hover:text-turf-neon disabled:opacity-30 disabled:hover:bg-transparent"
+                  className="w-12 h-12 rounded-none skew-x-[-10deg] bg-white/5 border border-white/10 text-white hover:bg-turf-neon hover:text-black hover:border-turf-neon disabled:opacity-30 disabled:hover:bg-transparent transition-all"
                 >
-                  <Minus className="h-4 w-4" />
+                  <Minus className="h-5 w-5 skew-x-[10deg]" />
                 </Button>
-                <div className="text-center">
-                  <div className="text-2xl font-bold">{duration} hr</div>
-                  <div className="text-sm text-gray-400">
+                <div className="text-center min-w-[120px]">
+                  <div className="text-4xl font-black italic font-heading text-white">
+                    {duration} <span className="text-lg text-gray-500">hr</span>
+                  </div>
+                  <div className="text-xs text-turf-neon uppercase tracking-widest font-bold mt-1">
                     {formatSlotTime(startTime)} -{" "}
                     {calculateEndTime(formatSlotTime(startTime), duration)}
                   </div>
@@ -287,24 +293,28 @@ export function DurationSelector({
                   size="icon"
                   onClick={() => handleDurationChange(1)}
                   disabled={duration >= maxDuration}
-                  className="bg-white/5 border-white/10 text-white hover:bg-white/10 hover:text-turf-neon disabled:opacity-30 disabled:hover:bg-transparent"
+                  className="w-12 h-12 rounded-none skew-x-[-10deg] bg-white/5 border border-white/10 text-white hover:bg-turf-neon hover:text-black hover:border-turf-neon disabled:opacity-30 disabled:hover:bg-transparent transition-all"
                 >
-                  <Plus className="h-4 w-4" />
+                  <Plus className="h-5 w-5 skew-x-[10deg]" />
                 </Button>
               </div>
 
-              <div className="text-center">
-                <div className="text-sm text-gray-400">Total Amount</div>
-                <div className="text-2xl font-bold text-turf-neon">
-                  ₹{calculatePrice(duration)}
+              <div className="text-center bg-white/5 p-4 border border-white/10 skew-x-[-10deg]">
+                <div className="skew-x-[10deg]">
+                  <div className="text-[10px] text-gray-500 uppercase tracking-widest font-bold mb-1">
+                    Total Amount
+                  </div>
+                  <div className="text-4xl font-black text-turf-neon italic font-heading">
+                    ₹{calculatePrice(duration)}
+                  </div>
                 </div>
               </div>
 
               <Button
-                className="w-full bg-turf-neon text-black font-bold hover:bg-turf-neon/90"
+                className="w-full h-14 bg-turf-neon text-black font-black uppercase text-lg hover:bg-turf-neon/90 rounded-none skew-x-[-10deg] shadow-[0_0_20px_rgba(204,255,0,0.3)] transition-all hover:scale-[1.02]"
                 onClick={handleConfirm}
               >
-                Confirm Booking
+                <span className="skew-x-[10deg]">Confirm Booking</span>
               </Button>
             </div>
           </div>

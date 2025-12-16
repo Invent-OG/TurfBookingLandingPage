@@ -31,14 +31,19 @@ export default function Testimonials() {
       id="testimonials"
       ref={containerRef}
     >
-      {/* Background Effect Removed */}
+      {/* Background Elements Removed for Global Background */}
 
       <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 z-10">
-        <div ref={textRef} className="text-center mb-16 space-y-4">
-          <h2 className="text-4xl md:text-5xl font-black text-white font-heading uppercase italic tracking-tighter">
-            What Our <span className="text-turf-neon">Players</span> Say
+        <div
+          ref={textRef}
+          className="text-center max-w-4xl mx-auto relative z-10 mb-16 space-y-6"
+        >
+          <h2 className="text-4xl md:text-6xl font-black text-white font-heading uppercase italic tracking-tighter">
+            What Our{" "}
+            <span className="text-stroke-neon text-transparent">Players</span>{" "}
+            <span className="text-turf-neon">Say</span>
           </h2>
-          <p className="text-xl text-gray-400 max-w-2xl mx-auto">
+          <p className="text-lg md:text-xl text-gray-400 max-w-2xl mx-auto">
             Don't just take our word for it - hear from our community of
             athletes.
           </p>
