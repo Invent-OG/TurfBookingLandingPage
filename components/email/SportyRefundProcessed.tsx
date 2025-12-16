@@ -21,6 +21,7 @@ interface SportyRefundProcessedProps {
   date: string;
   companyName?: string;
   supportPhone?: string;
+  logoUrl?: string;
 }
 
 export const SportyRefundProcessed = ({
@@ -30,6 +31,7 @@ export const SportyRefundProcessed = ({
   date = "2024-12-25",
   companyName = "KRP Sports Zone",
   supportPhone = "+91 88838 88025",
+  logoUrl = "https://krpsportszone.com/logo.png",
 }: SportyRefundProcessedProps) => {
   return (
     <Html>
@@ -40,10 +42,10 @@ export const SportyRefundProcessed = ({
           {/* Header */}
           <Section style={header}>
             <Img
-              src="https://krpsportszone.com/logo.png"
+              src={logoUrl}
               width="60"
               height="60"
-              alt="KRP Sports Zone"
+              alt={companyName}
               style={{ margin: "0 auto 10px", borderRadius: "8px" }}
             />
             <Heading style={brand}>{companyName}</Heading>

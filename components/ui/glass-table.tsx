@@ -26,7 +26,10 @@ export function GlassTable<T>({
         <thead className="bg-white/5 border-b border-white/10 text-xs uppercase text-gray-400 font-semibold tracking-wider sticky top-0 backdrop-blur-md">
           <tr>
             {columns.map((col, idx) => (
-              <th key={idx} className={cn("px-6 py-4", col.className)}>
+              <th
+                key={idx}
+                className={cn("px-6 py-4 whitespace-nowrap", col.className)}
+              >
                 {col.header}
               </th>
             ))}
@@ -61,7 +64,7 @@ export function GlassTable<T>({
                   <td
                     key={colIdx}
                     className={cn(
-                      "px-6 py-4 text-sm text-gray-300 group-hover:text-white transition-colors",
+                      "px-6 py-4 text-sm text-gray-300 group-hover:text-white transition-colors whitespace-nowrap",
                       col.className
                     )}
                   >

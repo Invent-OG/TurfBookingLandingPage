@@ -24,6 +24,7 @@ interface SportyEventRegistrationProps {
   registrationId: string;
   companyName?: string;
   supportPhone?: string;
+  logoUrl?: string;
 }
 
 export const SportyEventRegistration = ({
@@ -35,6 +36,7 @@ export const SportyEventRegistration = ({
   registrationId = "EVT-12345",
   companyName = "KRP Sports Zone",
   supportPhone = "+91 88838 88025",
+  logoUrl = "https://krpsportszone.com/logo.png",
 }: SportyEventRegistrationProps) => {
   return (
     <Html>
@@ -45,10 +47,10 @@ export const SportyEventRegistration = ({
           {/* Header */}
           <Section style={header}>
             <Img
-              src="https://krpsportszone.com/logo.png"
+              src={logoUrl}
               width="60"
               height="60"
-              alt="KRP Sports Zone"
+              alt={companyName}
               style={{ margin: "0 auto 10px", borderRadius: "8px" }}
             />
             <Heading style={brand}>{companyName}</Heading>

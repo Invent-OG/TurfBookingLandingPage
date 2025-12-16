@@ -17,12 +17,16 @@ interface SportyContactEmailProps {
   name: string;
   email: string;
   message: string;
+  companyName?: string;
+  logoUrl?: string;
 }
 
 export const SportyContactEmail = ({
   name = "Visitor",
   email = "visitor@example.com",
   message = "I want to book an event.",
+  companyName = "KRP Sports Zone",
+  logoUrl = "https://krpsportszone.com/logo.png",
 }: SportyContactEmailProps) => {
   return (
     <Html>
@@ -33,10 +37,10 @@ export const SportyContactEmail = ({
           {/* Header */}
           <Section style={header}>
             <Img
-              src="https://krpsportszone.com/logo.png"
+              src={logoUrl}
               width="60"
               height="60"
-              alt="KRP Sports Zone"
+              alt={companyName}
               style={{ margin: "0 auto 10px", borderRadius: "8px" }}
             />
             <Heading style={brand}>

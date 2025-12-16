@@ -45,6 +45,8 @@ export async function sendEmail({ to, type, data }: EmailPayload) {
     const supportPhone = settings[0]?.supportPhone || "+91 88838 88025";
     const supportEmail =
       settings[0]?.supportEmail || "support@krpsportszone.com";
+    const logoUrl =
+      settings[0]?.logoUrl || "https://krpsportszone.com/logo.png";
 
     let emailComponent;
     let subject;
@@ -62,6 +64,9 @@ export async function sendEmail({ to, type, data }: EmailPayload) {
           duration: data.duration,
           amount: data.amount,
           turf: data.turf,
+          companyName,
+          supportPhone,
+          logoUrl,
         });
         break;
 
@@ -72,6 +77,9 @@ export async function sendEmail({ to, type, data }: EmailPayload) {
           bookingId: data.bookingId,
           amount: data.amount,
           turf: data.turf,
+          companyName,
+          supportPhone,
+          logoUrl,
         });
         break;
 
@@ -86,6 +94,7 @@ export async function sendEmail({ to, type, data }: EmailPayload) {
           registrationId: data.registrationId,
           companyName,
           supportPhone,
+          logoUrl,
         });
         break;
 
@@ -96,6 +105,9 @@ export async function sendEmail({ to, type, data }: EmailPayload) {
           bookingId: data.bookingId,
           amount: data.amount,
           date: data.date,
+          companyName,
+          supportPhone,
+          logoUrl,
         });
         break;
 
@@ -106,6 +118,9 @@ export async function sendEmail({ to, type, data }: EmailPayload) {
           bookingId: data.bookingId,
           turf: data.turf,
           date: data.date,
+          companyName,
+          supportPhone,
+          logoUrl,
         });
         break;
 
@@ -115,6 +130,8 @@ export async function sendEmail({ to, type, data }: EmailPayload) {
           name: data.name,
           email: data.email,
           message: data.message,
+          companyName,
+          logoUrl,
         });
         break;
 
