@@ -11,10 +11,17 @@ export async function generateMetadata(): Promise<Metadata> {
   try {
     const settings = await db.select().from(siteSettings).limit(1);
     const companyName = settings[0]?.companyName || "TurfBook";
+    const logoUrl =
+      settings[0]?.logoUrl || "https://krpsportszone.com/logo.png";
 
     return {
       title: `${companyName} | Premium Turf Booking`,
       description: `Book your favorite sports arena with ${companyName}.`,
+      icons: {
+        icon: logoUrl,
+        shortcut: logoUrl,
+        apple: logoUrl,
+      },
     };
   } catch (error) {
     console.warn(
@@ -24,6 +31,11 @@ export async function generateMetadata(): Promise<Metadata> {
     return {
       title: "TurfBook | Premium Turf Booking",
       description: "Book your favorite sports arena with TurfBook.",
+      icons: {
+        icon: "https://krpsportszone.com/logo.png",
+        shortcut: "https://krpsportszone.com/logo.png",
+        apple: "https://krpsportszone.com/logo.png",
+      },
     };
   }
 }

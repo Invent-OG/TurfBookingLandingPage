@@ -1,3 +1,4 @@
+"use client";
 import { FaPhone, FaWhatsapp } from "react-icons/fa";
 import { useSiteSettings } from "@/hooks/use-site-settings";
 
