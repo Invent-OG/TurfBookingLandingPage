@@ -20,6 +20,8 @@ interface SportyBookingCancellationProps {
   bookingId: string;
   turf: string;
   date: string;
+  companyName?: string;
+  supportPhone?: string;
 }
 
 export const SportyBookingCancellation = ({
@@ -27,6 +29,8 @@ export const SportyBookingCancellation = ({
   bookingId = "BK-123456",
   turf = "Neon Arena",
   date = "2024-12-25",
+  companyName = "KRP Sports Zone",
+  supportPhone = "+91 88838 88025",
 }: SportyBookingCancellationProps) => {
   return (
     <Html>
@@ -43,9 +47,7 @@ export const SportyBookingCancellation = ({
               alt="KRP Sports Zone"
               style={{ margin: "0 auto 10px", borderRadius: "8px" }}
             />
-            <Heading style={brand}>
-              KRP<span style={{ color: "#ccff00" }}>SPORTS ZONE</span>
-            </Heading>
+            <Heading style={brand}>{companyName}</Heading>
           </Section>
 
           {/* Hero Status */}
@@ -72,9 +74,11 @@ export const SportyBookingCancellation = ({
 
           <Section style={footer}>
             <Text style={footerText}>
-              Need Support? Call +91 88838 88025 or reply to this email.
+              Need Support? Call {supportPhone} or reply to this email.
             </Text>
-            <Text style={footerText}>© 2024 KRP Sports Zone.</Text>
+            <Text style={footerText}>
+              © {new Date().getFullYear()} {companyName}.
+            </Text>
           </Section>
         </Container>
       </Body>

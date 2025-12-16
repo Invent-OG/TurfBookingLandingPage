@@ -13,6 +13,7 @@ export default function SettingsPage() {
   const [savingBranding, setSavingBranding] = useState(false);
   const [companyName, setCompanyName] = useState("");
   const [supportEmail, setSupportEmail] = useState("");
+  const [supportPhone, setSupportPhone] = useState("");
   const [logoUrl, setLogoUrl] = useState<string | null>(null);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
@@ -37,6 +38,7 @@ export default function SettingsPage() {
         const data = await res.json();
         setCompanyName(data.companyName || "TurfBook");
         setSupportEmail(data.supportEmail || "");
+        setSupportPhone(data.supportPhone || "");
         setLogoUrl(data.logoUrl);
       }
     } catch (error) {
@@ -76,6 +78,7 @@ export default function SettingsPage() {
       const formData = new FormData();
       formData.append("companyName", companyName);
       formData.append("supportEmail", supportEmail);
+      formData.append("supportPhone", supportPhone);
       if (selectedFile) {
         let uploadFile = selectedFile;
         // Compress if image
@@ -211,6 +214,20 @@ export default function SettingsPage() {
                   onChange={(e) => setSupportEmail(e.target.value)}
                   className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-turf-neon focus:ring-1 focus:ring-turf-neon transition-all"
                   placeholder="support@example.com"
+                />
+              </div>
+
+              {/* Support Phone */}
+              <div className="space-y-2">
+                <label className="text-sm uppercase tracking-wider text-gray-400 font-bold">
+                  Support Phone Number
+                </label>
+                <input
+                  type="tel"
+                  value={supportPhone}
+                  onChange={(e) => setSupportPhone(e.target.value)}
+                  className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-turf-neon focus:ring-1 focus:ring-turf-neon transition-all"
+                  placeholder="+91 88838 88025"
                 />
               </div>
 

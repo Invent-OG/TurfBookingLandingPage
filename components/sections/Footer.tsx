@@ -37,6 +37,7 @@ export default function Footer() {
   const [branding, setBranding] = useState({
     companyName: "TurfBook",
     supportEmail: "contact@turfbook.com",
+    supportPhone: "+91 88838 88025",
   });
 
   useEffect(() => {
@@ -47,6 +48,7 @@ export default function Footer() {
           setBranding({
             companyName: data.companyName || "TurfBook",
             supportEmail: data.supportEmail || "contact@turfbook.com",
+            supportPhone: data.supportPhone || "+91 88838 88025",
           });
         }
       })
@@ -55,7 +57,7 @@ export default function Footer() {
 
   const contactInfo = [
     { icon: Mail, text: branding.supportEmail },
-    { icon: Phone, text: "+91 88838 88025" },
+    { icon: Phone, text: branding.supportPhone },
     {
       icon: MapPin,
       text: "bypass, opp. to DSR madhanam inn, Malik Nagar, Asur, Kumbakonam, Tamil Nadu, Kumbakonam 612001",

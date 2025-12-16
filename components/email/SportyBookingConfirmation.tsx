@@ -21,10 +21,12 @@ interface SportyBookingConfirmationProps {
   date: string;
   startTime: string;
   duration: number;
-  amount?: string;
-  turf?: string;
   email?: string;
   phone?: string;
+  amount?: string;
+  turf?: string;
+  companyName?: string;
+  supportPhone?: string;
 }
 
 export const SportyBookingConfirmation = ({
@@ -37,6 +39,8 @@ export const SportyBookingConfirmation = ({
   turf = "Neon Arena",
   email = "player@example.com",
   phone = "9876543210",
+  companyName = "KRP Sports Zone",
+  supportPhone = "+91 88838 88025",
 }: SportyBookingConfirmationProps) => {
   return (
     <Html>
@@ -53,9 +57,7 @@ export const SportyBookingConfirmation = ({
               alt="KRP Sports Zone"
               style={{ margin: "0 auto 10px", borderRadius: "8px" }}
             />
-            <Heading style={brand}>
-              KRP<span style={{ color: "#ccff00" }}>SPORTS ZONE</span>
-            </Heading>
+            <Heading style={brand}>{companyName}</Heading>
           </Section>
 
           {/* Hero Status */}
@@ -123,7 +125,7 @@ export const SportyBookingConfirmation = ({
             <Text style={contactText}>
               Need Support? Call us at{" "}
               <span style={{ color: "#ccff00", fontWeight: "bold" }}>
-                +91 88838 88025
+                {supportPhone}
               </span>{" "}
               or reply to this email.
             </Text>
@@ -131,7 +133,7 @@ export const SportyBookingConfirmation = ({
 
           <Section style={footer}>
             <Text style={footerText}>
-              © 2024 KRP Sports Zone. All rights reserved.
+              © {new Date().getFullYear()} {companyName}. All rights reserved.
             </Text>
           </Section>
         </Container>

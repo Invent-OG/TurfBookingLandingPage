@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { EventRegistrationModal } from "@/components/events/EventRegistrationModal";
+import { useSiteSettings } from "@/hooks/use-site-settings";
 
 interface Event {
   id: string;
@@ -44,6 +45,7 @@ const EventDetailsPage = () => {
   const router = useRouter();
   const [event, setEvent] = useState<Event | null>(null);
   const [loading, setLoading] = useState(true);
+  const { settings } = useSiteSettings();
 
   useEffect(() => {
     if (!id) return;
@@ -116,7 +118,7 @@ const EventDetailsPage = () => {
           </button>
         </div>
 
-        <div className="absolute bottom-0 left-0 w-full p-6 md:p-16 z-10">
+        <div className="absolute bottom-0 left-0 w-full p-6 pb-20 md:p-16 md:pb-24 z-10">
           <div className="max-w-7xl mx-auto space-y-6 animate-in fade-in slide-in-from-bottom-10 duration-700">
             {/* Skewed Badge */}
             <div className="inline-block transform skew-x-[-15deg]">
@@ -273,6 +275,19 @@ const EventDetailsPage = () => {
               <p className="text-[10px] text-center text-gray-500 uppercase tracking-widest font-bold">
                 By registering, you agree to the event rules.
               </p>
+
+              <div className="pt-6 mt-6 border-t border-white/10 text-center">
+                <p className="text-gray-400 text-[10px] font-bold uppercase tracking-widest mb-2">
+                  Need Help?
+                </p>
+                <a
+                  href={`tel:${settings.supportPhone.replace(/\s/g, "")}`}
+                  className="text-turf-neon font-black text-xl hover:text-white transition-colors flex items-center justify-center gap-2"
+                >
+                  <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
+                  {settings.supportPhone}
+                </a>
+              </div>
             </div>
           </div>
         </div>

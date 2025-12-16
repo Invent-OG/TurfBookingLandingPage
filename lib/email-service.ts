@@ -5,6 +5,8 @@ import SportyEventRegistration from "@/components/email/SportyEventRegistration"
 import SportyRefundProcessed from "@/components/email/SportyRefundProcessed";
 import SportyBookingCancellation from "@/components/email/SportyBookingCancellation";
 import SportyContactEmail from "@/components/email/SportyContactEmail";
+import { db } from "@/db/db";
+import { siteSettings } from "@/db/schema";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
@@ -37,6 +39,13 @@ export async function sendEmail({ to, type, data }: EmailPayload) {
   }
 
   try {
+    // Fetch Site Settings
+    const settings = await db.select().from(siteSettings).limit(1);
+    const companyName = settings[0]?.companyName || "KRP Sports Zone";
+    const supportPhone = settings[0]?.supportPhone || "+91 88838 88025";
+    const supportEmail =
+      settings[0]?.supportEmail || "support@krpsportszone.com";
+
     let emailComponent;
     let subject;
 
@@ -75,6 +84,8 @@ export async function sendEmail({ to, type, data }: EmailPayload) {
           teamName: data.teamName,
           amount: data.amount,
           registrationId: data.registrationId,
+          companyName,
+          supportPhone,
         });
         break;
 
@@ -112,7 +123,7 @@ export async function sendEmail({ to, type, data }: EmailPayload) {
     }
 
     const response = await resend.emails.send({
-      from: "KRP Sports Zone <bookings@krpsportszone.com>",
+      from: `${companyName} <bookings@krpsportszone.com>`,
       to: [to],
       subject: subject,
       react: emailComponent,

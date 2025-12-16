@@ -135,6 +135,7 @@ export const siteSettings = pgTable("site_settings", {
   companyName: text("company_name").default("TurfBook").notNull(),
   logoUrl: text("logo_url"),
   supportEmail: text("support_email"),
+  supportPhone: text("support_phone"),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 

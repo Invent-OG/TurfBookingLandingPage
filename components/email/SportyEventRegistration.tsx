@@ -22,6 +22,8 @@ interface SportyEventRegistrationProps {
   teamName?: string;
   amount?: string;
   registrationId: string;
+  companyName?: string;
+  supportPhone?: string;
 }
 
 export const SportyEventRegistration = ({
@@ -31,6 +33,8 @@ export const SportyEventRegistration = ({
   teamName = "Thunderbolts",
   amount = "500",
   registrationId = "EVT-12345",
+  companyName = "KRP Sports Zone",
+  supportPhone = "+91 88838 88025",
 }: SportyEventRegistrationProps) => {
   return (
     <Html>
@@ -47,9 +51,7 @@ export const SportyEventRegistration = ({
               alt="KRP Sports Zone"
               style={{ margin: "0 auto 10px", borderRadius: "8px" }}
             />
-            <Heading style={brand}>
-              KRP<span style={{ color: "#ccff00" }}>SPORTS ZONE</span>
-            </Heading>
+            <Heading style={brand}>{companyName}</Heading>
           </Section>
 
           {/* Hero Status */}
@@ -101,7 +103,10 @@ export const SportyEventRegistration = ({
 
           <Section style={footer}>
             <Text style={footerText}>Bring this email to the venue.</Text>
-            <Text style={footerText}>© 2024 KRP Sports Zone Events.</Text>
+            <Text style={footerText}>Need Help? Call {supportPhone}</Text>
+            <Text style={footerText}>
+              © {new Date().getFullYear()} {companyName}.
+            </Text>
           </Section>
         </Container>
       </Body>

@@ -14,6 +14,7 @@ export async function GET() {
         companyName: "TurfBook",
         logoUrl: null,
         supportEmail: "support@turfbook.com",
+        supportPhone: "+91 88838 88025",
       });
     }
 
@@ -32,6 +33,7 @@ export async function POST(req: Request) {
     const formData = await req.formData();
     const companyName = formData.get("companyName") as string;
     const supportEmail = formData.get("supportEmail") as string;
+    const supportPhone = formData.get("supportPhone") as string;
     const logoFile = formData.get("logo") as File | null;
 
     let logoUrl = undefined;
@@ -71,6 +73,7 @@ export async function POST(req: Request) {
       await db.insert(siteSettings).values({
         companyName: companyName || "TurfBook",
         supportEmail: supportEmail || "support@turfbook.com",
+        supportPhone: supportPhone || "+91 88838 88025",
         logoUrl: logoUrl,
       });
     } else {
@@ -80,6 +83,7 @@ export async function POST(req: Request) {
         .set({
           companyName: companyName || settings[0].companyName,
           supportEmail: supportEmail || settings[0].supportEmail,
+          supportPhone: supportPhone || settings[0].supportPhone,
           // Only update logo if a new one was provided, otherwise keep existing
           ...(logoUrl ? { logoUrl } : {}),
           updatedAt: new Date(),

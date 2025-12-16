@@ -20,6 +20,8 @@ interface SportyPaymentFailureProps {
   bookingId: string;
   amount: string;
   turf: string;
+  companyName?: string;
+  supportPhone?: string;
 }
 
 export const SportyPaymentFailure = ({
@@ -27,6 +29,8 @@ export const SportyPaymentFailure = ({
   bookingId = "BK-FAILED",
   amount = "0",
   turf = "Arena",
+  companyName = "KRP Sports Zone",
+  supportPhone = "+91 88838 88025",
 }: SportyPaymentFailureProps) => {
   return (
     <Html>
@@ -43,9 +47,7 @@ export const SportyPaymentFailure = ({
               alt="KRP Sports Zone"
               style={{ margin: "0 auto 10px", borderRadius: "8px" }}
             />
-            <Heading style={brand}>
-              KRP<span style={{ color: "#ff0033" }}>SPORTS ZONE</span>
-            </Heading>
+            <Heading style={brand}>{companyName}</Heading>
           </Section>
 
           {/* Hero Status */}
@@ -85,9 +87,11 @@ export const SportyPaymentFailure = ({
 
           <Section style={footer}>
             <Text style={footerText}>
-              Need help? Call +91 88838 88025 or reply to this email.
+              Need help? Call {supportPhone} or reply to this email.
             </Text>
-            <Text style={footerText}>© 2024 KRP Sports Zone.</Text>
+            <Text style={footerText}>
+              © {new Date().getFullYear()} {companyName}.
+            </Text>
           </Section>
         </Container>
       </Body>
