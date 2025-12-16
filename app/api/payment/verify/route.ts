@@ -109,22 +109,32 @@ export async function POST(req: Request) {
         const name = updatedBooking.customerName || updatedBooking.userName;
 
         if (email) {
+          console.log(`📌 [VerifyRoute] Triggering email for ${email}`);
           // Send email directly without HTTP fetch overhead/issues
-          await sendEmail({
-            to: email,
-            type: "booking_confirmation",
-            data: {
-              email,
-              name,
-              bookingId: updatedBooking.id,
-              date: updatedBooking.date,
-              time: updatedBooking.startTime,
-              duration: updatedBooking.duration,
-              amount: updatedBooking.totalPrice,
-              turf: updatedBooking.turfName,
-              phone: updatedBooking.customerPhone,
-            },
-          });
+          try {
+            await sendEmail({
+              to: email,
+              type: "booking_confirmation",
+              data: {
+                email,
+                name,
+                bookingId: updatedBooking.id,
+                date: updatedBooking.date,
+                time: updatedBooking.startTime,
+                duration: updatedBooking.duration,
+                amount: updatedBooking.totalPrice,
+                turf: updatedBooking.turfName,
+                phone: updatedBooking.customerPhone,
+              },
+            });
+            console.log(`✅ [VerifyRoute] Email sent successfully to ${email}`);
+          } catch (emailError) {
+            console.error(`❌ [VerifyRoute] Failed to send email:`, emailError);
+          }
+        } else {
+          console.warn(
+            `⚠️ [VerifyRoute] No email found for booking ${bookingId}`
+          );
         }
       }
 

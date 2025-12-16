@@ -7,78 +7,106 @@ export default function Success({ bookingData }: any) {
   const router = useRouter();
 
   return (
-    <div className="w-full relative">
-      <div className="absolute inset-0 bg-gradient-to-r from-turf-neon/20 to-blue-500/20 blur-3xl rounded-full" />
+    <div className="w-full relative px-4">
+      <div className="absolute inset-0 bg-gradient-to-r from-turf-neon/10 to-blue-500/10 blur-3xl rounded-full" />
 
-      <div className="relative bg-black/40 backdrop-blur-xl border border-white/10 rounded-2xl overflow-hidden shadow-2xl">
-        {/* Header */}
-        <div className="bg-green-500/10 p-6 border-b border-green-500/20 text-center">
-          <div className="mx-auto w-16 h-16 bg-green-500/20 rounded-full flex items-center justify-center mb-4 ring-2 ring-green-500/40">
-            <CheckCircle className="w-8 h-8 text-green-400" />
-          </div>
-          <h2 className="text-3xl font-bold text-white mb-2">
-            Booking Confirmed!
-          </h2>
-          <p className="text-gray-400">Get ready for the game! ⚽</p>
-        </div>
+      {/* Sporty Card Container */}
+      <div className="relative transform skew-x-[-6deg]">
+        <div className="relative bg-turf-dark/90 backdrop-blur-xl border border-white/10 p-1 overflow-hidden shadow-[0_0_50px_-10px_rgba(204,255,0,0.15)]">
+          {/* Neon Corner Accents */}
+          <div className="absolute top-0 left-0 w-16 h-16 border-l-4 border-t-4 border-turf-neon z-20"></div>
+          <div className="absolute bottom-0 right-0 w-16 h-16 border-r-4 border-b-4 border-turf-neon z-20"></div>
 
-        {/* Ticket Content */}
-        <div className="p-6 space-y-6">
-          <div className="bg-white/5 rounded-xl p-4 border border-white/10 space-y-4">
-            <div className="flex items-start gap-3">
-              <MapPin className="w-5 h-5 text-turf-neon mt-1" />
-              <div>
-                <p className="text-sm text-gray-400">Arena</p>
-                <span className="text-white font-medium">
-                  {bookingData.turfName}
+          <div className="bg-black/50 p-8 md:p-12 relative overflow-hidden">
+            {/* Background Texture */}
+            <div className="absolute inset-0 bg-[linear-gradient(45deg,rgba(255,255,255,0.03)_1px,transparent_1px)] bg-[size:20px_20px] opacity-30"></div>
+
+            <div className="relative z-10 flex flex-col items-center text-center">
+              {/* Animated Success Icon (Sporty Style) */}
+              <div className="mb-8 relative">
+                <div className="absolute inset-0 bg-turf-neon blur-2xl opacity-20 animate-pulse"></div>
+                <div className="w-24 h-24 bg-black border-2 border-turf-neon flex items-center justify-center relative skew-x-[-10deg] shadow-[0_0_20px_rgba(204,255,0,0.4)]">
+                  <CheckCircle className="w-12 h-12 text-turf-neon skew-x-[10deg]" />
+                </div>
+              </div>
+
+              {/* Heading */}
+              <h2 className="text-4xl md:text-5xl font-black text-white italic uppercase tracking-tighter mb-2 font-heading">
+                Booking{" "}
+                <span className="text-transparent text-stroke-neon">
+                  Confirmed
                 </span>
-              </div>
-            </div>
+              </h2>
+              <p className="text-gray-400 font-medium uppercase tracking-widest text-sm mb-10">
+                Get ready to dominate the field
+              </p>
 
-            <div className="grid grid-cols-2 gap-4">
-              <div className="flex items-start gap-3">
-                <Calendar className="w-5 h-5 text-turf-neon mt-1" />
-                <div>
-                  <p className="text-sm text-gray-400">Date</p>
-                  <p className="font-medium text-white">{bookingData.date}</p>
+              {/* Ticket Details Box */}
+              <div className="w-full bg-white/5 border border-white/10 p-6 md:p-8 space-y-6 relative mb-10">
+                <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 w-4 h-4 bg-black rotate-45 border border-white/10"></div>
+                <div className="absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-1/2 w-4 h-4 bg-black rotate-45 border border-white/10"></div>
+
+                <div className="flex flex-col gap-6">
+                  {/* Arena Info */}
+                  <div className="text-center pb-6 border-b border-white/10 border-dashed">
+                    <p className="text-[10px] text-turf-neon font-black uppercase tracking-widest mb-1">
+                      Arena Secured
+                    </p>
+                    <h3 className="text-2xl font-black text-white italic uppercase font-heading">
+                      {bookingData.turfName}
+                    </h3>
+                  </div>
+
+                  {/* Grid Details */}
+                  <div className="grid grid-cols-2 gap-y-6 gap-x-4">
+                    <div className="text-left">
+                      <p className="text-[10px] text-gray-500 font-bold uppercase tracking-wider mb-1">
+                        Date
+                      </p>
+                      <p className="text-lg font-bold text-white font-mono">
+                        {bookingData.date}
+                      </p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-[10px] text-gray-500 font-bold uppercase tracking-wider mb-1">
+                        Time
+                      </p>
+                      <p className="text-lg font-bold text-white font-mono">
+                        {formatToAMPM(bookingData.startTime)}
+                      </p>
+                    </div>
+                    <div className="text-left">
+                      <p className="text-[10px] text-gray-500 font-bold uppercase tracking-wider mb-1">
+                        Duration
+                      </p>
+                      <p className="text-lg font-bold text-white font-mono">
+                        {bookingData.duration} HR
+                      </p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-[10px] text-gray-500 font-bold uppercase tracking-wider mb-1">
+                        Total Paid
+                      </p>
+                      <p className="text-2xl font-black text-turf-neon italic">
+                        ₹{bookingData.totalPrice}
+                      </p>
+                    </div>
+                  </div>
                 </div>
               </div>
-              <div className="flex items-start gap-3">
-                <Clock className="w-5 h-5 text-turf-neon mt-1" />
-                <div>
-                  <p className="text-sm text-gray-400">Time</p>
-                  <p className="font-medium text-white">
-                    {formatToAMPM(bookingData.startTime)}
-                  </p>
+
+              {/* Action Button */}
+              <Button
+                className="w-full bg-turf-neon text-black font-black text-lg py-6 rounded-none skew-x-[-10deg] hover:bg-white hover:scale-[1.02] transition-all uppercase tracking-widest shadow-[0_0_30px_rgba(204,255,0,0.3)]"
+                onClick={() => router.push("/")}
+              >
+                <div className="skew-x-[10deg] flex items-center gap-2">
+                  <Ticket className="w-5 h-5" />
+                  Return to Base
                 </div>
-              </div>
-            </div>
-
-            <div className="flex items-start gap-3">
-              <Ticket className="w-5 h-5 text-turf-neon mt-1" />
-              <div>
-                <p className="text-sm text-gray-400">Duration</p>
-                <p className="font-medium text-white">
-                  {bookingData.duration} hour(s)
-                </p>
-              </div>
+              </Button>
             </div>
           </div>
-
-          <div className="flex justify-between items-center py-4 border-t border-white/10 border-dashed">
-            <span className="text-gray-400">Total Paid</span>
-            <span className="text-white font-medium">
-              ₹{bookingData.totalPrice}
-            </span>
-          </div>
-
-          <Button
-            variant="default"
-            className="w-full bg-turf-neon hover:bg-turf-neon/80 text-black font-bold py-6 rounded-xl transition-all"
-            onClick={() => router.push("/")}
-          >
-            Go to Dashboard
-          </Button>
         </div>
       </div>
     </div>

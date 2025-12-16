@@ -21,9 +21,17 @@ interface EmailPayload {
 }
 
 export async function sendEmail({ to, type, data }: EmailPayload) {
+  console.log(`📧 [EmailService] Attempting to send '${type}' email to: ${to}`);
+
   if (!process.env.RESEND_API_KEY) {
-    console.error("RESEND_API_KEY is missing");
+    console.error(
+      "❌ [EmailService] RESEND_API_KEY is completely missing from process.env"
+    );
     throw new Error("Missing Email API Key");
+  } else {
+    console.log(
+      `🔑 [EmailService] API Key present (starts with: ${process.env.RESEND_API_KEY.substring(0, 5)}...)`
+    );
   }
 
   try {
@@ -92,15 +100,23 @@ export async function sendEmail({ to, type, data }: EmailPayload) {
         throw new Error("Invalid email type");
     }
 
-    const emailData = await resend.emails.send({
+    const response = await resend.emails.send({
       from: "TurfBook <onboarding@resend.dev>",
       to: [to],
       subject: subject,
       react: emailComponent,
     });
 
-    console.log(`✅ Email sent (${type}) to ${to}`, emailData);
-    return { success: true, data: emailData };
+    if (response.error) {
+      console.error(
+        `❌ [EmailService] Resend API Validation Error:`,
+        response.error
+      );
+      return { success: false, error: response.error };
+    }
+
+    console.log(`✅ Email sent (${type}) to ${to}`, response.data);
+    return { success: true, data: response.data };
   } catch (error) {
     console.error(`❌ Email send error (${type}):`, error);
     return { success: false, error };
