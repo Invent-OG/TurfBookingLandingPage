@@ -11,6 +11,7 @@ import {
   Row,
   Column,
   Hr,
+  Img,
 } from "@react-email/components";
 
 interface SportyRefundProcessedProps {
@@ -34,6 +35,13 @@ export const SportyRefundProcessed = ({
         <Container style={container}>
           {/* Header */}
           <Section style={header}>
+            <Img
+              src="https://krpsportszone.com/logo.png"
+              width="60"
+              height="60"
+              alt="KRP Sports Zone"
+              style={{ margin: "0 auto 10px", borderRadius: "8px" }}
+            />
             <Heading style={brand}>
               KRP<span style={{ color: "#ccff00" }}>SPORTS ZONE</span>
             </Heading>
@@ -68,7 +76,9 @@ export const SportyRefundProcessed = ({
           </Section>
 
           <Section style={footer}>
-            <Text style={footerText}>Questions? Reply to this email.</Text>
+            <Text style={footerText}>
+              Questions? Call +91 88838 88025 or reply to this email.
+            </Text>
             <Text style={footerText}>© 2024 KRP Sports Zone.</Text>
           </Section>
         </Container>

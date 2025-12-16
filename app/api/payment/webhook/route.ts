@@ -83,6 +83,7 @@
 
 import { supabase } from "@/lib/supabase";
 import { NextResponse } from "next/server";
+import { sendEmail } from "@/lib/email-service";
 
 export async function POST(req: Request) {
   try {
@@ -128,15 +129,15 @@ export async function POST(req: Request) {
       }
 
       // ✅ Send confirmation email using internal email route
-      const emailResponse = await fetch(
-        `${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/api/send-email`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            type: "booking_confirmation",
+      // ✅ Send confirmation email using internal email route
+      console.log(
+        `📌 [WebhookRoute] Sending confirmation email for ${orderId}`
+      );
+      try {
+        await sendEmail({
+          to: booking.customerEmail,
+          type: "booking_confirmation",
+          data: {
             email: booking.customerEmail,
             name: booking.customerName,
             turf: booking.turfName,
@@ -146,15 +147,11 @@ export async function POST(req: Request) {
             bookingId: booking.id,
             amount: booking.totalPrice,
             phone: booking.customerPhone,
-          }),
-        }
-      );
-
-      if (!emailResponse.ok) {
-        const err = await emailResponse.json();
-        console.error("📧 Email failed to send:", err);
-      } else {
-        console.log("📧 Booking confirmation email sent!");
+          },
+        });
+        console.log("📧 Booking confirmation email sent successfully!");
+      } catch (emailErr) {
+        console.error("📧 Email failed to send:", emailErr);
       }
 
       console.log(`✅ Booking ${orderId} updated and email sent`);
@@ -187,21 +184,23 @@ export async function POST(req: Request) {
 
       if (booking) {
         // Send Failure Email
-        await fetch(
-          `${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/api/send-email`,
-          {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              type: "payment_failure",
+        // Send Failure Email
+        try {
+          await sendEmail({
+            to: booking.customerEmail,
+            type: "payment_failure",
+            data: {
               email: booking.customerEmail,
               name: booking.customerName,
               bookingId: booking.id,
               amount: booking.totalPrice,
               turf: booking.turfName,
-            }),
-          }
-        ).catch((err) => console.error("Failed to send failure email", err));
+            },
+          });
+          console.log("📧 Payment failure email sent successfully!");
+        } catch (failErr) {
+          console.error("Failed to send failure email", failErr);
+        }
       }
 
       console.log(`🛑 Booking ${orderId} marked as payment_failed`);

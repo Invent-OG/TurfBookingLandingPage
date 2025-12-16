@@ -1,4 +1,5 @@
 import { db } from "@/db/db";
+import { sendEmail } from "@/lib/email-service";
 import { turfs, users, bookings, blockedDates } from "@/db/schema";
 import { eq, and, or, sql, notInArray } from "drizzle-orm";
 
@@ -161,32 +162,34 @@ export async function POST(req: Request) {
 
       // Send Email Background Task
       if (customerEmail) {
-        fetch(
-          `${
-            process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"
-          }/api/send-email`,
-          {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              type: "booking_confirmation",
+        console.log(
+          `📌 [ManualBookingRoute] Triggering email for ${customerEmail}`
+        );
+        try {
+          await sendEmail({
+            to: customerEmail,
+            type: "booking_confirmation",
+            data: {
               email: customerEmail,
               name: customerName,
               bookingId: newBooking.id,
               date: date,
               time: startTime,
               duration: parsedDuration,
-              amount: parsedTotalPrice,
+              amount: String(parsedTotalPrice),
               turf: turf_name,
               phone: customerPhone,
-            }),
-          }
-        ).catch((err) =>
+            },
+          });
+          console.log(
+            `✅ [ManualBookingRoute] Email sent successfully to ${customerEmail}`
+          );
+        } catch (emailError) {
           console.error(
-            "Failed to send manual booking confirmation email:",
-            err
-          )
-        );
+            `❌ [ManualBookingRoute] Failed to send email:`,
+            emailError
+          );
+        }
       }
 
       return new Response(

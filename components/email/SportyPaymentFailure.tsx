@@ -12,6 +12,7 @@ import {
   Column,
   Hr,
   Button,
+  Img,
 } from "@react-email/components";
 
 interface SportyPaymentFailureProps {
@@ -35,6 +36,13 @@ export const SportyPaymentFailure = ({
         <Container style={container}>
           {/* Header */}
           <Section style={header}>
+            <Img
+              src="https://krpsportszone.com/logo.png"
+              width="60"
+              height="60"
+              alt="KRP Sports Zone"
+              style={{ margin: "0 auto 10px", borderRadius: "8px" }}
+            />
             <Heading style={brand}>
               KRP<span style={{ color: "#ff0033" }}>SPORTS ZONE</span>
             </Heading>
@@ -76,7 +84,9 @@ export const SportyPaymentFailure = ({
           </Section>
 
           <Section style={footer}>
-            <Text style={footerText}>Need help? Reply to this email.</Text>
+            <Text style={footerText}>
+              Need help? Call +91 88838 88025 or reply to this email.
+            </Text>
             <Text style={footerText}>© 2024 KRP Sports Zone.</Text>
           </Section>
         </Container>

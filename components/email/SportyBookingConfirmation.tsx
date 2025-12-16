@@ -46,6 +46,13 @@ export const SportyBookingConfirmation = ({
         <Container style={container}>
           {/* Header */}
           <Section style={header}>
+            <Img
+              src="https://krpsportszone.com/logo.png"
+              width="60"
+              height="60"
+              alt="KRP Sports Zone"
+              style={{ margin: "0 auto 10px", borderRadius: "8px" }}
+            />
             <Heading style={brand}>
               KRP<span style={{ color: "#ccff00" }}>SPORTS ZONE</span>
             </Heading>
@@ -81,7 +88,7 @@ export const SportyBookingConfirmation = ({
               <Row>
                 <Column>
                   <Text style={label}>ARENA</Text>
-                  <Text style={value}>{turf.toUpperCase()}</Text>
+                  <Text style={value}>{turf?.toUpperCase()}</Text>
                 </Column>
                 <Column style={{ textAlign: "right" }}>
                   <Text style={label}>DURATION</Text>
@@ -113,7 +120,13 @@ export const SportyBookingConfirmation = ({
             <Text style={contactText}>
               Sent to <span style={{ color: "#fff" }}>{email}</span>
             </Text>
-            <Text style={contactText}>Need Support? Reply to this email.</Text>
+            <Text style={contactText}>
+              Need Support? Call us at{" "}
+              <span style={{ color: "#ccff00", fontWeight: "bold" }}>
+                +91 88838 88025
+              </span>{" "}
+              or reply to this email.
+            </Text>
           </Section>
 
           <Section style={footer}>

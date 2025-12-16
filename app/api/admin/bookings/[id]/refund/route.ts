@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { sendEmail } from "@/lib/email-service";
 import { db } from "@/db/db";
 import { bookings } from "@/db/schema";
 import { eq } from "drizzle-orm";
@@ -90,21 +91,29 @@ export async function POST(
       .where(eq(bookings.id, bookingId));
 
     // 5. Send Refund Email
-    fetch(
-      `${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/api/send-email`,
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          type: "refund_processed",
+    // 5. Send Refund Email
+    console.log(
+      `📌 [RefundRoute] Sending refund email for booking ${bookingId} to ${booking.customerEmail}`
+    );
+    try {
+      await sendEmail({
+        to: booking.customerEmail || "",
+        type: "refund_processed",
+        data: {
           email: booking.customerEmail,
-          name: booking.customerName,
+          name: booking.customerName || "Customer",
           bookingId: booking.id,
-          amount: refundAmount,
+          amount: String(refundAmount),
           date: new Date().toISOString().split("T")[0],
-        }),
-      }
-    ).catch((err) => console.error("Failed to send refund email:", err));
+        },
+      });
+      console.log(`✅ [RefundRoute] Refund email sent successfully.`);
+    } catch (emailError) {
+      console.error(
+        "❌ [RefundRoute] Failed to send refund email:",
+        emailError
+      );
+    }
 
     return NextResponse.json({
       success: true,

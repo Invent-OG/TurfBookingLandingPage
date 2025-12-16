@@ -4,6 +4,7 @@ import SportyPaymentFailure from "@/components/email/SportyPaymentFailure";
 import SportyEventRegistration from "@/components/email/SportyEventRegistration";
 import SportyRefundProcessed from "@/components/email/SportyRefundProcessed";
 import SportyBookingCancellation from "@/components/email/SportyBookingCancellation";
+import SportyContactEmail from "@/components/email/SportyContactEmail";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
@@ -12,7 +13,8 @@ export type EmailType =
   | "payment_failure"
   | "event_registration"
   | "refund_processed"
-  | "booking_cancellation";
+  | "booking_cancellation"
+  | "contact_submission";
 
 interface EmailPayload {
   to: string;
@@ -93,6 +95,15 @@ export async function sendEmail({ to, type, data }: EmailPayload) {
           bookingId: data.bookingId,
           turf: data.turf,
           date: data.date,
+        });
+        break;
+
+      case "contact_submission":
+        subject = `New Inquiry: ${data.name}`;
+        emailComponent = SportyContactEmail({
+          name: data.name,
+          email: data.email,
+          message: data.message,
         });
         break;
 

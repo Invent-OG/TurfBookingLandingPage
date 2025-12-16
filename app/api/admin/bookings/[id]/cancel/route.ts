@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { sendEmail } from "@/lib/email-service";
 import { db } from "@/db/db";
 import { bookings, users } from "@/db/schema";
 import { eq, and, notInArray } from "drizzle-orm";
@@ -66,23 +67,28 @@ export async function POST(
 
     // 4. Send Cancellation Email
     if (updatedBooking.length > 0) {
-      fetch(
-        `${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/api/send-email`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            type: "booking_cancellation",
+      console.log(
+        `📌 [CancelRoute] Sending cancellation email for booking ${id} to ${booking[0].customerEmail || booking[0].userEmail}`
+      );
+      try {
+        await sendEmail({
+          to: booking[0].customerEmail || booking[0].userEmail || "",
+          type: "booking_cancellation",
+          data: {
             email: booking[0].customerEmail || booking[0].userEmail,
             name: booking[0].customerName || booking[0].userName,
             bookingId: booking[0].id,
             turf: booking[0].turfName,
             date: booking[0].date,
-          }),
-        }
-      ).catch((err) =>
-        console.error("Failed to send cancellation email:", err)
-      );
+          },
+        });
+        console.log(`✅ [CancelRoute] Cancellation email sent successfully.`);
+      } catch (emailError) {
+        console.error(
+          "❌ [CancelRoute] Failed to send cancellation email:",
+          emailError
+        );
+      }
     }
 
     return NextResponse.json(

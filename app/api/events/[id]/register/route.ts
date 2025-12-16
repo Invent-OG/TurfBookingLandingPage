@@ -1,4 +1,5 @@
 import { db } from "@/db/db";
+import { sendEmail } from "@/lib/email-service";
 import { events, eventRegistrations, users } from "@/db/schema";
 import { eq, sql, and } from "drizzle-orm";
 
@@ -148,13 +149,15 @@ export async function POST(
 
     // 6. Send Email Notification
     // Ensure eventDate is treated as string. Drizzle 'date' is usually string.
-    fetch(
-      `${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/api/send-email`,
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          type: "event_registration",
+    // 6. Send Email Notification
+    console.log(
+      `📌 [EventRegisterRoute] Sending registration email to ${customerEmail}`
+    );
+    try {
+      await sendEmail({
+        to: customerEmail,
+        type: "event_registration",
+        data: {
           email: customerEmail,
           name: customerName,
           eventName: result.eventTitle,
@@ -162,11 +165,17 @@ export async function POST(
           teamName: teamName,
           amount: result.amount,
           registrationId: result.registration.id,
-        }),
-      }
-    ).catch((err) =>
-      console.error("Failed to send event registration email:", err)
-    );
+        },
+      });
+      console.log(
+        `✅ [EventRegisterRoute] Event registration email sent successfully.`
+      );
+    } catch (emailError) {
+      console.error(
+        "❌ [EventRegisterRoute] Failed to send event registration email:",
+        emailError
+      );
+    }
 
     return new Response(
       JSON.stringify({ success: true, registration: result.registration }),

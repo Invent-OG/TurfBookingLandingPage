@@ -12,6 +12,7 @@ import {
   Column,
   Hr,
   Button,
+  Img,
 } from "@react-email/components";
 
 interface SportyBookingCancellationProps {
@@ -35,6 +36,13 @@ export const SportyBookingCancellation = ({
         <Container style={container}>
           {/* Header */}
           <Section style={header}>
+            <Img
+              src="https://krpsportszone.com/logo.png"
+              width="60"
+              height="60"
+              alt="KRP Sports Zone"
+              style={{ margin: "0 auto 10px", borderRadius: "8px" }}
+            />
             <Heading style={brand}>
               KRP<span style={{ color: "#ccff00" }}>SPORTS ZONE</span>
             </Heading>
@@ -64,7 +72,7 @@ export const SportyBookingCancellation = ({
 
           <Section style={footer}>
             <Text style={footerText}>
-              If you think this is a mistake, reply to this email.
+              Need Support? Call +91 88838 88025 or reply to this email.
             </Text>
             <Text style={footerText}>© 2024 KRP Sports Zone.</Text>
           </Section>

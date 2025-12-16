@@ -55,7 +55,7 @@ export default function Footer() {
 
   const contactInfo = [
     { icon: Mail, text: branding.supportEmail },
-    { icon: Phone, text: "+91 91515 96868" },
+    { icon: Phone, text: "+91 88838 88025" },
     {
       icon: MapPin,
       text: "bypass, opp. to DSR madhanam inn, Malik Nagar, Asur, Kumbakonam, Tamil Nadu, Kumbakonam 612001",
@@ -116,6 +116,7 @@ export default function Footer() {
             {contactInfo.map((info, index) => {
               const Icon = info.icon;
               const isEmail = info.text.includes("@");
+              const isPhone = info.icon === Phone;
 
               return (
                 <div key={index} className="flex items-start space-x-3 group">
@@ -125,6 +126,13 @@ export default function Footer() {
                   {isEmail ? (
                     <a
                       href={`mailto:${info.text}`}
+                      className="text-gray-400 hover:text-white transition-colors pt-1"
+                    >
+                      {info.text}
+                    </a>
+                  ) : isPhone ? (
+                    <a
+                      href={`tel:${info.text.replace(/\s/g, "")}`} // Remove spaces for tel: link
                       className="text-gray-400 hover:text-white transition-colors pt-1"
                     >
                       {info.text}

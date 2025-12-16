@@ -1,8 +1,7 @@
-// app/api/get-in-touch/route.ts
 import { Resend } from "resend";
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import SportyContactEmail from "@/components/email/SportyContactEmail";
+import { sendEmail } from "@/lib/email-service";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
@@ -22,24 +21,18 @@ export async function POST(req: Request) {
     }
 
     const { name, email, message } = parsed.data;
-
     const adminEmail = process.env.ADMIN_EMAIL || "your@email.com";
 
-    // Send to admin using Sporty Template
-    await resend.emails.send({
-      from: "Get in Touch <onboarding@resend.dev>",
-      to: [adminEmail],
-      subject: `New message from ${name}`,
-      react: SportyContactEmail({
-        name,
-        email,
-        message,
-      }),
+    // 1. Send to Admin (via reliable service)
+    await sendEmail({
+      to: adminEmail,
+      type: "contact_submission",
+      data: { name, email, message },
     });
 
-    // Optional: Send sporty confirmation to user
+    // 2. Send Acknowledgment to User (Direct Resend for custom HTML for now)
     await resend.emails.send({
-      from: "Turf Support <onboarding@resend.dev>",
+      from: "KRP Sports Zone <bookings@krpsportszone.com>",
       to: [email],
       subject: "We received your message! ⚽",
       html: `
@@ -48,7 +41,7 @@ export async function POST(req: Request) {
           <p>Hi ${name},</p>
           <p>Thanks for touching base. Our team is warming up and will get back to you shortly.</p>
           <div style="margin-top: 20px; border-top: 1px solid #333; padding-top: 10px;">
-             <p style="color: #666; font-size: 12px;">TURFBOOK SUPPORT</p>
+             <p style="color: #666; font-size: 12px;">KRP SPORTS ZONE SUPPORT</p>
           </div>
         </div>
       `,

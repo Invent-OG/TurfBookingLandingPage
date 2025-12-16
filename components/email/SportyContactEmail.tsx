@@ -10,6 +10,7 @@ import {
   Section,
   Hr,
   Button,
+  Img,
 } from "@react-email/components";
 
 interface SportyContactEmailProps {
@@ -31,6 +32,13 @@ export const SportyContactEmail = ({
         <Container style={container}>
           {/* Header */}
           <Section style={header}>
+            <Img
+              src="https://krpsportszone.com/logo.png"
+              width="60"
+              height="60"
+              alt="KRP Sports Zone"
+              style={{ margin: "0 auto 10px", borderRadius: "8px" }}
+            />
             <Heading style={brand}>
               KRP<span style={{ color: "#ccff00" }}>SPORTS ZONE</span>
             </Heading>
