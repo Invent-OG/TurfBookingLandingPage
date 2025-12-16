@@ -31,7 +31,7 @@ export function AdminHeader() {
         </button>
       </div>
 
-      <div className="flex items-center gap-3">
+      {/* <div className="flex items-center gap-3">
         <button className="p-2 lg:p-2.5 rounded-full text-gray-400 hover:text-white hover:bg-white/10 transition-colors relative">
           <Bell className="w-5 h-5" />
           <span className="absolute top-2 right-2.5 w-2 h-2 bg-turf-neon rounded-full shadow-[0_0_8px_#ccff00]"></span>
@@ -39,7 +39,7 @@ export function AdminHeader() {
         <button className="p-2 lg:p-2.5 rounded-full text-gray-400 hover:text-white hover:bg-white/10 transition-colors">
           <Settings className="w-5 h-5" />
         </button>
-      </div>
+      </div> */}
     </header>
   );
 }

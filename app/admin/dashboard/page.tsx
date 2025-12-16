@@ -113,7 +113,7 @@ export default function Dashboard() {
   return (
     <div className="space-y-8 animate-in fade-in duration-500">
       {/* Page Title */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h1 className="text-3xl font-bold text-white font-heading tracking-wide">
             Dashboard Overview

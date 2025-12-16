@@ -124,7 +124,7 @@ const AdminEventsPage = () => {
 
   return (
     <div className="space-y-8 max-w-7xl mx-auto pb-10">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h1 className="text-3xl font-bold text-white font-heading">
             Event Management
