@@ -47,7 +47,7 @@ export const SportyBookingConfirmation = ({
           {/* Header */}
           <Section style={header}>
             <Heading style={brand}>
-              TURF<span style={{ color: "#ccff00" }}>BOOK</span>
+              KRP<span style={{ color: "#ccff00" }}>SPORTS ZONE</span>
             </Heading>
           </Section>
 
@@ -118,7 +118,7 @@ export const SportyBookingConfirmation = ({
 
           <Section style={footer}>
             <Text style={footerText}>
-              © 2024 TurfBook. All rights reserved.
+              © 2024 KRP Sports Zone. All rights reserved.
             </Text>
           </Section>
         </Container>

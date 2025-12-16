@@ -35,7 +35,7 @@ export const SportyRefundProcessed = ({
           {/* Header */}
           <Section style={header}>
             <Heading style={brand}>
-              TURF<span style={{ color: "#ccff00" }}>BOOK</span>
+              KRP<span style={{ color: "#ccff00" }}>SPORTS ZONE</span>
             </Heading>
           </Section>
 
@@ -69,7 +69,7 @@ export const SportyRefundProcessed = ({
 
           <Section style={footer}>
             <Text style={footerText}>Questions? Reply to this email.</Text>
-            <Text style={footerText}>© 2024 TurfBook.</Text>
+            <Text style={footerText}>© 2024 KRP Sports Zone.</Text>
           </Section>
         </Container>
       </Body>

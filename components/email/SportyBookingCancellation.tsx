@@ -36,7 +36,7 @@ export const SportyBookingCancellation = ({
           {/* Header */}
           <Section style={header}>
             <Heading style={brand}>
-              TURF<span style={{ color: "#ccff00" }}>BOOK</span>
+              KRP<span style={{ color: "#ccff00" }}>SPORTS ZONE</span>
             </Heading>
           </Section>
 
@@ -56,7 +56,7 @@ export const SportyBookingCancellation = ({
             </Text>
 
             <Section style={{ textAlign: "center", marginTop: "30px" }}>
-              <Button style={button} href="https://turfbook.com">
+              <Button style={button} href="https://krpsportszone.com">
                 BOOK A NEW SLOT
               </Button>
             </Section>
@@ -66,7 +66,7 @@ export const SportyBookingCancellation = ({
             <Text style={footerText}>
               If you think this is a mistake, reply to this email.
             </Text>
-            <Text style={footerText}>© 2024 TurfBook.</Text>
+            <Text style={footerText}>© 2024 KRP Sports Zone.</Text>
           </Section>
         </Container>
       </Body>

@@ -40,7 +40,7 @@ export async function sendEmail({ to, type, data }: EmailPayload) {
 
     switch (type) {
       case "booking_confirmation":
-        subject = `Booking Confirmation - ${data.turf || "TurfBook"}`;
+        subject = `Booking Confirmation - ${data.turf || "KRP Sports Zone"}`;
         emailComponent = SportyBookingConfirmation({
           userName: data.name || data.userName,
           bookingId: data.bookingId,
@@ -65,7 +65,7 @@ export async function sendEmail({ to, type, data }: EmailPayload) {
         break;
 
       case "event_registration":
-        subject = `Event Registration: ${data.eventName || "Turf Event"}`;
+        subject = `Event Registration: ${data.eventName || "KRP Sports Zone Event"}`;
         emailComponent = SportyEventRegistration({
           userName: data.name || data.userName,
           eventName: data.eventName,
@@ -77,7 +77,7 @@ export async function sendEmail({ to, type, data }: EmailPayload) {
         break;
 
       case "refund_processed":
-        subject = "Refund Processed - TurfBook";
+        subject = "Refund Processed - KRP Sports Zone";
         emailComponent = SportyRefundProcessed({
           userName: data.name || data.userName,
           bookingId: data.bookingId,
@@ -101,7 +101,7 @@ export async function sendEmail({ to, type, data }: EmailPayload) {
     }
 
     const response = await resend.emails.send({
-      from: "TurfBook <onboarding@resend.dev>",
+      from: "KRP Sports Zone <bookings@krpsportszone.com>",
       to: [to],
       subject: subject,
       react: emailComponent,
@@ -112,7 +112,24 @@ export async function sendEmail({ to, type, data }: EmailPayload) {
         `❌ [EmailService] Resend API Validation Error:`,
         response.error
       );
-      return { success: false, error: response.error };
+
+      // Handle specific Sandbox error
+      if (
+        response.error.name === "validation_error" &&
+        response.error.message.includes(
+          "only send testing emails to your own email address"
+        )
+      ) {
+        return {
+          success: false,
+          error: `SANDBOX LIMITATION: You can only send emails to ${process.env.RESEND_REGISTERED_EMAIL || "your registered email"} until you verify a domain.`,
+        };
+      }
+
+      return {
+        success: false,
+        error: response.error.message || "Failed to send email",
+      };
     }
 
     console.log(`✅ Email sent (${type}) to ${to}`, response.data);

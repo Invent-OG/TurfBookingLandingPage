@@ -40,7 +40,7 @@ export const SportyEventRegistration = ({
           {/* Header */}
           <Section style={header}>
             <Heading style={brand}>
-              TURF<span style={{ color: "#ccff00" }}>BOOK</span>
+              KRP<span style={{ color: "#ccff00" }}>SPORTS ZONE</span>
             </Heading>
           </Section>
 
@@ -93,7 +93,7 @@ export const SportyEventRegistration = ({
 
           <Section style={footer}>
             <Text style={footerText}>Bring this email to the venue.</Text>
-            <Text style={footerText}>© 2024 TurfBook Events.</Text>
+            <Text style={footerText}>© 2024 KRP Sports Zone Events.</Text>
           </Section>
         </Container>
       </Body>

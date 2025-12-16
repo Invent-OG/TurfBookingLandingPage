@@ -36,7 +36,7 @@ export const SportyPaymentFailure = ({
           {/* Header */}
           <Section style={header}>
             <Heading style={brand}>
-              TURF<span style={{ color: "#ff0033" }}>BOOK</span>
+              KRP<span style={{ color: "#ff0033" }}>SPORTS ZONE</span>
             </Heading>
           </Section>
 
@@ -69,7 +69,7 @@ export const SportyPaymentFailure = ({
             </Section>
 
             <Section style={{ textAlign: "center", marginTop: "30px" }}>
-              <Button style={button} href="https://turfbook.com/bookings">
+              <Button style={button} href="https://krpsportszone.com/bookings">
                 RETRY PAYMENT
               </Button>
             </Section>
@@ -77,7 +77,7 @@ export const SportyPaymentFailure = ({
 
           <Section style={footer}>
             <Text style={footerText}>Need help? Reply to this email.</Text>
-            <Text style={footerText}>© 2024 TurfBook.</Text>
+            <Text style={footerText}>© 2024 KRP Sports Zone.</Text>
           </Section>
         </Container>
       </Body>

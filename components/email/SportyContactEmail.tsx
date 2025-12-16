@@ -32,7 +32,7 @@ export const SportyContactEmail = ({
           {/* Header */}
           <Section style={header}>
             <Heading style={brand}>
-              TURF<span style={{ color: "#ccff00" }}>BOOK</span>
+              KRP<span style={{ color: "#ccff00" }}>SPORTS ZONE</span>
             </Heading>
           </Section>
 
@@ -62,7 +62,7 @@ export const SportyContactEmail = ({
           </Section>
 
           <Section style={footer}>
-            <Text style={footerText}>© 2024 TurfBook Admin.</Text>
+            <Text style={footerText}>© 2024 KRP Sports Zone Admin.</Text>
           </Section>
         </Container>
       </Body>

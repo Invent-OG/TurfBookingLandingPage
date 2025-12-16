@@ -17,7 +17,7 @@ export async function POST(req: Request) {
 
     switch (type) {
       case "booking_confirmation":
-        subject = `Booking Confirmation - ${data.turf || "TurfBook"}`;
+        subject = `Booking Confirmation - ${data.turf || "KRP Sports Zone"}`;
         emailComponent = SportyBookingConfirmation({
           userName: data.name || data.userName,
           bookingId: data.bookingId,
@@ -42,7 +42,7 @@ export async function POST(req: Request) {
         break;
 
       case "event_registration":
-        subject = `Event Registration: ${data.eventName || "Turf Event"}`;
+        subject = `Event Registration: ${data.eventName || "KRP Sports Zone Event"}`;
         emailComponent = SportyEventRegistration({
           userName: data.name || data.userName,
           eventName: data.eventName,
@@ -54,7 +54,7 @@ export async function POST(req: Request) {
         break;
 
       case "refund_processed":
-        subject = "Refund Processed - TurfBook";
+        subject = "Refund Processed - KRP Sports Zone";
         emailComponent = SportyRefundProcessed({
           userName: data.name || data.userName,
           bookingId: data.bookingId,
@@ -78,7 +78,7 @@ export async function POST(req: Request) {
     }
 
     const emailData = await resend.emails.send({
-      from: "TurfBook <onboarding@resend.dev>",
+      from: "KRP Sports Zone <bookings@krpsportszone.com>",
       to: [data.email || data.to],
       subject: subject,
       react: emailComponent,
