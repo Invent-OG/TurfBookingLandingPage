@@ -56,7 +56,7 @@ export default function PeakHourEntryManager({
 
   const updateEntry = (index: number, key: string, val: any) => {
     const updated = [...value];
-    updated[index][key as keyof PeakHourEntry] = val;
+    (updated[index] as any)[key] = val;
     onChange(updated);
   };
 
