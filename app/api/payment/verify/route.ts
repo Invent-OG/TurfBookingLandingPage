@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { db } from "@/db/db";
 import { bookings, users } from "@/db/schema";
 import { eq } from "drizzle-orm";
+import { sendEmail } from "@/lib/email-service";
 
 export async function POST(req: Request) {
   try {
@@ -108,29 +109,22 @@ export async function POST(req: Request) {
         const name = updatedBooking.customerName || updatedBooking.userName;
 
         if (email) {
-          fetch(
-            `${
-              process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"
-            }/api/send-email`,
-            {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({
-                type: "booking_confirmation",
-                email,
-                name,
-                bookingId: updatedBooking.id,
-                date: updatedBooking.date,
-                time: updatedBooking.startTime,
-                duration: updatedBooking.duration,
-                amount: updatedBooking.totalPrice,
-                turf: updatedBooking.turfName,
-                phone: updatedBooking.customerPhone,
-              }),
-            }
-          ).catch((err) =>
-            console.error("Failed to send booking confirmation email:", err)
-          );
+          // Send email directly without HTTP fetch overhead/issues
+          await sendEmail({
+            to: email,
+            type: "booking_confirmation",
+            data: {
+              email,
+              name,
+              bookingId: updatedBooking.id,
+              date: updatedBooking.date,
+              time: updatedBooking.startTime,
+              duration: updatedBooking.duration,
+              amount: updatedBooking.totalPrice,
+              turf: updatedBooking.turfName,
+              phone: updatedBooking.customerPhone,
+            },
+          });
         }
       }
 

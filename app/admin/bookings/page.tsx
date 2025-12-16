@@ -8,6 +8,7 @@ import {
   ChevronRight,
   CalendarCheck,
   Search,
+  Mail,
 } from "lucide-react";
 import { toast } from "sonner";
 import { Calendar } from "@/components/ui/calendar";
@@ -107,6 +108,26 @@ export default function Bookings() {
     },
     onError: () => {
       toast.error("Failed to delete bookings.");
+    },
+  });
+
+  // Mutation for Resending Email
+  const resendEmailMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const res = await fetch(`/api/admin/bookings/${id}/resend-email`, {
+        method: "POST",
+      });
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error || "Failed to resend email");
+      }
+      return res.json();
+    },
+    onSuccess: () => {
+      toast.success("Email sent successfully.");
+    },
+    onError: (error: Error) => {
+      toast.error(error.message);
     },
   });
 
@@ -254,6 +275,19 @@ export default function Bookings() {
               className="px-2 py-1 text-xs font-semibold text-red-400 border border-red-500/30 rounded hover:bg-red-500/10 transition-colors"
             >
               Cancel
+            </button>
+          )}
+          {["booked"].includes(item.status) && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                resendEmailMutation.mutate(item.id);
+              }}
+              disabled={resendEmailMutation.isPending}
+              className="p-1 text-gray-400 hover:text-white hover:bg-white/10 rounded transition-colors"
+              title="Resend Confirmation Email"
+            >
+              <Mail className="w-4 h-4" />
             </button>
           )}
         </div>
