@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { format, isBefore, parseISO } from "date-fns";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
-import { ChevronLeft, ChevronRight, HomeIcon } from "lucide-react";
+import { ChevronLeft, ChevronRight, HomeIcon, ArrowLeft } from "lucide-react";
 import DateSelector from "@/components/date-picker";
 import { toast } from "sonner";
 import clsx from "clsx";
@@ -152,26 +152,25 @@ function BookingContent() {
 
   return (
     <main className="min-h-screen bg-turf-dark text-white font-sans selection:bg-turf-neon/30">
-      {/* Header */}
-      <div className="sticky top-0 z-50 overflow-hidden border-b border-white/10 bg-black/50 backdrop-blur-xl">
-        <div className="absolute inset-0 bg-gradient-to-r from-turf-neon/5 via-white/5 to-purple-500/5 opacity-50" />
-        <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between relative z-10">
-          <div
-            className="flex items-center gap-3 cursor-pointer group"
-            onClick={() => router.push("/")}
-            role="button"
-          >
-            <div className="p-2 rounded-full bg-white/5 border border-white/10 group-hover:border-turf-neon/50 transition-colors">
-              <HomeIcon className="w-5 h-5 text-turf-neon" />
-            </div>
-            <span className="font-bold text-xl tracking-tight text-white font-heading italic uppercase">
-              Turf<span className="text-turf-neon">Book</span>
+      {/* Sporty Back Button */}
+      <div className="absolute top-6 left-6 z-50">
+        <button
+          onClick={() => router.back()}
+          className="group relative px-6 py-3 bg-black/80 border border-white/10 overflow-hidden transform skew-x-[-10deg] hover:border-turf-neon transition-all duration-300 shadow-[0_4px_20px_rgba(0,0,0,0.5)]"
+        >
+          {/* Neon Hover Background */}
+          <div className="absolute inset-0 bg-turf-neon/10 translate-y-full group-hover:translate-y-0 transition-transform duration-300"></div>
+
+          <div className="relative flex items-center gap-2 skew-x-[10deg]">
+            <ArrowLeft className="w-5 h-5 text-gray-400 group-hover:text-turf-neon transition-colors" />
+            <span className="font-black text-sm uppercase tracking-widest text-gray-400 group-hover:text-white transition-colors">
+              Back
             </span>
           </div>
-        </div>
+        </button>
       </div>
 
-      <div className="max-w-6xl mx-auto px-4 py-8 flex flex-col gap-12">
+      <div className="max-w-6xl mx-auto px-4 pt-24 pb-8 flex flex-col gap-12">
         {/* Turf Selection */}
         <div className="space-y-6">
           <div className="flex items-center justify-between">
