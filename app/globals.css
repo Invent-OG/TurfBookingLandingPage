@@ -6,8 +6,9 @@
   --foreground-rgb: 0, 0, 0;
   --background-start-rgb: 214, 219, 220;
   --background-end-rgb: 255, 255, 255;
-  --font-sans: 'Inter', sans-serif;
-  --font-heading: 'Outfit', sans-serif; /* Example for "Sport-styled" if loaded */
+  --font-sans: "Inter", sans-serif;
+  --font-heading:
+    "Outfit", sans-serif; /* Example for "Sport-styled" if loaded */
 }
 
 @media (prefers-color-scheme: dark) {
@@ -95,8 +96,9 @@
   * {
     @apply border-border;
   }
-  html, body {
-    @apply bg-turf-dark text-foreground overflow-x-hidden;
+  html,
+  body {
+    @apply bg-transparent text-foreground overflow-x-hidden;
   }
 }
 
@@ -120,7 +122,7 @@
   .glass-panel {
     @apply bg-turf-glass-surface backdrop-blur-xl border border-turf-glass-border shadow-glass;
   }
-  
+
   .glass-sidebar {
     @apply bg-turf-dark/90 backdrop-blur-xl border-r border-turf-glass-border;
   }
@@ -130,17 +132,17 @@
   }
 
   .text-shadow {
-    text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
   }
-  
+
   .text-glow {
     text-shadow: 0 0 10px currentColor;
   }
-  
+
   .scrollbar-hide::-webkit-scrollbar {
     display: none;
   }
-  
+
   .scrollbar-hide {
     -ms-overflow-style: none;
     scrollbar-width: none;

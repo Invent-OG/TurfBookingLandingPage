@@ -35,7 +35,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body className="bg-turf-dark text-white antialiased">
+      <body className="bg-transparent text-white antialiased">
         <Providers>
           {children}
           <ReactQueryDevtools initialIsOpen={false} />
