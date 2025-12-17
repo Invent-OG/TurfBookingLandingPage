@@ -366,46 +366,75 @@ function BookingContent() {
                         />
                       ))
                     ) : availableSlots.length > 0 ? (
-                      availableSlots.map(({ time, isBooked, isBlocked }) => {
-                        const calculatedPrice = calculateSlotPrice({
-                          turf: selectedTurf!,
-                          date: new Date(format(new Date(date), "yyyy-MM-dd")),
-                          startTime: time,
-                          peakHours: peakHours,
-                        });
+                      availableSlots.map(
+                        ({ time, isBooked, isBlocked }, index) => {
+                          const slotPrice = calculateSlotPrice({
+                            turf: selectedTurf!,
+                            date: new Date(
+                              format(new Date(date), "yyyy-MM-dd")
+                            ),
+                            startTime: time,
+                            peakHours: peakHours,
+                          });
 
-                        const isPeak =
-                          calculatedPrice !==
-                          Number(selectedTurf?.pricePerHour ?? 0);
+                          const isPeak =
+                            slotPrice > Number(selectedTurf?.pricePerHour ?? 0);
 
-                        return (
-                          <DurationSelector
-                            key={time}
-                            startTime={time}
-                            onTimeSelect={handleTimeSelect}
-                            isDisabled={isBooked || isBlocked}
-                            minHours={parseInt(
-                              String(selectedTurf?.minHours ?? "0")
-                            )}
-                            maxHours={parseInt(
+                          // Calculate effective max duration based on subsequent slots availability
+                          const calculateMaxDuration = () => {
+                            const globalMax = parseInt(
                               String(selectedTurf?.maxHours ?? "0")
-                            )}
-                            slotClassName={clsx(
-                              "w-full py-2 h-auto min-h-[3.5rem] px-2 text-sm font-bold border transition-all duration-200 uppercase tracking-wide skew-x-[-10deg] rounded-none flex flex-col items-center justify-center gap-0.5",
-                              isBooked
-                                ? "bg-red-900/10 border-red-500/20 text-red-500 cursor-not-allowed opacity-50"
-                                : isBlocked
-                                  ? "bg-gray-800/50 border-white/5 text-gray-600 cursor-not-allowed"
-                                  : startTime === time
-                                    ? "bg-turf-neon text-black border-turf-neon shadow-[0_0_20px_rgba(204,255,0,0.4)] scale-105 z-10"
-                                    : "bg-black/40 border-white/10 text-gray-400 hover:border-turf-neon hover:text-white hover:bg-white/5"
-                            )}
-                            buttonVariant="ghost"
-                            pricePerHour={calculatedPrice}
-                            isPeak={isPeak}
-                          />
-                        );
-                      })
+                            );
+                            let availableCount = 0;
+
+                            // Check consecutive slots starting from current index
+                            for (
+                              let i = index;
+                              i < availableSlots.length &&
+                              i < index + globalMax;
+                              i++
+                            ) {
+                              if (
+                                availableSlots[i].isBooked ||
+                                availableSlots[i].isBlocked
+                              ) {
+                                break;
+                              }
+                              availableCount++;
+                            }
+
+                            // If available count is 0 (current slot blocked), it doesn't matter as button is disabled
+                            // Otherwise return min of available consecutive slots and global max (already clamped by loop condition essentially)
+                            return availableCount > 0 ? availableCount : 1;
+                          };
+
+                          return (
+                            <DurationSelector
+                              key={time}
+                              startTime={time}
+                              onTimeSelect={handleTimeSelect}
+                              isDisabled={isBooked || isBlocked}
+                              minHours={parseInt(
+                                String(selectedTurf?.minHours ?? "0")
+                              )}
+                              maxHours={calculateMaxDuration()}
+                              slotClassName={clsx(
+                                "w-full py-2 h-auto min-h-[3.5rem] px-2 text-sm font-bold border transition-all duration-200 uppercase tracking-wide skew-x-[-10deg] rounded-none flex flex-col items-center justify-center gap-0.5",
+                                isBooked
+                                  ? "bg-red-900/10 border-red-500/20 text-red-500 cursor-not-allowed opacity-50"
+                                  : isBlocked
+                                    ? "bg-gray-800/50 border-white/5 text-gray-600 cursor-not-allowed"
+                                    : startTime === time
+                                      ? "bg-turf-neon text-black border-turf-neon shadow-[0_0_20px_rgba(204,255,0,0.4)] scale-105 z-10"
+                                      : "bg-black/40 border-white/10 text-gray-400 hover:border-turf-neon hover:text-white hover:bg-white/5"
+                              )}
+                              buttonVariant="ghost"
+                              pricePerHour={slotPrice}
+                              isPeak={isPeak}
+                            />
+                          );
+                        }
+                      )
                     ) : (
                       <div className="col-span-full py-16 text-center border-2 border-dashed border-white/10">
                         <div className="w-16 h-16 bg-white/5 mx-auto flex items-center justify-center mb-4">
