@@ -183,6 +183,7 @@ interface DurationSelectorProps {
     | undefined;
   minHours: number;
   maxHours: number;
+  isPeak?: boolean;
 }
 
 export function DurationSelector({
@@ -194,6 +195,7 @@ export function DurationSelector({
   buttonVariant,
   minHours,
   maxHours,
+  isPeak = false,
 }: DurationSelectorProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [duration, setDuration] = useState(1);
@@ -252,9 +254,19 @@ export function DurationSelector({
         disabled={isDisabled}
         variant={buttonVariant}
       >
-        <span className="skew-x-[10deg] inline-block">
-          {formatSlotTime(startTime)}
-        </span>
+        <div className="flex flex-col items-center justify-center skew-x-[10deg]">
+          <span>{formatSlotTime(startTime)}</span>
+          {isPeak && !isDisabled && (
+            <div className="flex flex-col items-center mt-1 leading-none">
+              <span className="text-[9px] text-turf-neon/70 font-bold uppercase tracking-widest mb-0.5">
+                Peak Price
+              </span>
+              <span className="text-xs text-turf-neon font-black">
+                ₹{pricePerHour}
+              </span>
+            </div>
+          )}
+        </div>
       </Button>
 
       <Drawer open={isOpen} onOpenChange={setIsOpen}>

@@ -1,4 +1,4 @@
-import { isWeekend, format } from "date-fns";
+import { isWeekend, format, getDay } from "date-fns";
 import { Turf } from "@/types/turf";
 import { PeakHour } from "@/hooks/use-peak-hours";
 
@@ -13,6 +13,40 @@ interface CalculatePriceArgs {
 //   return start <= check && check < end;
 // }
 
+const timeInRange = (start: string, end: string, check: string) => {
+  return (
+    start.slice(0, 5) <= check.slice(0, 5) &&
+    check.slice(0, 5) < end.slice(0, 5)
+  );
+};
+
+export function isPeakSlot(
+  date: Date,
+  startTime: string,
+  peakHours: PeakHour[]
+): PeakHour | undefined {
+  const formattedDate = format(date, "yyyy-MM-dd");
+  const dayIndex = getDay(date).toString(); // 0 = Sunday, 1 = Monday, etc.
+
+  return peakHours.find((entry) => {
+    if (entry.type === "date") {
+      return (
+        entry.specificDate === formattedDate &&
+        timeInRange(entry.startTime, entry.endTime, startTime)
+      );
+    }
+
+    if (entry.type === "day") {
+      return (
+        entry.daysOfWeek?.includes(dayIndex) &&
+        timeInRange(entry.startTime, entry.endTime, startTime)
+      );
+    }
+
+    return false;
+  });
+}
+
 export function calculateSlotPrice({
   turf,
   date,
@@ -25,31 +59,9 @@ export function calculateSlotPrice({
   }
 
   const isWeekendDay = isWeekend(date);
-  const formattedDate = format(date, "yyyy-MM-dd");
-  const dayOfWeek = format(date, "EEEE"); // e.g., "Monday"
-
-  const timeInRange = (start: string, end: string, check: string) => {
-    return start <= check && check < end;
-  };
 
   // Check if there's a matching peak hour
-  const peakEntry = peakHours.find((entry) => {
-    if (entry.type === "date") {
-      return (
-        entry.specificDate === formattedDate &&
-        timeInRange(entry.startTime, entry.endTime, startTime)
-      );
-    }
-
-    if (entry.type === "day") {
-      return (
-        entry.daysOfWeek?.includes(dayOfWeek) &&
-        timeInRange(entry.startTime, entry.endTime, startTime)
-      );
-    }
-
-    return false;
-  });
+  const peakEntry = isPeakSlot(date, startTime, peakHours);
 
   if (peakEntry) {
     return Number(peakEntry.price);
