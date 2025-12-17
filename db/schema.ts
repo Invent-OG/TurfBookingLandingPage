@@ -153,6 +153,16 @@ export const siteSettings = pgTable("site_settings", {
   logoUrl: text("logo_url"),
   supportEmail: text("support_email"),
   supportPhone: text("support_phone"),
+  promoPopupImage: text("promo_popup_image"),
+  isPromoPopupActive: boolean("is_promo_popup_active").default(false),
+
+  // Enhanced Promo Fields
+  promoTitle: text("promo_title"),
+  promoDescription: text("promo_description"),
+  promoButtonText: text("promo_button_text"),
+  promoButtonLink: text("promo_button_link"),
+  isPromoButtonActive: boolean("is_promo_button_active").default(false),
+
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 

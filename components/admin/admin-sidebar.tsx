@@ -16,6 +16,7 @@ import {
   Users,
   Image as ImageIcon,
   Trophy,
+  Megaphone,
 } from "lucide-react";
 import { useRouter, usePathname } from "next/navigation";
 import { useState, useEffect } from "react";
@@ -94,6 +95,17 @@ const sections: SidebarSection[] = [
           { title: "Block Date Range", url: "/admin/blocked-dates/date-range" },
           { title: "Block Time", url: "/admin/blocked-dates/block-time" },
         ],
+      },
+    ],
+  },
+
+  {
+    title: "Marketing",
+    items: [
+      {
+        title: "Promotional Offer",
+        url: "/admin/offers",
+        icon: Megaphone,
       },
     ],
   },

@@ -40,16 +40,35 @@ export async function generateMetadata(): Promise<Metadata> {
   }
 }
 
-export default function RootLayout({
+import OfferPopup from "@/components/OfferPopup";
+
+export default async function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  let settings;
+  try {
+    const res = await db.select().from(siteSettings).limit(1);
+    settings = res[0];
+  } catch (error) {
+    console.warn("Failed to fetch settings for layout:", error);
+  }
+
   return (
     <html lang="en" suppressHydrationWarning>
       <body className="bg-transparent text-white antialiased">
         <Providers>
           {children}
+          <OfferPopup
+            imageUrl={settings?.promoPopupImage}
+            isActive={settings?.isPromoPopupActive || false}
+            title={settings?.promoTitle}
+            description={settings?.promoDescription}
+            buttonText={settings?.promoButtonText}
+            buttonLink={settings?.promoButtonLink}
+            isButtonActive={settings?.isPromoButtonActive || false}
+          />
           <ReactQueryDevtools initialIsOpen={false} />
           <Toaster />
         </Providers>

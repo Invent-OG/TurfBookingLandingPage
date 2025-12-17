@@ -79,6 +79,7 @@ export default function SettingsPage() {
       formData.append("companyName", companyName);
       formData.append("supportEmail", supportEmail);
       formData.append("supportPhone", supportPhone);
+
       if (selectedFile) {
         let uploadFile = selectedFile;
         // Compress if image
@@ -104,8 +105,10 @@ export default function SettingsPage() {
       if (res.ok) {
         const updated = await res.json();
         setLogoUrl(updated.logoUrl);
+
         setPreviewUrl(null);
         setSelectedFile(null);
+
         alert("Branding settings updated!");
         window.location.reload();
       } else {
