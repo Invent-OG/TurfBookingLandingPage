@@ -27,8 +27,8 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Booking not found" }, { status: 404 });
     }
 
-    if (booking.status === "booked") {
-      return NextResponse.json({ status: "booked" });
+    if (booking.status === "confirmed") {
+      return NextResponse.json({ status: "confirmed" });
     }
 
     // 2. If not booked, check Cashfree
@@ -70,15 +70,15 @@ export async function POST(req: Request) {
 
     const paymentStatus = data.order_status; // "PAID", "ACTIVE", "EXPIRED"
 
-    if (paymentStatus === "PAID") {
+    if (paymentStatus === "PAID" || paymentStatus === "SUCCESS") {
       console.log(`✅ Payment Verified for ${bookingId}. Updating DB...`);
 
-      // Update status to 'booked'
+      // Update status to 'confirmed'
       // Fetch fresh booking details with user info for email
       const result = await db.transaction(async (trx) => {
         await trx
           .update(bookings)
-          .set({ status: "booked" })
+          .set({ status: "confirmed" }) // Updated to new enum
           .where(eq(bookings.id, bookingId));
 
         return await trx
@@ -138,7 +138,19 @@ export async function POST(req: Request) {
         }
       }
 
-      return NextResponse.json({ status: "booked" });
+      return NextResponse.json({ status: "confirmed" });
+    } else if (
+      paymentStatus === "FAILED" ||
+      paymentStatus === "USER_DROPPED" ||
+      paymentStatus === "EXPIRED"
+    ) {
+      // Payment failed or expired
+      await db
+        .update(bookings)
+        .set({ status: "expired" })
+        .where(eq(bookings.id, bookingId));
+
+      return NextResponse.json({ status: "expired" });
     } else {
       return NextResponse.json({
         status: "pending",

@@ -126,13 +126,15 @@ export async function POST(req: Request) {
         }
       }
 
-      // ✅ Calculate End Time with dynamic slotInterval
-      const totalMinutes = duration * slotInterval!;
-      const endTimeSQL = sql`(${startTime}::time + make_interval(mins => ${totalMinutes}))`;
+      // ✅ Calculate End Time in JS first (needed for blocked ranges check)
+      const endTimeStr = addMinutes(startTime, duration * slotInterval!);
+      // Calculate End Time SQL for conflict query
+      // const endTimeSQL = ... (we can use endTimeStr string casting to time now)
 
       // ✅ Check if booking exceeds turf closing time
+      // using endTimeStr
       const exceedsClosingTime = await trx.execute(
-        sql`SELECT ${endTimeSQL} > ${closingTime} AS exceeds`
+        sql`SELECT ${endTimeStr}::time > ${closingTime} AS exceeds`
       );
       const [{ exceeds }] = exceedsClosingTime as unknown as {
         exceeds: boolean;
@@ -145,7 +147,7 @@ export async function POST(req: Request) {
         );
       }
 
-      // ✅ Check for Blocked Dates/Times
+      // ✅ Check for Blocked Dates/Times/Ranges
       const blockedEntries = await trx
         .select()
         .from(blockedDates)
@@ -154,25 +156,48 @@ export async function POST(req: Request) {
         );
 
       for (const entry of blockedEntries) {
-        // Full day block
-        if (!entry.blockedTimes || entry.blockedTimes.length === 0) {
+        // Full day block (if no specific times/ranges defined)
+        if (
+          (!entry.blockedTimes || entry.blockedTimes.length === 0) &&
+          (!entry.blockedRanges || (entry.blockedRanges as any[]).length === 0)
+        ) {
           throw new Error("Selected date is fully blocked.");
         }
 
-        // Slot block check
-        if (entry.blockedTimes.includes(startTime)) {
+        // Slot block check (Legacy)
+        if (entry.blockedTimes && entry.blockedTimes.includes(startTime)) {
           throw new Error("Selected time slot is blocked.");
         }
 
-        // Check for any blocked slot within the booking duration
-        // Assuming slots are standard 60 mins for simplicity or using blockedTimes set
-        // A more rigorous check would verify if ANY minute of the booking overlaps,
-        // but checking start times is a reasonable approximation for fixed slots.
-        // For safety, let's check generated slots for the duration
-        // NOTE: This assumes standard slots. If partial blocked times exist, this logic holds.
+        // Range block check
+        if (entry.blockedRanges) {
+          const ranges = entry.blockedRanges as {
+            start: string;
+            end: string;
+          }[];
+          const startMinutes = timeToMinutes(startTime);
+          const endMinutes = timeToMinutes(endTimeStr);
+
+          for (const r of ranges) {
+            const rStart = timeToMinutes(r.start);
+            const rEnd = timeToMinutes(r.end);
+            // Overlap check
+            if (startMinutes < rEnd && endMinutes > rStart) {
+              throw new Error(
+                "Selected time slot overlaps with a blocked range."
+              );
+            }
+          }
+        }
       }
 
-      // ✅ Check for overlapping bookings using slotInterval
+      // ✅ Check for overlapping bookings
+      // Logic: Overlap if (StartA < EndB) and (EndA > StartB)
+      // Status Check:
+      // - Confirmed: ALWAYS blocks.
+      // - Blocked: ALWAYS blocks.
+      // - Pending: Blocks ONLY if lockedUntil > NOW().
+
       const conflictingBooking = await trx
         .select()
         .from(bookings)
@@ -180,15 +205,23 @@ export async function POST(req: Request) {
           and(
             eq(bookings.turfId, turfId),
             eq(bookings.date, date),
-            notInArray(bookings.status, ["cancelled", "rejected", "refunded"]),
+            // Exclude explicitly cancelled/expired
+            notInArray(bookings.status, ["cancelled", "expired"]),
+            // Time Overlap
             or(
               and(
-                sql`${startTime} >= ${bookings.startTime}`,
-                sql`${startTime} < (${bookings.startTime} + make_interval(mins => ${slotInterval} * ${bookings.duration}))`
-              ),
+                sql`${bookings.startTime} < ${endTimeStr}::time`,
+                sql`${bookings.endTime} > ${startTime}::time`
+              )
+            ),
+            // Status/Lock Validity Check
+            or(
+              // If confirmed/blocked, it's a conflict
+              notInArray(bookings.status, ["pending"]),
+              // If pending, it's a conflict ONLY if still locked
               and(
-                sql`${bookings.startTime} >= ${startTime}`,
-                sql`${bookings.startTime} < ${endTimeSQL}`
+                eq(bookings.status, "pending"),
+                sql`${bookings.lockedUntil} > NOW()`
               )
             )
           )
@@ -196,10 +229,10 @@ export async function POST(req: Request) {
 
       if (conflictingBooking.length > 0) {
         console.error("Time slot conflict:", conflictingBooking);
-        throw new Error("Selected time slot is already booked");
+        throw new Error("Selected time slot is already booked or locked");
       }
 
-      // ✅ Insert New Booking
+      // ✅ Insert New Booking with Lock
       const [newBooking] = await trx
         .insert(bookings)
         .values({
@@ -208,14 +241,17 @@ export async function POST(req: Request) {
           turfName,
           date,
           startTime,
+          endTime: endTimeStr, // Explicitly save endTime
           duration,
           totalPrice,
+          priceBreakup: body.priceBreakup || null, // Persist breakup
           paymentMethod,
           customerName,
           customerPhone,
           customerEmail,
           createdBy: finalUserId,
           status: "pending",
+          lockedUntil: new Date(Date.now() + 10 * 60 * 1000), // Lock for 10 mins
         })
         .returning({ id: bookings.id });
 
@@ -243,4 +279,19 @@ function hashCode(str: string): number {
     hash |= 0;
   }
   return hash;
+}
+
+// ✅ Helper to add minutes to a time string "HH:mm:ss"
+function addMinutes(time: string, minutes: number): string {
+  const [h, m] = time.split(":").map(Number);
+  const totalMinutes = h * 60 + m + minutes;
+  const newH = Math.floor(totalMinutes / 60) % 24;
+  const newM = totalMinutes % 60;
+  return `${String(newH).padStart(2, "0")}:${String(newM).padStart(2, "0")}:00`;
+}
+
+// ✅ Helper to convert time string to minutes
+function timeToMinutes(time: string): number {
+  const [h, m] = time.split(":").map(Number);
+  return h * 60 + m;
 }

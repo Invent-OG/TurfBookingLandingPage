@@ -184,8 +184,22 @@ export async function POST(
         headers: { "Content-Type": "application/json" },
       }
     );
-  } catch (error) {
+  } catch (error: any) {
     console.error("Error registering for event:", error);
+
+    // Handle duplicate registration error specifically
+    if (
+      error.message === "User already registered for this event" ||
+      error.code === "23505"
+    ) {
+      return new Response(
+        JSON.stringify({ error: "User already registered for this event" }),
+        {
+          status: 409,
+        }
+      );
+    }
+
     return new Response(
       JSON.stringify({
         error: error instanceof Error ? error.message : "Internal Server Error",

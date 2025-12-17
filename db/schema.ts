@@ -91,28 +91,34 @@ export const bookings = pgTable(
     turfName: text("turf_name").notNull(), // Store turf name
     date: date("date").notNull(),
     startTime: time("start_time").notNull(),
+    endTime: time("end_time").default("00:00").notNull(), // Added endTime
     duration: integer("duration").notNull(),
     totalPrice: numeric("total_price").notNull(),
-    status: text("status").default("booked").notNull(),
-    paymentMethod: text("payment_method").notNull(), // Required for tracking payment type
-    customerName: text("customer_name"), // Optional (for walk-in customers)
-    customerPhone: text("customer_phone"), // Store customer’s phone
-    customerEmail: text("customer_email"), // Store customer’s email
-    createdBy: uuid("created_by")
-      .notNull()
-      .references(() => users.id, { onDelete: "set null" }), // Tracks the admin making manual bookings
+
+    // Updated Status Enum
+    status: text("status", {
+      enum: ["pending", "confirmed", "cancelled", "expired", "blocked"],
+    })
+      .default("confirmed")
+      .notNull(),
+
+    paymentMethod: text("payment_method").notNull(),
+    customerName: text("customer_name"),
+    customerPhone: text("customer_phone"),
+    customerEmail: text("customer_email"),
+
+    lockedUntil: timestamp("locked_until"), // For slot locking
+    priceBreakup: jsonb("price_breakup"), // Store pricing details
+
+    createdBy: uuid("created_by").references(() => users.id, {
+      onDelete: "set null",
+    }), // Nullable + Set Null
+
     createdAt: timestamp("created_at").defaultNow(),
-  },
-  (table) => {
-    return {
-      uniqueTurfBooking: unique("unique_turf_booking").on(
-        table.turfId,
-        table.date,
-        table.startTime
-      ),
-    };
   }
+  // Removed uniqueTurfBooking constraint to allow flexible concurrent slots (overlap handled by logic)
 );
+
 export const blockedDates = pgTable(
   "blocked_dates",
   {
@@ -122,11 +128,12 @@ export const blockedDates = pgTable(
       .references(() => turfs.id, { onDelete: "cascade" }),
     startDate: date("start_date").notNull(),
     endDate: date("end_date"),
-    blockedTimes: time("blocked_times").array(), // ✅ Now using time[] correctly
+    blockedTimes: time("blocked_times").array(), // Deprecated in favor of ranges
+    blockedRanges:
+      jsonb("blocked_ranges").$type<{ start: string; end: string }[]>(), // New Range Support
     reason: varchar("reason", { length: 255 }),
     createdAt: timestamp("created_at").defaultNow(),
   },
-  // ✅ Add Unique Constraint for ON CONFLICT usage
   (t) => ({
     uniqueTurfDate: unique().on(t.turfId, t.startDate),
   })
@@ -151,11 +158,11 @@ export const galleryImages = pgTable("gallery_images", {
 export const events = pgTable("events", {
   id: uuid("id").defaultRandom().primaryKey(),
   title: text("title").notNull(),
-  description: text("description"), // Rich text
+  description: text("description"),
   turfId: uuid("turf_id")
     .references(() => turfs.id, { onDelete: "cascade" })
     .notNull(),
-  eventType: text("event_type").notNull(), // Tournament, League, etc.
+  eventType: text("event_type").notNull(),
   startDate: date("start_date").notNull(),
   endDate: date("end_date").notNull(),
   startTime: time("start_time").notNull(),
@@ -167,7 +174,7 @@ export const events = pgTable("events", {
   currentParticipants: integer("current_participants").default(0).notNull(),
   price: numeric("price").notNull(),
   prizeDetails: text("prize_details"),
-  rules: text("rules"), // Rich text
+  rules: text("rules"),
   bannerImage: text("banner_image"),
   status: text("status", {
     enum: ["upcoming", "active", "completed", "cancelled"],
@@ -176,27 +183,33 @@ export const events = pgTable("events", {
     .notNull(),
   createdBy: uuid("created_by").references(() => users.id, {
     onDelete: "set null",
-  }), // Admin who created it
+  }),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
 // Event Registrations Table
-export const eventRegistrations = pgTable("event_registrations", {
-  id: uuid("id").defaultRandom().primaryKey(),
-  eventId: uuid("event_id")
-    .references(() => events.id, { onDelete: "cascade" })
-    .notNull(),
-  userId: uuid("user_id")
-    .references(() => users.id, { onDelete: "cascade" })
-    .notNull(),
-  teamName: text("team_name"), // Nullable if individual
-  members: jsonb("members"), // JSON array for team members details
-  paymentStatus: text("payment_status", {
-    enum: ["pending", "paid", "failed", "refunded"],
+export const eventRegistrations = pgTable(
+  "event_registrations",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    eventId: uuid("event_id")
+      .references(() => events.id, { onDelete: "cascade" })
+      .notNull(),
+    userId: uuid("user_id")
+      .references(() => users.id, { onDelete: "cascade" })
+      .notNull(),
+    teamName: text("team_name"),
+    members: jsonb("members"),
+    paymentStatus: text("payment_status", {
+      enum: ["pending", "paid", "failed", "refunded"],
+    })
+      .default("pending")
+      .notNull(),
+    customerPhone: text("customer_phone"),
+    registeredAt: timestamp("registered_at").defaultNow(),
+  },
+  (t) => ({
+    uniqueEventUser: unique("unique_event_user").on(t.eventId, t.userId), // Added Unique Constraint
   })
-    .default("pending")
-    .notNull(),
-  customerPhone: text("customer_phone"), // Added contact phone
-  registeredAt: timestamp("registered_at").defaultNow(),
-});
+);

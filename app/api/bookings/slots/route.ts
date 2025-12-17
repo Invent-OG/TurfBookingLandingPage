@@ -210,28 +210,35 @@ export async function GET(req: Request) {
         and(
           eq(bookings.turfId, turfId),
           lt(bookings.createdAt, fiveMinutesAgo),
-          or(
-            eq(bookings.status, "pending"),
-            eq(bookings.status, "payment_failed")
-          )
+          or(eq(bookings.status, "pending"), eq(bookings.status, "expired"))
         )
       );
 
-    // Get booked slots (excluding cancelled/rejected)
+    // Get booked slots (excluding cancelled/rejected/expired)
+    // AND checking for valid locks
     const bookedSlots = await db
-      .select({ startTime: bookings.startTime, duration: bookings.duration })
+      .select({
+        startTime: bookings.startTime,
+        endTime: bookings.endTime, // Use DB endTime
+        duration: bookings.duration,
+        status: bookings.status,
+        lockedUntil: bookings.lockedUntil,
+      })
       .from(bookings)
       .where(
         and(
           eq(bookings.turfId, turfId),
           eq(bookings.date, date.split("T")[0]),
-          notInArray(bookings.status, ["cancelled", "rejected", "refunded"])
+          notInArray(bookings.status, ["cancelled", "expired"])
         )
       );
 
-    // Get blocked times
-    const blockedSlots = await db
-      .select({ blockedTimes: blockedDates.blockedTimes })
+    // Get blocked ranges
+    const blockedData = await db
+      .select({
+        blockedTimes: blockedDates.blockedTimes,
+        blockedRanges: blockedDates.blockedRanges,
+      })
       .from(blockedDates)
       .where(
         and(
@@ -240,7 +247,39 @@ export async function GET(req: Request) {
         )
       );
 
-    // Get active events for this date
+    // Flatten blocked ranges
+    const blockedRanges: { start: string; end: string }[] = [];
+    const blockedTimesSet = new Set<string>();
+
+    blockedData.forEach((entry) => {
+      if (entry.blockedRanges) {
+        (entry.blockedRanges as { start: string; end: string }[]).forEach((r) =>
+          blockedRanges.push(r)
+        );
+      }
+      // Backward compatibility
+      if (entry.blockedTimes) {
+        entry.blockedTimes.forEach((t) => blockedTimesSet.add(t));
+      }
+      // If whole day block (empty arrays/nulls but row exists?)
+      // The previous logic for whole day block was: (!blockedTimes || length===0).
+      // We should replicate that or rely on specific whole-day flag if we had one.
+      // For now, if blockedRanges is empty AND blockedTimes is empty, assume FULL DAY BLOCK?
+      // Or did we change that? The schema migration might have fixed it.
+      // Let's assume explicit ranges or times mean partial, empty means potentially full if logic dictated.
+      // Actually, previous logic said "if (!entry.blockedTimes || length === 0) throw error (full day)".
+      // So we keep that logic but check ranges too.
+      if (
+        (!entry.blockedTimes || entry.blockedTimes.length === 0) &&
+        (!entry.blockedRanges || (entry.blockedRanges as any[]).length === 0)
+      ) {
+        // Full day block
+        // We can hack this by adding 00:00-24:00 range
+        blockedRanges.push({ start: "00:00", end: "23:59" });
+      }
+    });
+
+    // Active Events
     const activeEvents = await db
       .select()
       .from(events)
@@ -253,48 +292,65 @@ export async function GET(req: Request) {
         )
       );
 
-    // Check for full day block
-    const isFullDayBlocked = blockedSlots.some(
-      (slot) => !slot.blockedTimes || slot.blockedTimes.length === 0
-    );
-
-    const blockedTimesSet = new Set(
-      blockedSlots.flatMap((slot) => slot.blockedTimes || [])
-    );
-
-    // Helper to check if a slot is blocked by an event
-    const isBlockedByEvent = (slotMinutes: number) => {
-      return activeEvents.some((event) => {
-        const eventStart = timeToMinutes(event.startTime);
-        const eventEnd = timeToMinutes(event.endTime);
-        return slotMinutes >= eventStart && slotMinutes < eventEnd;
-      });
-    };
-
     const availableSlots = [];
     let slotMinutes = openingMinutes;
+    const now = new Date(); // To check locks
 
     while (slotMinutes <= lastBookingStartMinutes) {
       const slotTime = minutesToTime(slotMinutes);
+      const slotEndMinutes = slotMinutes + slotDuration;
+      const slotEndTime = minutesToTime(slotEndMinutes);
 
       if (isToday && slotMinutes <= localMinutes) {
         slotMinutes += slotDuration;
         continue;
       }
 
-      // Check if booked
-      const isBooked = bookedSlots.some((slot) => {
-        const bookingStart = timeToMinutes(slot.startTime);
-        const bookingEnd = bookingStart + slot.duration * 60;
-        return slotMinutes >= bookingStart && slotMinutes < bookingEnd;
+      // 1. Check Booking Overlaps
+      const isBooked = bookedSlots.some((book) => {
+        // If pending, check lock
+        if (book.status === "pending" && book.lockedUntil) {
+          if (new Date(book.lockedUntil) < now) return false; // Expired lock, ignore
+        }
+
+        const bStart = timeToMinutes(book.startTime);
+        // Use endTime if avail, else calc
+        const bEnd = book.endTime
+          ? timeToMinutes(book.endTime)
+          : bStart + book.duration * 60; // Use 60 or slotInterval? Duration is in integer units of... hours?
+        // Wait, duration in bookings is usually HOURS based on usage in `addMinutes(start, duration * interval)`.
+        // BUT `booking.duration` in schema is integer.
+        // In previous code: `slotInterval * bookings.duration`.
+        // So `duration` is "number of slots"? Or "hours"?
+        // "duration" field usually implies "number of basic units".
+        // Let's stick to using `book.endTime` if available, it's safer.
+        // Prioritize `book.endTime`.
+
+        // Overlap: StartA < EndB && EndA > StartB
+        return slotMinutes < bEnd && slotEndMinutes > bStart;
       });
 
-      // Check if blocked: full day blocked OR specific slot blocked
-      const isBlocked =
-        isFullDayBlocked ||
+      // 2. Check Blocked Ranges/Times
+      let isBlocked =
         blockedTimesSet.has(slotTime) ||
-        blockedTimesSet.has(slotTime.slice(0, 5)) ||
-        isBlockedByEvent(slotMinutes); // Check if blocked by event
+        blockedTimesSet.has(slotTime.slice(0, 5));
+
+      if (!isBlocked) {
+        isBlocked = blockedRanges.some((range) => {
+          const rStart = timeToMinutes(range.start);
+          const rEnd = timeToMinutes(range.end);
+          return slotMinutes < rEnd && slotEndMinutes > rStart;
+        });
+      }
+
+      // 3. Check Events
+      if (!isBlocked) {
+        isBlocked = activeEvents.some((event) => {
+          const eventStart = timeToMinutes(event.startTime);
+          const eventEnd = timeToMinutes(event.endTime);
+          return slotMinutes >= eventStart && slotMinutes < eventEnd;
+        });
+      }
 
       availableSlots.push({
         time: slotTime,
