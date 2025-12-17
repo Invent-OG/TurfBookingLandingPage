@@ -42,7 +42,7 @@ export async function POST(req: Request) {
     console.log("🔙 Return URL:", RETURN_URL);
     console.log("📩 Notification URL:", NOTIFICATION_URL);
 
-    const response = await fetch("https://sandbox.cashfree.com/pg/orders", {
+    const response = await fetch(BASE_URL, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
