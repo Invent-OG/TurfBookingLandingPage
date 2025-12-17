@@ -400,7 +400,7 @@ export default function CustomersPage() {
                         {booking.turfName}
                       </h4>
                       <Badge
-                        className={`${booking.status === "booked" ? "bg-green-500/20 text-green-400" : "bg-yellow-500/20 text-yellow-400"} border-0`}
+                        className={`${booking.status === "confirmed" ? "bg-green-500/20 text-green-400" : "bg-yellow-500/20 text-yellow-400"} border-0`}
                       >
                         {booking.status}
                       </Badge>

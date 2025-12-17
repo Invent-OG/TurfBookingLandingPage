@@ -102,7 +102,7 @@ export async function POST(req: Request) {
       // ✅ Update booking status to "booked"
       const { error: updateError } = await supabase
         .from("bookings")
-        .update({ status: "booked" })
+        .update({ status: "confirmed" })
         .eq("id", orderId);
 
       if (updateError) {
@@ -164,7 +164,7 @@ export async function POST(req: Request) {
     ) {
       const { error: failError } = await supabase
         .from("bookings")
-        .update({ status: "payment_failed" })
+        .update({ status: "expired" })
         .eq("id", orderId);
 
       if (failError) {

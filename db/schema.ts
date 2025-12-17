@@ -97,7 +97,15 @@ export const bookings = pgTable(
 
     // Updated Status Enum
     status: text("status", {
-      enum: ["pending", "confirmed", "cancelled", "expired", "blocked"],
+      enum: [
+        "pending",
+        "confirmed",
+        "cancelled",
+        "expired",
+        "blocked",
+        "refunded",
+        "rejected",
+      ],
     })
       .default("confirmed")
       .notNull(),

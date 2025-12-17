@@ -28,7 +28,7 @@ function EventPaymentStatusContent() {
           body: JSON.stringify({ registrationId }),
         });
         const data = await res.json();
-        if (data.status === "paid") {
+        if (data.status === "confirmed" || data.status === "paid") {
           setStatus("success");
         } else {
           setStatus("failure");

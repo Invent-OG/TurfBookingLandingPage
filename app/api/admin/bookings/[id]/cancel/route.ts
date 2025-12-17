@@ -51,7 +51,7 @@ export async function POST(
       );
     }
 
-    if (!["booked", "pending"].includes(currentStatus)) {
+    if (!["confirmed", "pending"].includes(currentStatus)) {
       return NextResponse.json(
         { error: `Cannot cancel booking with status: ${currentStatus}` },
         { status: 400 }

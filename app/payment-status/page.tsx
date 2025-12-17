@@ -7,30 +7,7 @@ import Failure from "./components/Failure";
 import { useQueryClient } from "@tanstack/react-query";
 import { useBooking, useVerifyPayment } from "@/hooks/use-bookings";
 
-// BookingData type is now inferred from useBooking/Booking type, or we can use the hook's return type directly.
-// The component expects specific fields. Booking type from schema usually matches.
-// "turf_name" in schema is `turfName`.
-// The API returns Drizzle object (schema keys).
-// booking.turfName matches `turfName` in schema.
-// BUT this component used snake_case `turf_name` for internal type `BookingData`.
-// We should update component to use camelCase where possible or map it.
-// schema: `turfName`.
-// The previous code explicitly selected `turf_name`.
-// My API `api/bookings/[id]/route` returns `select().from(bookings)`.
-// `bookings` schema has `turfName: text("turf_name")`.
-// Drizzle returns `turfName`.
-// So I should update component to use `turfName`.
-
-type BookingData = {
-  id: string;
-  turfName: string | null;
-  date: string;
-  startTime: string;
-  duration: number;
-  totalPrice: string; // numeric from PG is usually string
-  status: string;
-};
-
+// Refactored Component
 function BookingStatusContent({ bookingId }: { bookingId: string | null }) {
   const queryClient = useQueryClient();
   const { data: booking, isLoading, isError } = useBooking(bookingId);
@@ -39,7 +16,8 @@ function BookingStatusContent({ bookingId }: { bookingId: string | null }) {
 
   useEffect(() => {
     if (booking) {
-      if (booking.status === "booked") {
+      // Cast to string to avoid "no overlap" error if types are slightly mismatched
+      if ((booking.status as string) === "confirmed") {
         setHasAttemptedVerify(true);
         return;
       }
@@ -48,14 +26,16 @@ function BookingStatusContent({ bookingId }: { bookingId: string | null }) {
         !hasAttemptedVerify &&
         bookingId &&
         !verifyPayment.isPending &&
-        booking.status !== "booked"
+        (booking.status as string) !== "confirmed" &&
+        booking.status !== "expired" &&
+        booking.status !== "cancelled"
       ) {
         verifyPayment.mutate(bookingId, {
           onSuccess: (data: any) => {
-            if (data.status === "booked") {
+            if (data.status === "confirmed") {
               queryClient.setQueryData(["booking", bookingId], (old: any) => ({
                 ...old,
-                status: "booked",
+                status: "confirmed",
               }));
             }
             queryClient.invalidateQueries({ queryKey: ["booking", bookingId] });
@@ -65,9 +45,14 @@ function BookingStatusContent({ bookingId }: { bookingId: string | null }) {
             setHasAttemptedVerify(true);
           },
         });
+      } else if (
+        !hasAttemptedVerify &&
+        (booking.status === "expired" || booking.status === "cancelled")
+      ) {
+        setHasAttemptedVerify(true);
       }
     }
-  }, [booking, bookingId]);
+  }, [booking, bookingId, hasAttemptedVerify, verifyPayment, queryClient]);
 
   if (isLoading) {
     return (
@@ -87,8 +72,8 @@ function BookingStatusContent({ bookingId }: { bookingId: string | null }) {
     );
   }
 
-  // Show Success if booked
-  if (booking.status === "booked") {
+  // Show Success if confirmed
+  if ((booking.status as string) === "confirmed") {
     return (
       <div className="min-h-screen bg-turf-dark flex items-center justify-center p-4 relative overflow-hidden">
         <div className="absolute inset-0 bg-[url('/noise.png')] opacity-5 pointer-events-none" />
@@ -114,7 +99,7 @@ function BookingStatusContent({ bookingId }: { bookingId: string | null }) {
     );
   }
 
-  // Show Failure if verified and still not booked
+  // Show Failure if verified and still not confirmed
   return (
     <div className="min-h-screen bg-turf-dark flex items-center justify-center p-4 relative overflow-hidden">
       <div className="absolute inset-0 bg-[url('/noise.png')] opacity-5 pointer-events-none" />

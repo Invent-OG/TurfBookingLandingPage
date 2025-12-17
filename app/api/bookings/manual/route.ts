@@ -16,7 +16,7 @@ export async function POST(req: Request) {
       startTime,
       duration,
       totalPrice,
-      status = "booked",
+      status = "confirmed",
       paymentMethod,
       customerName,
       customerPhone,

@@ -245,7 +245,7 @@ export default function Bookings() {
       header: "Actions",
       accessor: (item: any) => (
         <div className="flex justify-end gap-2">
-          {["booked", "pending"].includes(item.status) && (
+          {["confirmed", "pending"].includes(item.status) && (
             <button
               onClick={(e) => {
                 e.stopPropagation();
