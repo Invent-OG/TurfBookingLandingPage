@@ -54,8 +54,16 @@ export async function GET(req: Request) {
       : slotInterval || 60;
 
     // Convert opening and closing times
+    // Convert opening and closing times
     const openingMinutes = timeToMinutes(openingTime);
-    const closingMinutes = timeToMinutes(closingTime);
+    let closingMinutes = timeToMinutes(closingTime);
+
+    // If closing time is 23:59, treat it as 24:00 (1440 minutes) for calculation purposes
+    // This allows a slot like 23:00-00:00 to be generated if the duration is 60 mins.
+    if (closingMinutes === 23 * 60 + 59) {
+      closingMinutes = 24 * 60;
+    }
+
     const lastBookingStartMinutes = closingMinutes - slotDuration;
 
     const today = new Date().toISOString().split("T")[0];

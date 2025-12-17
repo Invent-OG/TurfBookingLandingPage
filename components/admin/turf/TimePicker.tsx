@@ -176,7 +176,11 @@ const generateTimeSlots = (start: string, interval: number): string[] => {
     current = addMinutes(current, interval);
   }
 
-  return Array.from(slots);
+  // Explicitly add 11:59 PM if it's not the start time (to avoid dupes if start is 23:59 somehow)
+  // and if it makes sense as a closing time option.
+  slots.add("23:59:00");
+
+  return Array.from(slots).sort();
 };
 
 export function TimePicker({

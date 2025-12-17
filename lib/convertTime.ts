@@ -40,5 +40,8 @@ export const generateTimeSlots = (interval: number = 30) => {
     times.push({ value, label });
   }
 
+  // Explicitly add 11:59 PM
+  times.push({ value: "23:59", label: "11:59 PM" });
+
   return times;
 };
