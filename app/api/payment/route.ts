@@ -78,7 +78,10 @@ export async function POST(req: Request) {
       );
     }
 
-    return NextResponse.json({ paymentSessionId: data.payment_session_id });
+    return NextResponse.json({
+      paymentSessionId: data.payment_session_id,
+      environment: ENV_MODE === "LIVE" ? "production" : "sandbox",
+    });
   } catch (error) {
     console.error("❌ Server Error:", error);
     return NextResponse.json(

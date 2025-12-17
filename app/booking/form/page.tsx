@@ -167,7 +167,9 @@ function BookingFormContent() {
       if (!data.paymentSessionId)
         throw new Error("❌ Invalid payment session ID");
 
-      const cashfree = new window.Cashfree({ mode: "sandbox" }); // or "sandbox" ,production
+      const cashfree = new window.Cashfree({
+        mode: data.environment || "sandbox",
+      });
 
       cashfree.checkout({
         paymentSessionId: data.paymentSessionId,
