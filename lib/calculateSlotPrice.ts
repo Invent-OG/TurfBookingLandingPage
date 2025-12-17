@@ -47,6 +47,12 @@ export function isPeakSlot(
   });
 }
 
+interface PricingRule {
+  startTime: string;
+  endTime: string;
+  price: number;
+}
+
 export function calculateSlotPrice({
   turf,
   date,
@@ -58,45 +64,33 @@ export function calculateSlotPrice({
     return 0;
   }
 
-  const isWeekendDay = isWeekend(date);
-
-  // Check if there's a matching peak hour
+  // 1. Check Specific Peak Hour Overrides (Highest Priority)
   const peakEntry = isPeakSlot(date, startTime, peakHours);
-
   if (peakEntry) {
     return Number(peakEntry.price);
   }
 
-  // Weekend pricing
+  const isWeekendDay = isWeekend(date);
+
+  // 2. Check Dynamic Pricing Rules
+  let rules: PricingRule[] | undefined | null = [];
+
   if (isWeekendDay && turf.isWeekendPricingEnabled) {
-    if (
-      timeInRange(
-        turf.weekendMorningStart || "06:00", // Default fallback if null
-        turf.weekendEveningStart || "18:00",
-        startTime
-      )
-    ) {
-      return Number(turf.weekendMorningPrice ?? turf.pricePerHour);
-    } else {
-      return Number(turf.weekendEveningPrice ?? turf.pricePerHour);
+    rules = turf.weekendRules as PricingRule[] | undefined | null;
+  } else if (!isWeekendDay && turf.isWeekdayPricingEnabled) {
+    rules = turf.weekdayRules as PricingRule[] | undefined | null;
+  }
+
+  if (rules && Array.isArray(rules)) {
+    const match = rules.find((rule) =>
+      timeInRange(rule.startTime, rule.endTime, startTime)
+    );
+    if (match) {
+      return Number(match.price);
     }
   }
 
-  // Weekday pricing
-  if (!isWeekendDay && turf.isWeekdayPricingEnabled) {
-    if (
-      timeInRange(
-        turf.weekdayMorningStart || "06:00",
-        turf.weekdayEveningStart || "18:00",
-        startTime
-      )
-    ) {
-      return Number(turf.weekdayMorningPrice ?? turf.pricePerHour);
-    } else {
-      return Number(turf.weekdayEveningPrice ?? turf.pricePerHour);
-    }
-  }
-
-  // Fallback default price
+  // 3. Base Price
+  // If no rules match and no peak override, return base price.
   return Number(turf.pricePerHour);
 }

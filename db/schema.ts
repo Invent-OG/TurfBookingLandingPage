@@ -38,16 +38,18 @@ export const turfs = pgTable("turfs", {
   minHours: integer("min_hours").notNull(),
 
   isWeekdayPricingEnabled: boolean("is_weekday_pricing_enabled").default(false), // Enable/disable weekday pricing
-  weekdayMorningStart: time("weekday_morning_start").default("06:01"), // Morning start time
-  weekdayEveningStart: time("weekday_evening_start").default("18:00"), // Evening start time
-  weekdayMorningPrice: numeric("weekday_morning_price"), // Morning price
-  weekdayEveningPrice: numeric("weekday_evening_price"), // Evening price
 
   isWeekendPricingEnabled: boolean("is_weekend_pricing_enabled").default(false), // Enable/disable weekend pricing
-  weekendMorningStart: time("weekend_morning_start").default("06:01"), // Morning start time
-  weekendEveningStart: time("weekend_evening_start").default("18:00"), // Evening start time
-  weekendMorningPrice: numeric("weekend_morning_price"), // Morning price
-  weekendEveningPrice: numeric("weekend_evening_price"), // Evening price
+
+  // New Flexible Pricing Rules
+  weekdayRules:
+    jsonb("weekday_rules").$type<
+      { startTime: string; endTime: string; price: number }[]
+    >(),
+  weekendRules:
+    jsonb("weekend_rules").$type<
+      { startTime: string; endTime: string; price: number }[]
+    >(),
 
   slotInterval: integer("slot_interval").default(60), // Default slot interval is 60 minutes
 

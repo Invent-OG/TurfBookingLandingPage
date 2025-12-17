@@ -1,4 +1,6 @@
 "use client";
+
+import { PricingRulesList } from "@/components/admin/turf/PricingRulesList";
 import { TimePicker } from "@/components/admin/turf/TimePicker";
 import { GlassCard } from "@/components/ui/glass-card";
 import { NeonButton } from "@/components/ui/neon-button";
@@ -191,11 +193,9 @@ const EditTurf = () => {
         imageUrl: imageUrl,
         pricePerHour: String(newTurf.pricePerHour || "0"),
 
-        // Sanitize optional time fields
-        weekdayMorningStart: newTurf.weekdayMorningStart || undefined,
-        weekdayEveningStart: newTurf.weekdayEveningStart || undefined,
-        weekendMorningStart: newTurf.weekendMorningStart || undefined,
-        weekendEveningStart: newTurf.weekendEveningStart || undefined,
+        // Pass the new rules (default empty array to avoid null)
+        weekdayRules: newTurf.weekdayRules || [],
+        weekendRules: newTurf.weekendRules || [],
       };
 
       // Strip immutable fields
@@ -222,16 +222,6 @@ const EditTurf = () => {
       return timeStr.split(" ")[1];
     }
     return timeStr;
-  };
-
-  const formatTo12Hour = (timeStr: string | undefined) => {
-    if (!timeStr) return undefined;
-    const [hours, minutes] = timeStr.split(":");
-    if (!hours || !minutes) return timeStr; // Fallback
-    const h = parseInt(hours, 10);
-    const ampm = h >= 12 ? "PM" : "AM";
-    const h12 = h % 12 || 12;
-    return `${h12}:${minutes} ${ampm}`;
   };
 
   return (
@@ -509,7 +499,7 @@ const EditTurf = () => {
         <GlassCard
           title={
             <div className="flex items-center justify-between w-full">
-              <span>Weekday Pricing</span>
+              <span>Weekday Pricing Rule (Flexible)</span>
               <div className="flex items-center gap-3">
                 <Label
                   htmlFor="enable_weekday"
@@ -518,7 +508,7 @@ const EditTurf = () => {
                   Enable Dynamic Pricing
                 </Label>
                 <PremiumToggle
-                  // id="enable_weekday" - PremiumToggle doesn't expose ID but it's fine for now, label handles click
+                  // id="enable_weekday"
                   checked={newTurf.isWeekdayPricingEnabled || false}
                   onChange={(checked) =>
                     setNewTurf((prev) =>
@@ -534,128 +524,19 @@ const EditTurf = () => {
           className="overflow-visible"
         >
           {newTurf.isWeekdayPricingEnabled && (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 animate-in fade-in slide-in-from-top-2">
-              <div className="space-y-4 p-4 rounded-xl bg-white/5 border border-white/5">
-                <h4 className="text-sm font-bold text-gray-300 uppercase tracking-wider">
-                  Morning Slots
-                </h4>
-                <div className="space-y-3">
-                  <div>
-                    <Label className={labelClasses}>Start Time</Label>
-                    <Select
-                      value={
-                        newTurf.weekdayMorningStart?.slice(0, 5) || undefined
-                      }
-                      onValueChange={(val) =>
-                        setNewTurf((prev) =>
-                          prev ? { ...prev, weekdayMorningStart: val } : null
-                        )
-                      }
-                    >
-                      <SelectTrigger className={inputClasses}>
-                        <div className="flex items-center gap-2 flex-1 text-left">
-                          <span className="text-white flex-1">
-                            {formatTo12Hour(
-                              newTurf.weekdayMorningStart?.slice(0, 5)
-                            ) || "Select Time"}
-                          </span>
-                        </div>
-                      </SelectTrigger>
-                      <SelectContent className="bg-black border border-white/10 text-white max-h-60 z-[9999] overflow-y-auto">
-                        {siteConfig.morningTimes.map((t) => (
-                          <SelectItem
-                            key={t}
-                            value={t}
-                            className="text-white hover:bg-turf-neon hover:text-turf-dark focus:bg-turf-neon focus:text-turf-dark cursor-pointer pl-8"
-                          >
-                            {t}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div>
-                    <Label className={labelClasses}>Price</Label>
-                    <NumberInput
-                      value={Number(newTurf.weekdayMorningPrice) || 0}
-                      onChange={(val) =>
-                        setNewTurf((prev) =>
-                          prev
-                            ? {
-                                ...prev,
-                                weekdayMorningPrice: String(val),
-                              }
-                            : null
-                        )
-                      }
-                      min={0}
-                      step={100}
-                      className={inputClasses}
-                    />
-                  </div>
-                </div>
-              </div>
-
-              <div className="space-y-4 p-4 rounded-xl bg-white/5 border border-white/5">
-                <h4 className="text-sm font-bold text-gray-300 uppercase tracking-wider">
-                  Evening Slots
-                </h4>
-                <div className="space-y-3">
-                  <div>
-                    <Label className={labelClasses}>Start Time</Label>
-                    <Select
-                      value={
-                        newTurf.weekdayEveningStart?.slice(0, 5) || undefined
-                      }
-                      onValueChange={(val) =>
-                        setNewTurf((prev) =>
-                          prev ? { ...prev, weekdayEveningStart: val } : null
-                        )
-                      }
-                    >
-                      <SelectTrigger className={inputClasses}>
-                        <div className="flex items-center gap-2 flex-1 text-left">
-                          <span className="text-white flex-1">
-                            {formatTo12Hour(
-                              newTurf.weekdayEveningStart?.slice(0, 5)
-                            ) || "Select Time"}
-                          </span>
-                        </div>
-                      </SelectTrigger>
-                      <SelectContent className="bg-black border border-white/10 text-white max-h-60 z-[9999] overflow-y-auto">
-                        {siteConfig.eveningTimes.map((t) => (
-                          <SelectItem
-                            key={t}
-                            value={t}
-                            className="text-white hover:bg-turf-neon hover:text-turf-dark focus:bg-turf-neon focus:text-turf-dark cursor-pointer pl-8"
-                          >
-                            {t}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div>
-                    <Label className={labelClasses}>Price</Label>
-                    <NumberInput
-                      value={Number(newTurf.weekdayEveningPrice) || 0}
-                      onChange={(val) =>
-                        setNewTurf((prev) =>
-                          prev
-                            ? {
-                                ...prev,
-                                weekdayEveningPrice: String(val),
-                              }
-                            : null
-                        )
-                      }
-                      min={0}
-                      step={100}
-                      className={inputClasses}
-                    />
-                  </div>
-                </div>
-              </div>
+            <div className="animate-in fade-in slide-in-from-top-2">
+              <PricingRulesList
+                label="Weekday Time Ranges"
+                rules={newTurf.weekdayRules || []}
+                onChange={(rules) =>
+                  setNewTurf((prev) =>
+                    prev ? { ...prev, weekdayRules: rules } : null
+                  )
+                }
+                minTime={getTimeString(newTurf.openingTime) || "06:00:00"}
+                maxTime={getTimeString(newTurf.closingTime) || "23:00:00"}
+                interval={newTurf.slotInterval || 60}
+              />
             </div>
           )}
         </GlassCard>
@@ -663,7 +544,7 @@ const EditTurf = () => {
         <GlassCard
           title={
             <div className="flex items-center justify-between w-full">
-              <span>Weekend Pricing</span>
+              <span>Weekend Pricing Rule (Flexible)</span>
               <div className="flex items-center gap-3">
                 <Label
                   htmlFor="enable_weekend"
@@ -688,128 +569,19 @@ const EditTurf = () => {
           className="overflow-visible"
         >
           {newTurf.isWeekendPricingEnabled && (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 animate-in fade-in slide-in-from-top-2">
-              <div className="space-y-4 p-4 rounded-xl bg-white/5 border border-white/5">
-                <h4 className="text-sm font-bold text-gray-300 uppercase tracking-wider">
-                  Morning Slots
-                </h4>
-                <div className="space-y-3">
-                  <div>
-                    <Label className={labelClasses}>Start Time</Label>
-                    <Select
-                      value={
-                        newTurf.weekendMorningStart?.slice(0, 5) || undefined
-                      }
-                      onValueChange={(val) =>
-                        setNewTurf((prev) =>
-                          prev ? { ...prev, weekendMorningStart: val } : null
-                        )
-                      }
-                    >
-                      <SelectTrigger className={inputClasses}>
-                        <div className="flex items-center gap-2 flex-1 text-left">
-                          <span className="text-white flex-1">
-                            {formatTo12Hour(
-                              newTurf.weekendMorningStart?.slice(0, 5)
-                            ) || "Select Time"}
-                          </span>
-                        </div>
-                      </SelectTrigger>
-                      <SelectContent className="bg-black border border-white/10 text-white max-h-60 z-[9999] overflow-y-auto">
-                        {siteConfig.morningTimes.map((t) => (
-                          <SelectItem
-                            key={t}
-                            value={t}
-                            className="text-white hover:bg-turf-neon hover:text-turf-dark focus:bg-turf-neon focus:text-turf-dark cursor-pointer pl-8"
-                          >
-                            {t}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div>
-                    <Label className={labelClasses}>Price</Label>
-                    <NumberInput
-                      value={Number(newTurf.weekendMorningPrice) || 0}
-                      onChange={(val) =>
-                        setNewTurf((prev) =>
-                          prev
-                            ? {
-                                ...prev,
-                                weekendMorningPrice: String(val),
-                              }
-                            : null
-                        )
-                      }
-                      min={0}
-                      step={100}
-                      className={inputClasses}
-                    />
-                  </div>
-                </div>
-              </div>
-
-              <div className="space-y-4 p-4 rounded-xl bg-white/5 border border-white/5">
-                <h4 className="text-sm font-bold text-gray-300 uppercase tracking-wider">
-                  Evening Slots
-                </h4>
-                <div className="space-y-3">
-                  <div>
-                    <Label className={labelClasses}>Start Time</Label>
-                    <Select
-                      value={
-                        newTurf.weekendEveningStart?.slice(0, 5) || undefined
-                      }
-                      onValueChange={(val) =>
-                        setNewTurf((prev) =>
-                          prev ? { ...prev, weekendEveningStart: val } : null
-                        )
-                      }
-                    >
-                      <SelectTrigger className={inputClasses}>
-                        <div className="flex items-center gap-2 flex-1 text-left">
-                          <span className="text-white flex-1">
-                            {formatTo12Hour(
-                              newTurf.weekendEveningStart?.slice(0, 5)
-                            ) || "Select Time"}
-                          </span>
-                        </div>
-                      </SelectTrigger>
-                      <SelectContent className="bg-black border border-white/10 text-white max-h-60 z-[9999] overflow-y-auto">
-                        {siteConfig.eveningTimes.map((t) => (
-                          <SelectItem
-                            key={t}
-                            value={t}
-                            className="text-white hover:bg-turf-neon hover:text-turf-dark focus:bg-turf-neon focus:text-turf-dark cursor-pointer pl-8"
-                          >
-                            {t}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div>
-                    <Label className={labelClasses}>Price</Label>
-                    <NumberInput
-                      value={Number(newTurf.weekendEveningPrice) || 0}
-                      onChange={(val) =>
-                        setNewTurf((prev) =>
-                          prev
-                            ? {
-                                ...prev,
-                                weekendEveningPrice: String(val),
-                              }
-                            : null
-                        )
-                      }
-                      className={inputClasses}
-                      min={0}
-                      step={100}
-                    />
-                  </div>
-                </div>
-              </div>
+            <div className="animate-in fade-in slide-in-from-top-2">
+              <PricingRulesList
+                label="Weekend Time Ranges"
+                rules={newTurf.weekendRules || []}
+                onChange={(rules) =>
+                  setNewTurf((prev) =>
+                    prev ? { ...prev, weekendRules: rules } : null
+                  )
+                }
+                minTime={getTimeString(newTurf.openingTime) || "06:00:00"}
+                maxTime={getTimeString(newTurf.closingTime) || "23:00:00"}
+                interval={newTurf.slotInterval || 60}
+              />
             </div>
           )}
         </GlassCard>
