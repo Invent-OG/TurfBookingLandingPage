@@ -370,15 +370,14 @@ function BookingContent() {
                         ({ time, isBooked, isBlocked }, index) => {
                           const slotPrice = calculateSlotPrice({
                             turf: selectedTurf!,
-                            date: new Date(
-                              format(new Date(date), "yyyy-MM-dd")
-                            ),
+                            date: parseISO(date),
                             startTime: time,
                             peakHours: peakHours,
                           });
 
                           const isPeak =
-                            slotPrice > Number(selectedTurf?.pricePerHour ?? 0);
+                            slotPrice !==
+                            Number(selectedTurf?.pricePerHour ?? 0);
 
                           // Calculate effective max duration based on subsequent slots availability
                           const calculateMaxDuration = () => {
