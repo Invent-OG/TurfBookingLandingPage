@@ -177,6 +177,12 @@ export default function TapedFooter() {
                 >
                   Terms of Service
                 </Link>
+                <Link
+                  className="hover:text-white transition-colors"
+                  href="/admin/login"
+                >
+                  Admin Login
+                </Link>
               </nav>
             </div>
           </div>
