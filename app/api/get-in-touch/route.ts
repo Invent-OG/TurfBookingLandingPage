@@ -3,6 +3,9 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { sendEmail } from "@/lib/email-service";
 
+import { db } from "@/db/db";
+import { siteSettings } from "@/db/schema";
+
 const resend = new Resend(process.env.RESEND_API_KEY);
 
 const schema = z.object({
@@ -21,7 +24,11 @@ export async function POST(req: Request) {
     }
 
     const { name, email, message } = parsed.data;
-    const adminEmail = process.env.ADMIN_EMAIL || "your@email.com";
+
+    // Fetch Admin Email from Site Settings
+    const settings = await db.select().from(siteSettings).limit(1);
+    const adminEmail =
+      settings[0]?.supportEmail || process.env.ADMIN_EMAIL || "your@email.com";
 
     // 1. Send to Admin (via reliable service)
     await sendEmail({
