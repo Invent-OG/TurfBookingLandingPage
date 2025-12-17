@@ -205,8 +205,13 @@ export async function POST(req: Request) {
           and(
             eq(bookings.turfId, turfId),
             eq(bookings.date, date),
-            // Exclude explicitly cancelled/expired
-            notInArray(bookings.status, ["cancelled", "expired"]),
+            // Exclude explicitly cancelled/expired/refunded/rejected
+            notInArray(bookings.status, [
+              "cancelled",
+              "expired",
+              "refunded",
+              "rejected",
+            ]),
             // Time Overlap
             or(
               and(

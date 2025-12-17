@@ -96,7 +96,12 @@ export async function GET(req: Request) {
         and(
           eq(bookings.turfId, turfId),
           eq(bookings.date, date.split("T")[0]),
-          notInArray(bookings.status, ["cancelled", "expired"])
+          notInArray(bookings.status, [
+            "cancelled",
+            "expired",
+            "refunded",
+            "rejected",
+          ])
         )
       );
 
