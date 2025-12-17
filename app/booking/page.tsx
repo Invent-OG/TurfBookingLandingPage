@@ -367,11 +367,17 @@ function BookingContent() {
                       ))
                     ) : availableSlots.length > 0 ? (
                       availableSlots.map(({ time, isBooked, isBlocked }) => {
-                        const isPeak = !!isPeakSlot(
-                          new Date(format(new Date(date), "yyyy-MM-dd")),
-                          time,
-                          peakHours
-                        );
+                        const calculatedPrice = calculateSlotPrice({
+                          turf: selectedTurf!,
+                          date: new Date(format(new Date(date), "yyyy-MM-dd")),
+                          startTime: time,
+                          peakHours: peakHours,
+                        });
+
+                        const isPeak =
+                          calculatedPrice !==
+                          Number(selectedTurf?.pricePerHour ?? 0);
+
                         return (
                           <DurationSelector
                             key={time}
@@ -395,14 +401,7 @@ function BookingContent() {
                                     : "bg-black/40 border-white/10 text-gray-400 hover:border-turf-neon hover:text-white hover:bg-white/5"
                             )}
                             buttonVariant="ghost"
-                            pricePerHour={calculateSlotPrice({
-                              turf: selectedTurf!,
-                              date: new Date(
-                                format(new Date(date), "yyyy-MM-dd")
-                              ),
-                              startTime: time,
-                              peakHours: peakHours,
-                            })}
+                            pricePerHour={calculatedPrice}
                             isPeak={isPeak}
                           />
                         );
