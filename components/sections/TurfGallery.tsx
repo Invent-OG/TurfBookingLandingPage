@@ -47,21 +47,8 @@ export default function TurfImageGallery() {
           }
         );
 
-        gsap.fromTo(
-          galleryRef.current?.children || [],
-          { y: 100, opacity: 0 },
-          {
-            y: 0,
-            opacity: 1,
-            duration: 0.8,
-            stagger: 0.1,
-            ease: "power3.out",
-            scrollTrigger: {
-              trigger: galleryRef.current,
-              start: "top 85%",
-            },
-          }
-        );
+        // GSAP animation for gallery items removed as per request
+        // The items will now appear instantly without fade-in
       }, containerRef);
       return () => ctx.revert();
     }
