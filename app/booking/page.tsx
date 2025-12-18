@@ -407,6 +407,26 @@ function BookingContent() {
                             return availableCount > 0 ? availableCount : 1;
                           };
 
+                          const calculateTotalForDuration = (
+                            duration: number
+                          ) => {
+                            let total = 0;
+                            for (let i = 0; i < duration; i++) {
+                              const slotIndex = index + i;
+                              // Safety check
+                              if (slotIndex >= availableSlots.length) break;
+
+                              const slotTime = availableSlots[slotIndex].time;
+                              total += calculateSlotPrice({
+                                turf: selectedTurf!,
+                                date: parseISO(date),
+                                startTime: slotTime,
+                                peakHours: peakHours,
+                              });
+                            }
+                            return total;
+                          };
+
                           return (
                             <DurationSelector
                               key={time}
@@ -429,6 +449,7 @@ function BookingContent() {
                               )}
                               buttonVariant="ghost"
                               pricePerHour={slotPrice}
+                              calculateTotalPrice={calculateTotalForDuration}
                               isPeak={isPeak}
                             />
                           );

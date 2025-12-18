@@ -184,6 +184,7 @@ interface DurationSelectorProps {
   minHours: number;
   maxHours: number;
   isPeak?: boolean;
+  calculateTotalPrice?: (duration: number) => number;
 }
 
 export function DurationSelector({
@@ -196,6 +197,7 @@ export function DurationSelector({
   minHours,
   maxHours,
   isPeak = false,
+  calculateTotalPrice,
 }: DurationSelectorProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [duration, setDuration] = useState(1);
@@ -238,6 +240,9 @@ export function DurationSelector({
   };
 
   const calculatePrice = (hours: number) => {
+    if (calculateTotalPrice) {
+      return calculateTotalPrice(hours);
+    }
     return Math.round(hours * pricePerHour);
   };
 
