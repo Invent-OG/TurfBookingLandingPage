@@ -60,6 +60,7 @@ const peakHourSchema = z.object({
 export default function TurfPeakHoursUI() {
   const { data: turfs = [] } = useTurfs();
   const [selectedTurfId, setSelectedTurfId] = useState<string>();
+  const selectedTurf = turfs.find((t) => t.id === selectedTurfId);
   const { data: peakHours = [] } = usePeakHours(selectedTurfId);
   const createMutation = useCreatePeakHour();
   const updateMutation = useUpdatePeakHour();
@@ -234,7 +235,12 @@ export default function TurfPeakHoursUI() {
             open={open}
             onOpenChange={(val) => {
               setOpen(val);
-              if (!val) resetForm();
+              if (!val) {
+                resetForm();
+              } else if (!editMode && selectedTurf) {
+                setStartTime(selectedTurf.openingTime?.slice(0, 5) || "");
+                setEndTime(selectedTurf.closingTime?.slice(0, 5) || "");
+              }
             }}
           >
             <DialogTrigger asChild>
@@ -357,6 +363,8 @@ export default function TurfPeakHoursUI() {
                     <TimePicker
                       value={startTime}
                       onChange={setStartTime}
+                      minTime={selectedTurf?.openingTime?.slice(0, 5)}
+                      maxTime={selectedTurf?.closingTime?.slice(0, 5)}
                       className="bg-white/5 border-white/10"
                     />
                   </div>
@@ -365,6 +373,8 @@ export default function TurfPeakHoursUI() {
                     <TimePicker
                       value={endTime}
                       onChange={setEndTime}
+                      minTime={selectedTurf?.openingTime?.slice(0, 5)}
+                      maxTime={selectedTurf?.closingTime?.slice(0, 5)}
                       className="bg-white/5 border-white/10"
                     />
                   </div>

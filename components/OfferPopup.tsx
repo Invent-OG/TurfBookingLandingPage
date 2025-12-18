@@ -1,5 +1,6 @@
 "use client";
 
+import { usePathname } from "next/navigation";
 import { useState, useEffect } from "react";
 import Image from "next/image";
 import { X, CheckCircle } from "lucide-react";
@@ -26,21 +27,18 @@ export default function OfferPopup({
 }: OfferPopupProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [dontShowAgain, setDontShowAgain] = useState(false);
+  const pathname = usePathname();
 
   useEffect(() => {
     // Check local storage and active status
-    if (isActive && imageUrl) {
+    if (isActive && imageUrl && !pathname?.startsWith("/admin")) {
       const hidden = localStorage.getItem("hideOfferPopup");
-      // If "hideOfferPopup" is not set, or if we want to show it every session?
-      // Usually "Don't show again" means forever (or until logic changes).
-      // Let's rely on the explicit checkbox for "Don't show again".
       if (hidden !== "true") {
-        // Small delay for entrance effect
         const timer = setTimeout(() => setIsOpen(true), 1000);
         return () => clearTimeout(timer);
       }
     }
-  }, [isActive, imageUrl]);
+  }, [isActive, imageUrl, pathname]);
 
   const handleClose = () => {
     setIsOpen(false);
@@ -49,12 +47,11 @@ export default function OfferPopup({
     }
   };
 
-  // Prevent rendering on server
+  // Prevent rendering on server or admin pages
   if (!isActive || !imageUrl) return null;
   if (typeof window === "undefined") return null;
+  if (pathname?.startsWith("/admin")) return null;
 
-  // Use portal to break out of layout constraints if needed, but for simple popup, fixed z-index is usually enough.
-  // Using portal is safer for z-index issues.
   return isOpen
     ? createPortal(
         <div className="fixed inset-0 z-[99999] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-in fade-in duration-300">
