@@ -97,7 +97,22 @@ export async function POST(req: Request) {
       }
 
       // Calculate End Time
-      const totalMinutes = parsedDuration * slotInterval!;
+      // Ensure we treat duration as HOURS.
+      // The slotInterval might be 60, but if it changes, manual booking "duration" input is usually "Hours".
+      // Let's standardise on Duration Input = Hours.
+      const totalMinutes = parsedDuration * 60;
+
+      // Calculate endTime string manually to ensure DB gets it
+      const [startHours, startMinutes] = startTime.split(":").map(Number);
+      const endTotalMinutes = startHours * 60 + startMinutes + totalMinutes;
+      const endHours = Math.floor(endTotalMinutes / 60);
+      const endMinutesResult = endTotalMinutes % 60;
+      // Handle day rollover if needed, but for now simple format (24h)
+      // If > 24, it might break time column? DB `time` type usually handles 24h.
+      // If it exceeds 24h, PG time type might wrap or error depending on implementation.
+      // Assuming single day operation for now or valid 24h time.
+      const formattedEndTime = `${String(endHours).padStart(2, "0")}:${String(endMinutesResult).padStart(2, "0")}:00`;
+
       const endTimeSQL = sql`(${startTime}::time + make_interval(mins => ${totalMinutes}))`;
 
       // Check Closing Time limits (Optional for manual override, but safer to enforce)
@@ -124,7 +139,7 @@ export async function POST(req: Request) {
             or(
               and(
                 sql`${startTime} >= ${bookings.startTime}`,
-                sql`${startTime} < (${bookings.startTime} + make_interval(mins => ${slotInterval} * ${bookings.duration}))`
+                sql`${startTime} < (${bookings.startTime} + make_interval(mins => ${bookings.duration} * 60))` // Ensure duration is treated as hours here too effectively
               ),
               and(
                 sql`${bookings.startTime} >= ${startTime}`,
@@ -149,6 +164,7 @@ export async function POST(req: Request) {
           turfName: turf_name,
           date,
           startTime,
+          endTime: formattedEndTime, // ✅ Added endTime
           duration: parsedDuration,
           totalPrice: parsedTotalPrice.toString(),
           paymentMethod,
