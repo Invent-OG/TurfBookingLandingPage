@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { db } from "@/db/db";
 import { blockedDates, turfs } from "@/db/schema";
-import { eq, and } from "drizzle-orm";
+import { eq, and, lt, gte } from "drizzle-orm";
 
 // Helper to add minutes
 function addMinutes(time: string, minutes: number): string {
@@ -25,6 +25,29 @@ export async function POST(req: Request) {
     if (!turfId || !date || !blockedTimes?.length) {
       return NextResponse.json(
         { error: "Missing required fields" },
+        { status: 400 }
+      );
+    }
+
+    // Check for overlapping date ranges (that start before this date)
+    const overlappingRange = await db
+      .select()
+      .from(blockedDates)
+      .where(
+        and(
+          eq(blockedDates.turfId, turfId),
+          lt(blockedDates.startDate, date), // Started before
+          gte(blockedDates.endDate, date) // Ends on or after
+        )
+      )
+      .limit(1);
+
+    if (overlappingRange.length > 0) {
+      return NextResponse.json(
+        {
+          error:
+            "This date is already blocked by a date range. Manage it in the Date Range tab.",
+        },
         { status: 400 }
       );
     }

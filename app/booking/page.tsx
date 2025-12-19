@@ -98,7 +98,12 @@ function BookingContent() {
   // ✅ Updated to handle both single blocked dates and blocked ranges
 
   const getDisabledDates = (
-    blockedDates: { startDate: string; endDate?: string | null }[]
+    blockedDates: {
+      startDate: string;
+      endDate?: string | null;
+      blockedTimes?: string[] | null;
+      blockedRanges?: any[] | null;
+    }[]
   ) => {
     const disabledDates: Date[] = [];
     const disabledRanges: { start: Date; end: Date }[] = [];
@@ -113,7 +118,14 @@ function BookingContent() {
         const endDate = parseISO(d.endDate);
         disabledRanges.push({ start: startDate, end: endDate });
       } else {
-        disabledDates.push(startDate);
+        // Only disable if it's a FULL DAY block (no specific times/ranges)
+        const isPartialBlock =
+          (d.blockedTimes && d.blockedTimes.length > 0) ||
+          (d.blockedRanges && (d.blockedRanges as any[]).length > 0);
+
+        if (!isPartialBlock) {
+          disabledDates.push(startDate);
+        }
       }
     });
 

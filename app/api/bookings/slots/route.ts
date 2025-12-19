@@ -115,7 +115,15 @@ export async function GET(req: Request) {
       .where(
         and(
           eq(blockedDates.turfId, turfId),
-          eq(blockedDates.startDate, date.split("T")[0])
+          or(
+            // Case 1: Single day block (startDate == date)
+            eq(blockedDates.startDate, date.split("T")[0]),
+            // Case 2: Range block (startDate <= date AND endDate >= date)
+            and(
+              lte(blockedDates.startDate, date.split("T")[0]),
+              gte(blockedDates.endDate, date.split("T")[0])
+            )
+          )
         )
       );
 
